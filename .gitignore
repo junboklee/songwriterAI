@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+.build/
+out/
+coverage/
+*.log
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.env.local
+*.secret
