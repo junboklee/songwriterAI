@@ -58,11 +58,22 @@ function initFirebaseAdmin() {
     return getApps()[0];
   }
 
+  // In a deployed Google Cloud environment (like App Hosting),
+  // the SDK can auto-initialize with the service account permissions.
+  if (process.env.GCP_PROJECT) {
+    const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+    if (!storageBucket) {
+      throw new Error('Firebase Storage bucket is missing from environment variables.');
+    }
+    return initializeApp({ storageBucket });
+  }
+
+  // For local development, use the service account keys from env vars.
   const serviceAccount = getServiceAccountFromEnv();
 
   if (!serviceAccount) {
     throw new Error(
-      'Firebase Admin credentials are missing. Configure FIREBASE_ADMIN_* env vars.'
+      'Firebase Admin credentials are missing. For local development, set FIREBASE_ADMIN_* env vars. For deployment, ensure the service account has permissions.'
     );
   }
 
