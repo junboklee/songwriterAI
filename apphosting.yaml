@@ -1,0 +1,17 @@
+runConfig:
+    minInstances: 0
+    maxInstances: 2
+env:
+    # 이 값들은 Firebase 콘솔의 프로젝트 설정 > 앱 섹션에서 가져올 수 있습니다.
+    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+        value: AIzaSyCQNZwdX8XclqhIxkczKaORSu8ciN0B6oo # 실제 API 키 값으로 대체
+    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+        value: character-ai-12ae8.firebaseapp.com
+    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        value: character-ai-12ae8
+    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+        value: character-ai-12ae8.firebasestorage.app # 또는 .firebasestorage.app
+    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+        value: 119066434041
+    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+        value: 1:119066434041:web:d5e8672925b11818b40528

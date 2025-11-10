@@ -1,0 +1,11 @@
+*** Begin Patch
+*** Update File: pages/dashboard/index.tsx
+@@
+-  loadingCharacters: decodeURIComponent('%EC%BB%A4%EC%8A%A4%ED%85%80%20%EC%BA%90%EB%A6%AD%ED%84%B0%EB%A5%BC%20%EB%B6%88%EB%9F%AC%EC%98%A4%EB%8A%94%20%EC%A4%91%EC%9E%85%EB%8B%88%EB%8B%A4...'),
+-  presenceIcon: '??',
+-  addIcon: '?',
++  loadingCharacters: decodeURIComponent('%EC%BB%A4%EC%8A%A4%ED%85%80%20%EC%BA%90%EB%A6%AD%ED%84%B0%EB%A5%BC%20%EB%B6%88%EB%9F%AC%EC%98%A4%EB%8A%94%20%EC%A4%91%EC%9E%85%EB%8B%88%EB%8B%A4...'),
++  presenceIcon: '\uD83D\uDFE2',
++  addIcon: '\u2795',
+*** End Patch
+

@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+.build/
+coverage/
+
+# Log files
+*.log
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.secret
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
+.venv/
+
+# Misc workspace artefacts
+vite-project/
+
+# Sensitive files
+character-ai-12ae8-firebase-adminsdk-fbsvc-27738cfbbf.json
