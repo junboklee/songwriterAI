@@ -60,7 +60,7 @@ function initFirebaseAdmin() {
 
   // In a deployed Google Cloud environment (like App Hosting),
   // the SDK can auto-initialize with the service account permissions.
-  if (process.env.GCP_PROJECT) {
+  if (process.env.K_SERVICE) { // K_SERVICE is a standard env var in Cloud Run.
     const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
     if (!storageBucket) {
       throw new Error('Firebase Storage bucket is missing from environment variables.');
