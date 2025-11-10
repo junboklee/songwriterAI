@@ -25,15 +25,12 @@ const normalizeStorageBucket = (bucket: string | undefined, projectId?: string) 
 
 function getServiceAccountFromEnv(): (ServiceAccountEnv & { storageBucket: string }) | null {
   const projectId =
-    process.env.SECRETS_PROJECT_ID ?? // Changed for Firebase deployment
     process.env.FIREBASE_ADMIN_PROJECT_ID ??
     process.env.FIREBASE_PROJECT_ID ??
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const clientEmail =
-    process.env.SECRETS_CLIENT_EMAIL ?? // Changed for Firebase deployment
     process.env.FIREBASE_ADMIN_CLIENT_EMAIL ?? process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey =
-    process.env.SECRETS_PRIVATE_KEY ?? // Changed for Firebase deployment
     process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
@@ -58,22 +55,11 @@ function initFirebaseAdmin() {
     return getApps()[0];
   }
 
-  // In a deployed Google Cloud environment (like App Hosting),
-  // the SDK can auto-initialize with the service account permissions.
-  if (process.env.K_SERVICE) { // K_SERVICE is a standard env var in Cloud Run.
-    const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
-    if (!storageBucket) {
-      throw new Error('Firebase Storage bucket is missing from environment variables.');
-    }
-    return initializeApp({ storageBucket });
-  }
-
-  // For local development, use the service account keys from env vars.
   const serviceAccount = getServiceAccountFromEnv();
 
   if (!serviceAccount) {
     throw new Error(
-      'Firebase Admin credentials are missing. For local development, set FIREBASE_ADMIN_* env vars. For deployment, ensure the service account has permissions.'
+      'Firebase Admin credentials are missing. Configure FIREBASE_ADMIN_* env vars.'
     );
   }
 
