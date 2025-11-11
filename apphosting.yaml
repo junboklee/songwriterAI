@@ -17,17 +17,3 @@ env:
     value: '1:119066434041:web:d5e8672925b11818b40528'
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: 'G-6LKKE1TE6E'
-
-  # OpenAI Secret Keys
-  - variable: OPENAI_API_KEY
-    value: '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' # <-- 여기에 새로 발급받은 OpenAI 키를 입력하세요
-  - variable: OPENAI_ASSISTANT_ID
-    value: 'asst_ED99NuKgahDCWbPaId4kUwq1'
-
-  # Firebase Admin Secret Keys
-  - variable: FIREBASE_ADMIN_PROJECT_ID
-    value: 'character-ai-12ae8'
-  - variable: FIREBASE_ADMIN_CLIENT_EMAIL
-    value: 'firebase-adminsdk-fbsvc@character-ai-12ae8.iam.gserviceaccount.com' # <-- 새로 다운로드한 service-account.json 파일의 값으로 채우세요
-  - variable: FIREBASE_ADMIN_PRIVATE_KEY
-    value: '-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDBPFhXov+trPXT\ncpxsydgcUu9u1D49ih1wwng5Tmrnpi/LOlzWjRfgSBsaw005EY2JaDuBRtiDSkyY\njtqSORWuMOJ4unlaD/r6d6IdngXCxjI1MCPDlmgdONYgeRePXQUgRykqyjDZylZ1\njp6DRib7/jIviMY1AjeHfoUtojM5/WNrYYWb2Nm2tSHahmayweYk0W3Z0pz6jURK\nMYxPFYRY+T7GHZI/GCULKuKX/cHaZxDOGHWxDBEFwhMhUv0FQ+p9eHufJGZFDBeM\nNCdstqpO95rc0O2mI9tEAlQV/X1TT1vX13tNCO3RED9E5ReOPoLlud+Fj1nHNNIV\nSq4dQa0ZAgMBAAECggEAL8D+BApgLUeFKNA2IBxxr+4/BaCmEQdE50zn8SGUAdNs\nFElEEDGmKOMo76A8QVI5LC/6JKShdTCzZTBIi8JXvUiPb06GFt/EIonWIoOe4Nei\nKMrQy9Erwaz+HeBPFjrivWtYnR6CnBAI9dxdCAwaLkRPmreuZAM8PdvihbiD+Fxc\nZ7bgdt/dhkDdlDbBh/h0vU9H1+/c9YnngJoSC3BivZiWCj355M88LB8A/f1RsAy6\nSLRJ9PO8oGiojsEh1nHngRLq3uzT7qecDi5nwWEn++Z7/sHSI2BvLrF/q7Coro/4\n5BOURY9W1W2fuJr2ltoQRIGHh1voVL/fAC/hUnXR0QKBgQDm0FLAKb517e1V5jxV\nSrXrqkcclAF5iQpctTBjDz7BbIPcJbbwxK+N2/pcIE/aPNMUJ1FMqJEDQKsu+/f3\nX+5fKNWN99nOTCkPXKbHSWfnj9yMLJvmWq6sd7wtaGmDiI4WIqjNVsyYvUGEfaDV\nMWTXXL71UT+4cjywTlGmr3FZZwKBgQDWUkvoUYloTZRVc9+BZh5dpsw+UUPxGACE\nZ6Why+h+Su2VKYlnE7Zn1q/YAz6iC73uh5Ev14RzDggElwIeHuu8udJ5itg8npur\nuMagkW6a1aNfiLnJsbdGtgIFFiXUwRI1pc+laI2ygzQgB8cFs2VJLcfT/4bUuU4P\nMCJq+Nw1fwKBgQDGantYegoisp/94egnogv1RPHQnWMPKUFhJNktruNRv4ky7LDx\nFQOdPWdhXt2GTBdgEdSPw7C1TRhbUXt+ilcOMroySshP0aTSceFlG7NYmpELZyW1\nxmq2FFAN8N4TloYefTkDHATRoI/750slOkrn3/DATlIqqvmEzi7ezZ7xLQKBgG3V\nixUqBBMx/ty0H0y/Oryf6HffScRamplATL/YMfPXDl6tBL+QeKBKg59eOlDtV47Q\nZvVvq28TN8SyZuFs0z7KtDSZlSur1PdyIEjVfytWZP1mol/c9aIFUI+uxAB+WYio\nyvtn04YyexoXIkWnpDaWgZwBjeWieYCLGHhdxOydAoGBAI2AnBvnZyihDKSCAlUt\nAnGYvYlo/QqqSxI9XFHtufhQCAhDP5xnUz7yWSA8wmcKdaG9H0VLLttFNkjDD0RV\npd4hBkAmXiBjL6tFzjMPv00TTTVhrV9o5czeKUV1STsVJLRimZhJrGVH8B0BvFHH\n64XAoWsA4bjV/n+iJ0NIQ3/a\n-----END PRIVATE KEY-----\n' # <-- 새로 다운로드한 service-account.json 파일의 값으로 채우세요 (줄바꿈은 \n 으로)

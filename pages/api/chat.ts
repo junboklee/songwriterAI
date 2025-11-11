@@ -11,10 +11,11 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import { createCharacterAssistant } from '@/lib/characterAssistants';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.APPSECRETS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY
 });
 
-const defaultAssistantId = process.env.OPENAI_ASSISTANT_ID ?? null;
+const defaultAssistantId =
+  process.env.APPSECRETS_OPENAI_ASSISTANT_ID ?? process.env.OPENAI_ASSISTANT_ID ?? null;
 
 type CharacterDocument = {
   name?: string;

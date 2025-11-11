@@ -1,4 +1,10 @@
 {
+  "hosting": {
+    "source": ".",
+    "frameworksBackend": {
+      "region": "asia-east1"
+    }
+  },
   "apphosting": {
     "backendId": "novasinger-ai-backend",
     "rootDir": "/",
