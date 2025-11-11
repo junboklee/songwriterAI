@@ -136,7 +136,16 @@ async function resolveAssistantContext(
       );
     } catch (assistantError) {
       logError('chat.assistant_sync_failed', assistantError);
-      throw new AppError('커스텀 캐릭터 assistant를 준비하지 못했습니다. 잠시 후 다시 시도해주세요.', {
+
+      let message = '커스텀 캐릭터 assistant를 준비하지 못했습니다. 잠시 후 다시 시도해주세요.';
+      if (assistantError instanceof OpenAI.APIError) {
+        message = `Failed to sync assistant with OpenAI: ${assistantError.message}`;
+      } else if (assistantError instanceof Error) {
+        // Keep the original error message for other error types
+        message = assistantError.message;
+      }
+
+      throw new AppError(message, {
         statusCode: 502,
         code: 'ASSISTANT_SYNC_FAILED'
       });

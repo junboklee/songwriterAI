@@ -1567,6 +1567,12 @@ useEffect(() => {
   const handleInputKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
+
+      const trimmed = input.trim();
+      if (!trimmed || isLoading) {
+        return;
+      }
+
       const formElement = formRef.current;
 
       if (!formElement) {
