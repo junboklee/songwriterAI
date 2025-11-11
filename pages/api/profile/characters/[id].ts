@@ -273,18 +273,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let resolvedAssistantId = existingAssistantId;
 
-    try {
-      if (resolvedAssistantId) {
-        await updateCharacterAssistant(resolvedAssistantId, descriptor);
-      } else {
-        resolvedAssistantId = await createCharacterAssistant(descriptor);
-        updates.assistantId = resolvedAssistantId;
+    // If the character is 'Dayeon', protect her assistant from being updated.
+    if (current.name?.toLowerCase() === 'dayeon') {
+      resolvedAssistantId = 'asst_ED99NuKgahDCWbPaId4kUwq1';
+      updates.assistantId = resolvedAssistantId;
+    } else {
+      try {
+        if (resolvedAssistantId) {
+          await updateCharacterAssistant(resolvedAssistantId, descriptor);
+        } else {
+          resolvedAssistantId = await createCharacterAssistant(descriptor);
+          updates.assistantId = resolvedAssistantId;
+        }
+      } catch (assistantError) {
+        console.error('Failed to sync assistant for character', assistantError);
+        return res.status(502).json({
+          error: 'OpenAI assistant를 업데이트하지 못했습니다. 잠시 후 다시 시도해주세요.'
+        });
       }
-    } catch (assistantError) {
-      console.error('Failed to sync assistant for character', assistantError);
-      return res.status(502).json({
-        error: 'OpenAI assistant를 업데이트하지 못했습니다. 잠시 후 다시 시도해주세요.'
-      });
     }
 
     if (!current.creatorId) {

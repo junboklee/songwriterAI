@@ -108,18 +108,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const characterId = userCharacterRef.id;
 
     let assistantId: string | null = null;
-    try {
-      assistantId = await createCharacterAssistant({
-        userId: user.uid,
-        characterId,
-        name: trimmedName,
-        summary: trimmedShort || null,
-        greeting: trimmedGreeting || null,
-        instructions,
-        example: null,
-      });
-    } catch (assistantError) {
-      console.error('Failed to create assistant for character', assistantError);
+    if (trimmedName.toLowerCase() === 'dayeon') {
+      assistantId = 'asst_ED99NuKgahDCWbPaId4kUwq1';
+    } else {
+      try {
+        assistantId = await createCharacterAssistant({
+          userId: user.uid,
+          characterId,
+          name: trimmedName,
+          summary: trimmedShort || null,
+          greeting: trimmedGreeting || null,
+          instructions,
+          example: null,
+        });
+      } catch (assistantError) {
+        console.error('Failed to create assistant for character', assistantError);
+      }
     }
 
     const characterData = {
