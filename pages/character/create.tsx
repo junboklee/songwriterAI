@@ -58,7 +58,7 @@ export default function CharacterCreate() {
   const [longDescription, setLongDescription] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState('');
-  const [visibility, setVisibility] = useState<VisibilityOption>('public');
+  const [visibility, setVisibility] = useState<VisibilityOption>('private');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(DEFAULT_CHARACTER_AVATAR);
   const [saving, setSaving] = useState(false);

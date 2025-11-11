@@ -102,19 +102,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const now = Timestamp.now();
-    
-    let docRef;
-    if (finalVisibility === 'private') {
-      docRef = adminDb.collection('users').doc(user.uid).collection('characters').doc();
-    } else {
-      docRef = adminDb.collection('characters').doc();
-    }
+    const userRef = adminDb.collection('users').doc(user.uid);
+    const userCharacterRef = userRef.collection('characters').doc();
+    const publicCharacterRef = adminDb.collection('characters').doc(userCharacterRef.id);
+    const characterId = userCharacterRef.id;
 
     let assistantId: string | null = null;
     try {
       assistantId = await createCharacterAssistant({
         userId: user.uid,
-        characterId: docRef.id,
+        characterId,
         name: trimmedName,
         summary: trimmedShort || null,
         greeting: trimmedGreeting || null,
@@ -140,13 +137,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       creatorId: user.uid,
     };
 
-    await docRef.set(characterData);
+    await userCharacterRef.set(characterData);
+
+    if (finalVisibility !== 'private') {
+      await publicCharacterRef.set(characterData);
+    }
 
     return res.status(201).json({
-      id: docRef.id,
+      id: characterId,
       character: {
         ...characterData,
-        id: docRef.id,
+        id: characterId,
         createdAt: now.toDate().toISOString(),
         updatedAt: now.toDate().toISOString(),
       },

@@ -55,6 +55,7 @@ type CharacterDocument = {
   shortDescription?: string | null;
   avatarUrl?: string | null;
   categories?: string[];
+  creatorId?: string | null;
 
 };
 
@@ -99,6 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const authUser = await requireUser(req);
     const userRef = adminDb.collection('users').doc(authUser.uid);
     const characterRef = userRef.collection('characters').doc(characterId);
+    const publicCharacterRef = adminDb.collection('characters').doc(characterId);
 
     if (req.method === 'GET') {
       const snapshot = await characterRef.get();
@@ -125,6 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : null;
 
       await characterRef.delete();
+      await publicCharacterRef.delete().catch(() => undefined);
 
       if (assistantId) {
         try {
@@ -284,10 +287,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
+    if (!current.creatorId) {
+      updates.creatorId = authUser.uid;
+    }
+
     await characterRef.update(updates);
 
     const updatedSnap = await characterRef.get();
     const updatedData = updatedSnap.data() as CharacterDocument;
+
+    if (updatedData.visibility === 'private') {
+      await publicCharacterRef.delete().catch(() => undefined);
+    } else {
+      await publicCharacterRef.set({
+        ...updatedData,
+        creatorId: updatedData.creatorId ?? authUser.uid
+      });
+    }
 
     return res.status(200).json({
       character: serializeCharacter(updatedSnap.id, updatedData)

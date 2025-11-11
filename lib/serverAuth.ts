@@ -40,16 +40,27 @@ async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser
   }
 }
 
+function extractIdToken(req: NextApiRequest): string | null {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) {
+    const raw = header.slice('Bearer '.length).trim();
+    if (raw) {
+      return raw;
+    }
+  }
+
+  const cookieToken = req.cookies?.__session;
+  if (typeof cookieToken === 'string' && cookieToken.trim()) {
+    return cookieToken.trim();
+  }
+
+  return null;
+}
+
 export async function authenticateRequest(
   req: NextApiRequest
 ): Promise<{ user: AuthenticatedUser; idToken: string }> {
-  const header = req.headers.authorization;
-
-  if (!header?.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Authorization header is missing or malformed.');
-  }
-
-  const idToken = header.slice('Bearer '.length).trim();
+  const idToken = extractIdToken(req);
 
   if (!idToken) {
     throw new UnauthorizedError('Firebase ID token is required.');

@@ -44,8 +44,6 @@ async function main() {
   console.log('projectId:', projectId);
   console.log('clientEmail:', clientEmail);
   console.log('privateKey length:', privateKey.length);
-  console.log('privateKey starts with:', privateKey.slice(0, 30));
-  console.log('privateKey ends with:', privateKey.slice(-30));
 
   const admin = require('firebase-admin');
 

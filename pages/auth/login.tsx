@@ -1,4 +1,4 @@
-import { FirebaseError } from 'firebase/app';
+﻿import { FirebaseError } from 'firebase/app';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
@@ -85,17 +85,17 @@ export default function Login() {
   };
 
   const handleAppleLogin = async () => {
-    setError('현재 준비중 입니다');
-    // setIsLoading(true); // No need to set loading state if we're not proceeding
+    setError(null);
+    setIsLoading(true);
 
-    // try {
-    //   await signInWithPopup(auth, appleProvider);
-    //   pushAfterAuth();
-    // } catch (err) {
-    //   setError(mapFirebaseError(err, 'apple', t));
-    // } finally {
-    //   setIsLoading(false);
-    // }
+    try {
+      await signInWithPopup(auth, appleProvider);
+      pushAfterAuth();
+    } catch (err) {
+      setError(mapFirebaseError(err, 'apple', t));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

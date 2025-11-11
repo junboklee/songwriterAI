@@ -64,5 +64,4 @@ All routes require a valid Firebase ID token.
 - To store a song immediately after generation, send the lyrics and optional metadata via the `songDraft` payload when calling `/api/chat`.
 
 ## Next Steps
-- Implement Apple sign-in on the frontend (`OAuthProvider('apple.com')` with Firebase Auth).
 - Connect UI pages to the new profile and history endpoints for dashboards, recent chats, and saved lyrics.
