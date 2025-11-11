@@ -81,8 +81,13 @@ async function resolveAssistantContext(
     };
   }
 
-  const characterRef = adminDb.collection('users').doc(userId).collection('characters').doc(characterId);
-  const snapshot = await characterRef.get();
+  let characterRef = adminDb.collection('users').doc(userId).collection('characters').doc(characterId);
+  let snapshot = await characterRef.get();
+
+  if (!snapshot.exists) {
+    characterRef = adminDb.collection('characters').doc(characterId);
+    snapshot = await characterRef.get();
+  }
 
   if (!snapshot.exists) {
     if (!defaultAssistantId) {
