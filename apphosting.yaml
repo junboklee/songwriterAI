@@ -17,3 +17,14 @@ env:
     value: '1:119066434041:web:d5e8672925b11818b40528'
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: 'G-6LKKE1TE6E'
+
+  - variable: FIREBASE_PROJECT_ID
+    value: 'character-ai-12ae8'
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: firebase-admin-client-email
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: firebase-admin-private-key
+  - variable: OPENAI_API_KEY
+    secret: openai-api-key
+
+

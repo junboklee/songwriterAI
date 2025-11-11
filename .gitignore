@@ -34,6 +34,7 @@ __pycache__/
 
 # Misc workspace artefacts
 vite-project/
+.firebase/
 
 # Sensitive files
 character-ai-12ae8-firebase-adminsdk-fbsvc-27738cfbbf.json
