@@ -2,9 +2,14 @@
   "hosting": {
     "source": ".",
     "frameworksBackend": {
-      "region": "asia-east1"
-    }
-  },
+      "region": "asia-east1",
+      "secrets": [
+        "openai-api-key", 
+        "firebase-admin-client-email",
+        "firebase-admin-private-key"
+        ]
+      }
+    },
   "apphosting": {
     "backendId": "novasinger-ai-backend",
     "rootDir": "/",
@@ -42,4 +47,5 @@
     },
     "singleProjectMode": true
   }
+
 }
