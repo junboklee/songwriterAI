@@ -66,6 +66,7 @@ export default function CharacterEdit() {
   const [visibility, setVisibility] = useState<VisibilityOption>('public');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(DEFAULT_CHARACTER_AVATAR);
+  const [avatarRemoved, setAvatarRemoved] = useState(false); // New state variable
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +83,7 @@ export default function CharacterEdit() {
     const fetchCharacter = async () => {
       setLoading(true);
       setError(null);
+      setAvatarRemoved(false); // Reset avatarRemoved on fetch
 
       try {
         const idToken = await user.getIdToken();
@@ -192,6 +194,9 @@ export default function CharacterEdit() {
       formData.append('categories', JSON.stringify(categories));
       if (avatarFile) {
         formData.append('avatar', avatarFile);
+      } else if (avatarRemoved) {
+        // Explicitly tell the backend to remove the avatar
+        formData.append('avatarRemoved', 'true');
       }
 
       const response = await fetch(`/api/profile/characters/${characterId}`, {
@@ -346,6 +351,7 @@ export default function CharacterEdit() {
                     onClick={() => {
                       setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
                       setAvatarFile(null);
+                      setAvatarRemoved(true); // Set avatarRemoved to true
                     }}
                     disabled={saving}
                   >

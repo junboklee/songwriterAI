@@ -161,7 +161,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const longDescription = getSingleValue(fields.longDescription);
     const visibility = getSingleValue(fields.visibility);
     const categoriesRaw = getSingleValue(fields.categories);
-    const example = getSingleValue(fields.example); // Added example field
+    const example = getSingleValue(fields.example);
+    const avatarRemoved = getSingleValue(fields.avatarRemoved); // Added avatarRemoved field
 
     if (typeof name === 'string') {
       const trimmed = name.trim();
@@ -198,7 +199,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // ignore if parsing fails
       }
     }
-    if (typeof example === 'string') { // Added example update
+    if (typeof example === 'string') {
       const trimmed = example.trim();
       updates.example = trimmed || null;
     }
@@ -215,6 +216,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
       updates.avatarUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+    } else if (avatarRemoved === 'true') { // Handle explicit avatar removal
+      updates.avatarUrl = null;
     }
 
     const mergedName =
