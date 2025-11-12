@@ -68,12 +68,6 @@ const defaultCharacterAssistantIds: Record<string, string | undefined> = {
     process.env.APPSECRETS_OPENAI_ASSISTANT_ID_DAYEON ??
     process.env.OPENAI_ASSISTANT_ID_DAYEON ??
     'asst_ED99NuKgahDCWbPaId4kUwq1', // Dayeon
-  '2':
-    process.env.APPSECRETS_OPENAI_ASSISTANT_ID_JUNHO ??
-    process.env.OPENAI_ASSISTANT_ID_JUNHO, // Junho
-  '3':
-    process.env.APPSECRETS_OPENAI_ASSISTANT_ID_JIMIN ??
-    process.env.OPENAI_ASSISTANT_ID_JIMIN // Jimin
 };
 
 async function resolveAssistantContext(
