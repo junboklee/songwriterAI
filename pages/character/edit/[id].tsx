@@ -111,7 +111,7 @@ export default function CharacterEdit() {
         setAvatarPreview(
           character.avatarUrl && character.avatarUrl.trim()
             ? character.avatarUrl
-            : DEFAULT_CHARACTER_AVATAR
+            : null // Set to null if no custom avatar
         );
       } catch (err) {
         if (!cancelled) {
@@ -135,21 +135,21 @@ export default function CharacterEdit() {
     const file = event.target.files?.[0];
     if (!file) {
       setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
+      setAvatarPreview(null); // Set to null if no file selected
       return;
     }
 
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       setError(tEdit('errors.avatarType'));
       setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
+      setAvatarPreview(null); // Set to null on error
       return;
     }
 
     if (file.size > MAX_AVATAR_SIZE) {
       setError(tEdit('errors.avatarSize'));
       setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
+      setAvatarPreview(null); // Set to null on error
       return;
     }
 
@@ -320,12 +320,17 @@ export default function CharacterEdit() {
                   }}
                 >
                   {
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={avatarPreview ?? DEFAULT_CHARACTER_AVATAR}
-                      alt={name || 'avatar preview'}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    avatarPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarPreview}
+                        alt={name || 'avatar preview'}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      // Display a generic empty avatar placeholder or nothing
+                      <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
+                    )
                   }
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>

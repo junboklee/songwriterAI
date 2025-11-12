@@ -77,7 +77,7 @@ const serializeCharacter = (id: string, data: CharacterDocument) => ({
   avatarUrl:
     typeof data.avatarUrl === 'string' && data.avatarUrl.trim()
       ? data.avatarUrl
-      : DEFAULT_CHARACTER_AVATAR,
+      : null, // Changed from DEFAULT_CHARACTER_AVATAR to null
   categories: Array.isArray(data.categories) ? data.categories : [],
 });
 
