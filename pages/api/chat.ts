@@ -63,10 +63,34 @@ async function pollRunCompletion(threadId: string, runId: string) {
   throw new Error('Timed out waiting for assistant response.');
 }
 
+const defaultCharacterAssistantIds: Record<string, string | undefined> = {
+  '1':
+    process.env.APPSECRETS_OPENAI_ASSISTANT_ID_DAYEON ??
+    process.env.OPENAI_ASSISTANT_ID_DAYEON ??
+    'asst_ED99NuKgahDCWbPaId4kUwq1', // Dayeon
+  '2':
+    process.env.APPSECRETS_OPENAI_ASSISTANT_ID_JUNHO ??
+    process.env.OPENAI_ASSISTANT_ID_JUNHO, // Junho
+  '3':
+    process.env.APPSECRETS_OPENAI_ASSISTANT_ID_JIMIN ??
+    process.env.OPENAI_ASSISTANT_ID_JIMIN // Jimin
+};
+
 async function resolveAssistantContext(
   userId: string,
   characterId?: string | null
 ): Promise<ResolvedAssistantContext> {
+  // Handle default characters first
+  if (characterId && defaultCharacterAssistantIds[characterId]) {
+    const assistantId = defaultCharacterAssistantIds[characterId];
+    if (assistantId) {
+      return {
+        assistantId,
+        origin: 'default'
+      };
+    }
+  }
+
   if (!characterId) {
     if (!defaultAssistantId) {
       throw new AppError('Assistant configuration is missing.', {
