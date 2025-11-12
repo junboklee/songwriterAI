@@ -259,14 +259,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     updates.instructions = instructions;
-    const resolvedAvatar =
-      (typeof updates.avatarUrl === 'string' && updates.avatarUrl.trim()
-        ? updates.avatarUrl
-        : null) ??
-      (typeof current.avatarUrl === 'string' && current.avatarUrl.trim()
-        ? current.avatarUrl
-        : null) ??
-      DEFAULT_CHARACTER_AVATAR;
+    let resolvedAvatar: string | null = null; // Initialize to null
+
+    if (updates.avatarUrl === null) { // If avatar was explicitly removed
+      resolvedAvatar = null; // Keep it null
+    } else if (typeof updates.avatarUrl === 'string' && updates.avatarUrl.trim()) {
+      resolvedAvatar = updates.avatarUrl; // Use the new avatar URL
+    } else if (typeof current.avatarUrl === 'string' && current.avatarUrl.trim()) {
+      resolvedAvatar = current.avatarUrl; // Use the current avatar URL
+    } else {
+      resolvedAvatar = DEFAULT_CHARACTER_AVATAR; // Fallback to default
+    }
     updates.avatarUrl = resolvedAvatar;
 
     const descriptor = {
