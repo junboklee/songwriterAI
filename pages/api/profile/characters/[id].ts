@@ -161,6 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const longDescription = getSingleValue(fields.longDescription);
     const visibility = getSingleValue(fields.visibility);
     const categoriesRaw = getSingleValue(fields.categories);
+    const example = getSingleValue(fields.example); // Added example field
 
     if (typeof name === 'string') {
       const trimmed = name.trim();
@@ -197,6 +198,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // ignore if parsing fails
       }
     }
+    if (typeof example === 'string') { // Added example update
+      const trimmed = example.trim();
+      updates.example = trimmed || null;
+    }
 
     const avatarFile = files.avatar?.[0];
     if (avatarFile) {
@@ -228,6 +233,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       typeof updates.longDescription === 'string'
         ? updates.longDescription
         : current.longDescription ?? null;
+    const mergedExample = // Added mergedExample
+      typeof updates.example === 'string'
+        ? updates.example
+        : current.example ?? null;
 
     const cleanName = mergedName.trim();
     if (!cleanName) {
@@ -237,6 +246,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const cleanShort = mergedShort?.toString().trim() || null;
     const cleanGreeting = mergedGreeting?.toString().trim() || null;
     const cleanLong = mergedLong?.toString().trim() || null;
+    const cleanExample = mergedExample?.toString().trim() || null; // Added cleanExample
 
     const instructions = buildCharacterInstructions({
       name: cleanName,
@@ -263,7 +273,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       summary: cleanShort,
       greeting: cleanGreeting,
       instructions,
-      example: current.example || null
+      example: cleanExample // Updated example in descriptor
     };
 
     const existingAssistantId =
@@ -278,10 +288,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       resolvedAssistantId = 'asst_ED99NuKgahDCWbPaId4kUwq1';
       updates.assistantId = resolvedAssistantId;
     } else {
+      // Determine if core character definition fields have changed, necessitating a new assistant
+      const characterDefinitionChanged =
+        cleanName !== (current.name?.trim() || '') ||
+        cleanShort !== (current.shortDescription?.trim() || null) ||
+        cleanGreeting !== (current.greeting?.trim() || null) ||
+        cleanLong !== (current.longDescription?.trim() || null) ||
+        cleanExample !== (current.example?.trim() || null);
+
       try {
-        if (resolvedAssistantId) {
-          await updateCharacterAssistant(resolvedAssistantId, descriptor);
+        if (existingAssistantId && characterDefinitionChanged) {
+          // If definition changed, delete old assistant and create a new one
+          await deleteCharacterAssistant(existingAssistantId);
+          resolvedAssistantId = await createCharacterAssistant(descriptor);
+          updates.assistantId = resolvedAssistantId;
+        } else if (existingAssistantId) {
+          // If definition did not change, just update the existing assistant
+          await updateCharacterAssistant(existingAssistantId, descriptor);
         } else {
+          // No existing assistant, create a new one
           resolvedAssistantId = await createCharacterAssistant(descriptor);
           updates.assistantId = resolvedAssistantId;
         }
