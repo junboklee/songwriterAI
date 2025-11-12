@@ -205,6 +205,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const avatarFile = files.avatar?.[0];
+    const avatarRemovedField = fields.avatarRemoved; // Get the raw field value
+
     if (avatarFile) {
       const bucket: Bucket = adminStorage.bucket();
       const fileName = `avatars/${authUser.uid}/${uuidv4()}-${avatarFile.originalFilename}`;
@@ -216,7 +218,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
       updates.avatarUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
-    } else if (avatarRemoved === 'true') { // Handle explicit avatar removal
+    } else if (avatarRemovedField) { // If avatarRemoved field is present at all
       updates.avatarUrl = null;
     }
 
