@@ -33,6 +33,20 @@ type ResolvedAssistantContext = {
   origin: 'default' | 'custom';
 };
 
+const getClientIp = (req: NextApiRequest) => {
+  const forwarded = req.headers['x-forwarded-for'];
+
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0]?.trim() || 'forwarded';
+  }
+
+  if (Array.isArray(forwarded) && forwarded.length) {
+    return forwarded[0]?.trim() || 'forwarded';
+  }
+
+  return req.socket.remoteAddress ?? 'unknown';
+};
+
 const wait = (ms: number) =>
   new Promise(resolve => {
     setTimeout(resolve, ms);
@@ -199,7 +213,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { user } = await authenticateRequest(req);
 
-    enforceRateLimit(user.uid);
+    const limiterKey = `${user.uid}:${getClientIp(req)}`;
+    enforceRateLimit(limiterKey);
 
     const { message, threadId, characterId, songDraft } = req.body as {
       message?: string;

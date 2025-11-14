@@ -227,7 +227,9 @@
       loading: '저장된 곡을 불러오는 중입니다...',
       error: '저장된 곡을 불러오지 못했습니다.',
       empty: '아직 저장된 Suno AI 곡이 없습니다. 새 트랙을 만들어 보세요.',
-      deleteError: '곡을 삭제하지 못했습니다.'
+      deleteError: '곡을 삭제하지 못했습니다.',
+      loadMore: '더 불러오기',
+      loadingMore: '불러오는 중...'
     },
     bulk: {
       selectedCount: '선택된 항목: {{count}}개',

@@ -45,6 +45,9 @@ const HISTORY_TEXT = {
   deleting: "삭제 중...",
   clearAll: "전체 삭제",
   clearing: "삭제 중...",
+  loadMore: "이전 대화 더 보기",
+  loadingMore: "불러오는 중...",
+  loadMoreError: "추가 대화를 불러오지 못했습니다.",
   deleteLabel: "삭제",
   headerTitle: "대화 기록",
   headerSubtitle: "날짜별로 정리된 지난 대화를 한눈에 살펴보세요.",
@@ -67,6 +70,8 @@ export default function HistoryPage() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
   const [clearingAll, setClearingAll] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [characterMap, setCharacterMap] = useState<Record<string, string>>({
     ...DEFAULT_CHARACTER_NAMES
   });
@@ -84,6 +89,9 @@ export default function HistoryPage() {
 
   useEffect(() => {
     if (!user) {
+      setConversations([]);
+      setNextCursor(null);
+      setLoading(false);
       return;
     }
 
@@ -109,16 +117,25 @@ export default function HistoryPage() {
           );
         }
 
-        const payload = (await response.json()) as { conversations: ConversationSummary[] };
+        const payload = (await response.json()) as {
+          conversations: ConversationSummary[];
+          nextCursor?: number | null;
+        };
 
         if (!cancelled) {
           setConversations(payload.conversations ?? []);
+          const cursorValue =
+            typeof payload.nextCursor === "number" && Number.isFinite(payload.nextCursor)
+              ? String(payload.nextCursor)
+              : null;
+          setNextCursor(cursorValue);
         }
       } catch (fetchError) {
         if (!cancelled) {
           setError(
             fetchError instanceof Error ? fetchError.message : "Failed to load conversations."
           );
+          setNextCursor(null);
         }
       } finally {
         if (!cancelled) {
@@ -213,6 +230,48 @@ export default function HistoryPage() {
   }, [user, conversations, characterMap]);
 
   const groups = useMemo(() => groupConversationsByDate(conversations), [conversations]);
+
+  const handleLoadMoreConversations = async () => {
+    if (!user || !nextCursor || loadingMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/profile/conversations?cursor=${nextCursor}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          (payload && typeof payload.error === "string" && payload.error) ||
+          HISTORY_TEXT.loadMoreError;
+        throw new Error(message);
+      }
+
+      const items = Array.isArray(payload.conversations)
+        ? (payload.conversations as ConversationSummary[])
+        : [];
+      setConversations(prev => [...prev, ...items]);
+
+      const cursorValue =
+        typeof payload.nextCursor === "number" && Number.isFinite(payload.nextCursor)
+          ? String(payload.nextCursor)
+          : null;
+      setNextCursor(cursorValue);
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : HISTORY_TEXT.loadMoreError);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleClearAllConversations = async () => {
     if (
@@ -399,6 +458,9 @@ export default function HistoryPage() {
           showBrand={false}
           actions={
             <>
+              <Link href="/dashboard" className="btn btn--ghost">
+                대시보드로 돌아가기
+              </Link>
               <Link href="/chat" className="btn btn--ghost">
                 라이브 채팅
               </Link>
@@ -538,6 +600,21 @@ export default function HistoryPage() {
               </section>
             );
           })}
+
+          {nextCursor ? (
+            <div className="history-page__load-more">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => {
+                  void handleLoadMoreConversations();
+                }}
+                disabled={loadingMore}
+              >
+                {loadingMore ? HISTORY_TEXT.loadingMore : HISTORY_TEXT.loadMore}
+              </button>
+            </div>
+          ) : null}
         </div>
       </AppShell>
     </RequireAuth>

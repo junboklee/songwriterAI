@@ -12,8 +12,8 @@ import Link from 'next/link';
 import { AppShell } from '@/components/AppShell';
 import { AppNav } from '@/components/AppNav';
 import { MainSidebar } from '@/components/MainSidebar';
-import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
+import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 
 type ChatMessage = {
   id: string;
@@ -33,8 +33,48 @@ type CharacterProfile = {
 
 const TEXT = {
   sessionExpired: '세션이 만료되었습니다. 다시 로그인해 주세요.',
-  rateLimited:
-    '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.'
+  rateLimited: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
+  loadError: '캐릭터 정보를 불러오지 못했습니다.',
+  notFound: '공개된 캐릭터를 찾을 수 없습니다.',
+  loginRequired: '로그인 후 캐릭터와 대화를 시작할 수 있습니다.'
+};
+
+type CharacterApiPayload = {
+  id?: string;
+  name?: string | null;
+  summary?: string | null;
+  shortDescription?: string | null;
+  greeting?: string | null;
+  example?: string | null;
+  longDescription?: string | null;
+  avatarUrl?: string | null;
+  visibility?: string | null;
+};
+
+const adaptCharacter = (raw: CharacterApiPayload, fallbackId: string): CharacterProfile => {
+  const summarySource =
+    (typeof raw.summary === 'string' && raw.summary.trim()) ||
+    (typeof raw.shortDescription === 'string' && raw.shortDescription.trim()) ||
+    '';
+
+  const exampleSource =
+    (typeof raw.example === 'string' && raw.example.trim()) ||
+    (typeof raw.longDescription === 'string' && raw.longDescription.trim()) ||
+    '';
+
+  const visibility =
+    raw.visibility === 'public' || raw.visibility === 'unlisted' ? raw.visibility : 'private';
+
+  return {
+    id: raw.id ?? fallbackId,
+    name: raw.name?.trim() || `Character ${fallbackId.slice(0, 6)}`,
+    avatar:
+      raw.avatarUrl && raw.avatarUrl.trim() ? raw.avatarUrl : DEFAULT_CHARACTER_AVATAR,
+    summary: summarySource,
+    greeting: raw.greeting ?? '',
+    example: exampleSource,
+    visibility
+  };
 };
 
 const normaliseMessages = (items: ChatMessage[]) =>
@@ -61,6 +101,13 @@ export default function CharacterChatPage() {
     const raw = Array.isArray(router.query.id) ? router.query.id[0] : router.query.id;
     return raw ?? null;
   }, [router.query.id]);
+  const sidebar = useMemo(() => <MainSidebar active="chat" />, []);
+  const loginHref = useMemo(() => {
+    const target =
+      router.asPath ||
+      (characterId ? `/character/${characterId}` : '/character');
+    return `/auth/login?redirect=${encodeURIComponent(target)}`;
+  }, [characterId, router.asPath]);
 
   useEffect(() => {
     if (!scrollContainerRef.current) {
@@ -70,47 +117,99 @@ export default function CharacterChatPage() {
   }, [messages, isLoading]);
 
   useEffect(() => {
-    if (!user || !characterId) {
+    if (!characterId) {
+      setPageError(TEXT.notFound);
       setPageLoading(false);
       return;
     }
 
     let cancelled = false;
 
+    const fetchPrivateCharacter = async (idToken: string) => {
+      const response = await fetch(`/api/profile/characters/${characterId}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          (payload && typeof payload.error === 'string' && payload.error) || TEXT.loadError;
+        throw new Error(message);
+      }
+
+      if (!payload?.character) {
+        throw new Error(TEXT.notFound);
+      }
+
+      return payload.character as CharacterApiPayload;
+    };
+
+    const fetchPublicCharacter = async () => {
+      const response = await fetch(`/api/characters/${characterId}`);
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          (payload && typeof payload.error === 'string' && payload.error) ||
+          (response.status === 404 ? TEXT.notFound : TEXT.loadError);
+        throw new Error(message);
+      }
+
+      if (!payload?.character) {
+        throw new Error(TEXT.notFound);
+      }
+
+      return payload.character as CharacterApiPayload;
+    };
+
     const load = async () => {
       setPageLoading(true);
       setPageError(null);
 
       try {
-        const idToken = await user.getIdToken();
-        const response = await fetch(`/api/profile/characters/${characterId}`, {
-          headers: {
-            Authorization: `Bearer ${idToken}`
+        let rawCharacter: CharacterApiPayload | null = null;
+
+        if (user) {
+          try {
+            const idToken = await user.getIdToken();
+            rawCharacter = await fetchPrivateCharacter(idToken);
+          } catch (privateError) {
+            console.warn('Failed to load private character, falling back to public access.', privateError);
           }
-        });
-
-        const payload = await response.json();
-
-        if (cancelled) {
-          return;
         }
 
-        if (!response.ok) {
-          throw new Error(payload.error || 'Failed to fetch character data.');
+        if (!rawCharacter) {
+          rawCharacter = await fetchPublicCharacter();
         }
 
-        const fetchedCharacter = payload.character as CharacterProfile;
-        setCharacter(fetchedCharacter);
-        setMessages([
-          {
-            id: 'intro',
-            role: 'assistant',
-            content: fetchedCharacter.greeting
-          }
-        ]);
+        if (!rawCharacter) {
+          throw new Error(TEXT.notFound);
+        }
+
+        const normalized = adaptCharacter(rawCharacter, characterId);
+
+        if (!cancelled) {
+          setCharacter(normalized);
+          setThreadId(null);
+          setMessages(
+            normalized.greeting
+              ? [
+                  {
+                    id: 'intro',
+                    role: 'assistant',
+                    content: normalized.greeting
+                  }
+                ]
+              : []
+          );
+        }
       } catch (err) {
         if (!cancelled) {
-          setPageError(err instanceof Error ? err.message : 'An unknown error occurred.');
+          setCharacter(null);
+          setPageError(err instanceof Error ? err.message : TEXT.loadError);
         }
       } finally {
         if (!cancelled) {
@@ -134,6 +233,11 @@ export default function CharacterChatPage() {
       return;
     }
 
+    if (!user) {
+      setError(TEXT.loginRequired);
+      return;
+    }
+
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -146,10 +250,6 @@ export default function CharacterChatPage() {
     setError(null);
 
     try {
-      if (!user) {
-        throw new Error(TEXT.sessionExpired);
-      }
-
       const idToken = await user.getIdToken();
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -209,147 +309,165 @@ export default function CharacterChatPage() {
     }
   };
 
+  const renderStatusPanel = (label: string) => (
+    <div className="chat-layout">
+      <div className="chat-layout__header">{label}</div>
+    </div>
+  );
+
   if (pageLoading) {
     return (
-      <RequireAuth>
-        <AppShell sidebar={<MainSidebar active="chat" />}>
-          <div className="chat-layout">
-            <div className="chat-layout__header">Loading character...</div>
-          </div>
-        </AppShell>
-      </RequireAuth>
+      <AppShell sidebar={sidebar}>{renderStatusPanel('Loading character...')}</AppShell>
     );
   }
 
   if (pageError) {
     return (
-      <RequireAuth>
-        <AppShell sidebar={<MainSidebar active="chat" />}>
-          <div className="chat-layout">
-            <div className="chat-layout__header">Error: {pageError}</div>
-          </div>
-        </AppShell>
-      </RequireAuth>
+      <AppShell sidebar={sidebar}>
+        {renderStatusPanel(`Error: ${pageError}`)}
+      </AppShell>
     );
   }
 
   if (!character) {
     return (
-      <RequireAuth>
-        <AppShell sidebar={<MainSidebar active="chat" />}>
-          <div className="chat-layout">
-            <div className="chat-layout__header">Character not found.</div>
-          </div>
-        </AppShell>
-      </RequireAuth>
+      <AppShell sidebar={sidebar}>
+        {renderStatusPanel(TEXT.notFound)}
+      </AppShell>
     );
   }
 
+  const navActions = user ? (
+    <>
+      <Link href="/dashboard" className="btn btn--ghost">
+        Dashboard
+      </Link>
+      <Link href="/character/create" className="btn btn--primary">
+        Create new character
+      </Link>
+    </>
+  ) : (
+    <Link href={loginHref} className="btn btn--primary">
+      로그인
+    </Link>
+  );
+
   return (
-    <RequireAuth>
-      <AppShell sidebar={<MainSidebar active="chat" />}>
-        <AppNav
-          actions={
-            <>
-              <Link href="/dashboard" className="btn btn--ghost">
-                Dashboard
-              </Link>
-              <Link href="/character/create" className="btn btn--primary">
-                Create new character
-              </Link>
-            </>
-          }
-        />
+    <AppShell sidebar={sidebar}>
+      <AppNav actions={navActions} />
 
-        <div className="chat-layout">
-          <div className="chat-layout__header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <Image
-                src={character.avatar || '/avatars/jimin.png'}
-                alt={`${character.name} avatar`}
-                width={52}
-                height={52}
-                style={{ borderRadius: 18 }}
-              />
-              <div>
-                <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem' }}>{character.name}</p>
-                <p
-                  style={{
-                    margin: '6px 0 0',
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)'
-                  }}
-                >
-                  {character.summary}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="chat-layout__messages" ref={scrollContainerRef}>
-            {messages.map(message => (
-              <div
-                key={message.id}
-                className="chat-message"
+      <div className="chat-layout">
+        <div className="chat-layout__header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Image
+              src={character.avatar || DEFAULT_CHARACTER_AVATAR}
+              alt={`${character.name} avatar`}
+              width={52}
+              height={52}
+              style={{ borderRadius: 18 }}
+            />
+            <div>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem' }}>{character.name}</p>
+              <p
                 style={{
-                  flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
+                  margin: '6px 0 0',
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)'
                 }}
               >
-                {message.role === 'assistant' ? (
-                  <Image
-                    src={character.avatar || '/avatars/jimin.png'}
-                    alt={`${character.name} avatar`}
-                    width={32}
-                    height={32}
-                    style={{ borderRadius: 12, marginTop: 4 }}
-                  />
-                ) : (
-                  <div style={{ width: 32, height: 32 }} />
-                )}
-                <div
-                  className={`chat-message__bubble ${
-                    message.role === 'user'
-                      ? 'chat-message__bubble--user'
-                      : 'chat-message__bubble--assistant'
-                  }`}
-                >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-
-            {isLoading ? (
-              <div className="chat-message">
-                <div style={{ width: 32, height: 32 }} />
-                <div className="chat-message__bubble chat-message__bubble--assistant">
-                  The assistant is thinking...
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <form onSubmit={handleSubmit} className="chat-footer">
-            <div className="chat-input">
-              <textarea
-                value={input}
-                onChange={event => setInput(event.target.value)}
-                placeholder={`Message ${character.name}...`}
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className="btn btn--primary"
-                style={{ paddingInline: 24 }}
-              >
-                Send
-              </button>
+                {character.summary || '소개가 아직 작성되지 않았어요.'}
+              </p>
             </div>
-            {error ? (
-              <p style={{ marginTop: 10, fontSize: '0.78rem', color: 'var(--danger)' }}>{error}</p>
-            ) : null}
-          </form>
+          </div>
         </div>
-      </AppShell>
-    </RequireAuth>
+
+        {!user ? (
+          <div
+            style={{
+              margin: '16px 0',
+              padding: '16px 20px',
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.04)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 12,
+              flexWrap: 'wrap'
+            }}
+          >
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              {TEXT.loginRequired}
+            </span>
+            <Link href={loginHref} className="btn btn--primary">
+              로그인하기
+            </Link>
+          </div>
+        ) : null}
+
+        <div className="chat-layout__messages" ref={scrollContainerRef}>
+          {messages.map(message => (
+            <div
+              key={message.id}
+              className="chat-message"
+              style={{
+                flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
+              }}
+            >
+              {message.role === 'assistant' ? (
+                <Image
+                  src={character.avatar || DEFAULT_CHARACTER_AVATAR}
+                  alt={`${character.name} avatar`}
+                  width={32}
+                  height={32}
+                  style={{ borderRadius: 12, marginTop: 4 }}
+                />
+              ) : (
+                <div style={{ width: 32, height: 32 }} />
+              )}
+              <div
+                className={`chat-message__bubble ${
+                  message.role === 'user'
+                    ? 'chat-message__bubble--user'
+                    : 'chat-message__bubble--assistant'
+                }`}
+              >
+                {message.content}
+              </div>
+            </div>
+          ))}
+
+          {isLoading ? (
+            <div className="chat-message">
+              <div style={{ width: 32, height: 32 }} />
+              <div className="chat-message__bubble chat-message__bubble--assistant">
+                The assistant is thinking...
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <form onSubmit={handleSubmit} className="chat-footer">
+          <div className="chat-input">
+            <textarea
+              value={input}
+              onChange={event => setInput(event.target.value)}
+              placeholder={`Message ${character.name}...`}
+              disabled={!user}
+            />
+            <button
+              type="submit"
+              disabled={!user || !input.trim() || isLoading}
+              className="btn btn--primary"
+              style={{ paddingInline: 24 }}
+            >
+              Send
+            </button>
+          </div>
+          {error ? (
+            <p style={{ marginTop: 10, fontSize: '0.78rem', color: 'var(--danger)' }}>{error}</p>
+          ) : null}
+        </form>
+      </div>
+    </AppShell>
   );
 }

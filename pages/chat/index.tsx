@@ -151,6 +151,7 @@ const CHAT_VIDEO_FALLBACKS = [
 ];
 
 const BASE_CHARACTER_NAMES = { ...DEFAULT_CHARACTER_NAMES };
+const AUTO_SAVE_STORAGE_KEY = 'songwriter:autoSaveLyrics';
 
 declare global {
   interface Window {
@@ -297,6 +298,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [autoSaveLyrics, setAutoSaveLyrics] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sidebarConversations, setSidebarConversations] = useState<ConversationSummary[]>([]);
   const [sidebarLoading, setSidebarLoading] = useState(false);
@@ -328,6 +330,27 @@ export default function ChatPage() {
   const suppressVolumeSyncRef = useRef(false);
   const suppressMuteTimeoutRef = useRef<number | null>(null);
   const suppressVolumeTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const stored = window.localStorage.getItem(AUTO_SAVE_STORAGE_KEY);
+    if (stored === 'off') {
+      setAutoSaveLyrics(false);
+    }
+  }, []);
+
+  const handleToggleAutoSave = useCallback(() => {
+    setAutoSaveLyrics(prev => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(AUTO_SAVE_STORAGE_KEY, next ? 'on' : 'off');
+      }
+      return next;
+    });
+  }, []);
   const pendingPlayerSyncRef = useRef(false);
   const pendingVolumeSyncRef = useRef(false);
   const pickNextFallbackId = useCallback(
@@ -1519,6 +1542,7 @@ useEffect(() => {
         assistantMessages.find(message => message.content.trim().length > 0) ?? null;
 
       if (
+        autoSaveLyrics &&
         lastAssistantMessage &&
         isLikelyLyrics(lastAssistantMessage.content) &&
         data.threadId &&
@@ -1731,6 +1755,25 @@ useEffect(() => {
                   >
                     {tChat('send')}
                   </button>
+                </div>
+                <div className="chat-footer__options" style={{ marginTop: 12 }}>
+                  <label
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: '0.78rem',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={autoSaveLyrics}
+                      onChange={handleToggleAutoSave}
+                    />
+                    <span>가사 자동 저장</span>
+                  </label>
                 </div>
                 {error ? (
                   <p style={{ marginTop: 10, fontSize: '0.78rem', color: 'var(--danger)' }}>

@@ -18,6 +18,8 @@ export default function SunoLibraryPage() {
   const [copiedSongId, setCopiedSongId] = useState<string | null>(null);
   const [selectedSongIds, setSelectedSongIds] = useState<Set<string>>(new Set());
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'selected' | 'all'>('idle');
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const dateFormatter = useMemo(
     () =>
@@ -33,6 +35,9 @@ export default function SunoLibraryPage() {
 
   useEffect(() => {
     if (!user) {
+      setSongs([]);
+      setNextCursor(null);
+      setLoading(false);
       return;
     }
 
@@ -50,7 +55,10 @@ export default function SunoLibraryPage() {
           }
         });
 
-        const payload = await response.json().catch(() => ({}));
+        const payload = (await response.json().catch(() => ({}))) as {
+          songs?: SongEntry[];
+          nextCursor?: number | null;
+        };
         if (!response.ok) {
           throw new Error(
             (payload && typeof payload.error === 'string' && payload.error) || t('status.error')
@@ -58,11 +66,17 @@ export default function SunoLibraryPage() {
         }
 
         if (!cancelled) {
-          setSongs((payload as { songs?: SongEntry[] }).songs ?? []);
+          setSongs(payload.songs ?? []);
+          const cursorValue =
+            typeof payload.nextCursor === 'number' && Number.isFinite(payload.nextCursor)
+              ? String(payload.nextCursor)
+              : null;
+          setNextCursor(cursorValue);
         }
       } catch (fetchError) {
         if (!cancelled) {
           setError(fetchError instanceof Error ? fetchError.message : t('status.error'));
+          setNextCursor(null);
         }
       } finally {
         if (!cancelled) {
@@ -77,6 +91,47 @@ export default function SunoLibraryPage() {
       cancelled = true;
     };
   }, [t, user]);
+
+  const handleLoadMoreSongs = async () => {
+    if (!user || !nextCursor || loadingMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/profile/songs?cursor=${nextCursor}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        songs?: SongEntry[];
+        nextCursor?: number | null;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        const message =
+          (payload && typeof payload.error === 'string' && payload.error) || t('status.error');
+        throw new Error(message);
+      }
+
+      setSongs(prev => [...prev, ...(payload.songs ?? [])]);
+      const cursorValue =
+        typeof payload.nextCursor === 'number' && Number.isFinite(payload.nextCursor)
+          ? String(payload.nextCursor)
+          : null;
+      setNextCursor(cursorValue);
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : t('status.error'));
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const sidebar = useMemo(() => <MainSidebar active="suno" />, []);
 
@@ -245,6 +300,9 @@ export default function SunoLibraryPage() {
           showBrand={false}
           actions={
             <>
+              <Link href="/dashboard" className="btn btn--ghost">
+                대시보드로 돌아가기
+              </Link>
               <Link href="/chat" className="btn btn--ghost">
                 {t('actions.liveChat')}
               </Link>
@@ -372,6 +430,21 @@ export default function SunoLibraryPage() {
               );
             })}
           </div>
+
+          {nextCursor ? (
+            <div className="suno-page__load-more">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => {
+                  void handleLoadMoreSongs();
+                }}
+                disabled={loadingMore}
+              >
+                {loadingMore ? t('status.loadingMore') : t('status.loadMore')}
+              </button>
+            </div>
+          ) : null}
         </div>
       </AppShell>
     </RequireAuth>

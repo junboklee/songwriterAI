@@ -61,7 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new BadRequestError('캐릭터 이름을 입력해 주세요.');
     }
     let avatarUrl: string | null = null;
-    const avatarFile = files.avatar?.[0];
+    const rawAvatarFile = files.avatar;
+    const avatarFile = Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile;
 
     if (avatarFile) {
       const bucket: Bucket = adminStorage.bucket();

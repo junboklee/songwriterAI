@@ -3,13 +3,21 @@ import { render, screen } from '@testing-library/react';
 import { AppNav } from '../AppNav';
 
 describe('AppNav', () => {
-  it('renders the logo and title', () => {
+  it('renders the default brand label', () => {
     render(<AppNav />);
 
-    const titleElement = screen.getByText(/Character Studio/i);
-    expect(titleElement).toBeTruthy();
+    expect(screen.getByText(/Character Studio/i)).toBeInTheDocument();
+  });
 
-    const logoElement = screen.getByText(/CAI/i);
-    expect(logoElement).toBeTruthy();
+  it('renders custom actions inside the header', () => {
+    render(
+      <AppNav
+        actions={(
+          <button type="button">Open settings</button>
+        )}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /Open settings/i })).toBeInTheDocument();
   });
 });

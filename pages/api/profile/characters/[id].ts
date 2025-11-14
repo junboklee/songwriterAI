@@ -204,7 +204,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       updates.example = trimmed || null;
     }
 
-    const avatarFile = files.avatar?.[0];
+    const rawAvatarFile = files.avatar;
+    const avatarFile = Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile;
     const avatarRemovedField = fields.avatarRemoved; // Get the raw field value
 
     if (avatarFile) {
