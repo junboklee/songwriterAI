@@ -33,11 +33,11 @@ const shouldCleanup = (now: number) => {
 };
 
 const cleanupExpiredEntries = (now: number) => {
-  for (const [key, entry] of store.entries()) {
+  store.forEach((entry, key) => {
     if (now - entry.windowStart > WINDOW_MS) {
       store.delete(key);
     }
-  }
+  });
   globalContext.__songwriterRateLimitLastCleanup = now;
 };
 
