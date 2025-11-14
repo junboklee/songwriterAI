@@ -55,23 +55,25 @@ export default function SunoLibraryPage() {
           }
         });
 
-        const payload = (await response.json().catch(() => ({}))) as {
-          songs?: SongEntry[];
-          nextCursor?: number | null;
-        };
+        const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+        const payloadSongs = Array.isArray(payload.songs)
+          ? (payload.songs as SongEntry[])
+          : [];
+        const payloadNextCursor =
+          typeof payload.nextCursor === 'number' && Number.isFinite(payload.nextCursor)
+            ? String(payload.nextCursor)
+            : null;
+        const payloadError =
+          typeof payload.error === 'string' && payload.error.trim() ? payload.error : null;
         if (!response.ok) {
           throw new Error(
-            (payload && typeof payload.error === 'string' && payload.error) || t('status.error')
+            payloadError || t('status.error')
           );
         }
 
         if (!cancelled) {
-          setSongs(payload.songs ?? []);
-          const cursorValue =
-            typeof payload.nextCursor === 'number' && Number.isFinite(payload.nextCursor)
-              ? String(payload.nextCursor)
-              : null;
-          setNextCursor(cursorValue);
+          setSongs(payloadSongs);
+          setNextCursor(payloadNextCursor);
         }
       } catch (fetchError) {
         if (!cancelled) {
@@ -108,24 +110,23 @@ export default function SunoLibraryPage() {
         }
       });
 
-      const payload = (await response.json().catch(() => ({}))) as {
-        songs?: SongEntry[];
-        nextCursor?: number | null;
-        error?: string;
-      };
-
-      if (!response.ok) {
-        const message =
-          (payload && typeof payload.error === 'string' && payload.error) || t('status.error');
-        throw new Error(message);
-      }
-
-      setSongs(prev => [...prev, ...(payload.songs ?? [])]);
-      const cursorValue =
+      const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+      const payloadSongs = Array.isArray(payload.songs)
+        ? (payload.songs as SongEntry[])
+        : [];
+      const payloadNextCursor =
         typeof payload.nextCursor === 'number' && Number.isFinite(payload.nextCursor)
           ? String(payload.nextCursor)
           : null;
-      setNextCursor(cursorValue);
+      const payloadError =
+        typeof payload.error === 'string' && payload.error.trim() ? payload.error : null;
+
+      if (!response.ok) {
+        throw new Error(payloadError || t('status.error'));
+      }
+
+      setSongs(prev => [...prev, ...payloadSongs]);
+      setNextCursor(payloadNextCursor);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : t('status.error'));
     } finally {
