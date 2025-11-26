@@ -231,6 +231,20 @@
       loadMore: '더 불러오기',
       loadingMore: '불러오는 중...'
     },
+    form: {
+      titleLabel: '제목 (선택)',
+      titlePlaceholder: '곡 제목을 입력하세요.',
+      promptLabel: '프롬프트 (선택)',
+      promptPlaceholder: '프롬프트를 입력하세요.',
+      lyricsLabel: '가사',
+      lyricsPlaceholder: '가사를 입력하세요.',
+      lyricsRequired: '가사를 입력해 주세요.',
+      save: '노래 저장',
+      saving: '저장 중...',
+      success: '노래를 저장했습니다.',
+      error: '노래를 저장하지 못했습니다.',
+      sessionExpired: '세션이 만료되었습니다. 다시 로그인해 주세요.'
+    },
     bulk: {
       selectedCount: '선택된 항목: {{count}}개',
       deleteSelected: '선택 삭제',

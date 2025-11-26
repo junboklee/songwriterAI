@@ -214,7 +214,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { user } = await authenticateRequest(req);
 
     const limiterKey = `${user.uid}:${getClientIp(req)}`;
-    enforceRateLimit(limiterKey);
+    await enforceRateLimit(limiterKey);
 
     const { message, threadId, characterId, songDraft } = req.body as {
       message?: string;

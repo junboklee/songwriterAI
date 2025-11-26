@@ -52,6 +52,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const userRef = adminDb.collection('users').doc(authUser.uid);
     const { limit = '20', cursor } = req.query;
+    const characterParam = Array.isArray(req.query.characterId)
+      ? req.query.characterId[0]
+      : req.query.characterId;
+    const characterIdFilter =
+      typeof characterParam === 'string' && characterParam.trim()
+        ? characterParam.trim()
+        : null;
 
     let parsedLimit = Number(Array.isArray(limit) ? limit[0] : limit);
     if (!Number.isFinite(parsedLimit) || parsedLimit <= 0) {
@@ -59,10 +66,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     parsedLimit = Math.min(parsedLimit, MAX_LIMIT);
 
-    let conversationsQuery = userRef
-      .collection('conversations')
-      .orderBy('updatedAt', 'desc')
-      .limit(parsedLimit + 1);
+    let conversationsQuery = userRef.collection('conversations') as FirebaseFirestore.Query;
+
+    if (characterIdFilter) {
+      conversationsQuery = conversationsQuery.where('characterId', '==', characterIdFilter);
+    }
+
+    conversationsQuery = conversationsQuery.orderBy('updatedAt', 'desc').limit(parsedLimit + 1);
 
     const cursorParam = Array.isArray(cursor) ? cursor[0] : cursor;
     if (cursorParam) {

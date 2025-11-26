@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
 import { Bucket } from '@google-cloud/storage';
-import formidable, { Fields, Files } from 'formidable';
+import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BadRequestError } from '@/lib/errors';
@@ -14,6 +14,7 @@ import {
 } from '@/lib/characterAssistants';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
+import { assertValidAvatarFile } from '@/lib/avatarValidation';
 
 export const config = {
   api: {
@@ -205,10 +206,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const rawAvatarFile = files.avatar;
-    const avatarFile = Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile;
+    const avatarFile = (Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile) as
+      | FormidableFile
+      | undefined;
     const avatarRemovedField = fields.avatarRemoved; // Get the raw field value
 
     if (avatarFile) {
+      assertValidAvatarFile(avatarFile);
       const bucket: Bucket = adminStorage.bucket();
       const fileName = `avatars/${authUser.uid}/${uuidv4()}-${avatarFile.originalFilename}`;
       

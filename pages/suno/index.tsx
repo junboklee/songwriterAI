@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { AppNav } from '@/components/AppNav';
 import { AppShell } from '@/components/AppShell';
@@ -20,6 +20,11 @@ export default function SunoLibraryPage() {
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'selected' | 'all'>('idle');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [newSongTitle, setNewSongTitle] = useState('');
+  const [newSongPrompt, setNewSongPrompt] = useState('');
+  const [newSongLyrics, setNewSongLyrics] = useState('');
+  const [newSongStatus, setNewSongStatus] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
+  const [savingSong, setSavingSong] = useState(false);
 
   const dateFormatter = useMemo(
     () =>
@@ -171,6 +176,67 @@ export default function SunoLibraryPage() {
   };
 
   const resetSelection = () => setSelectedSongIds(new Set());
+
+  const handleSaveSong = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedLyrics = newSongLyrics.trim();
+    if (!trimmedLyrics) {
+      setNewSongStatus({ kind: 'error', message: t('form.lyricsRequired') });
+      return;
+    }
+
+    if (!user) {
+      setNewSongStatus({ kind: 'error', message: t('form.sessionExpired') });
+      return;
+    }
+
+    setSavingSong(true);
+    setNewSongStatus(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/profile/songs', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: newSongTitle.trim() || null,
+          prompt: newSongPrompt.trim() || null,
+          lyrics: trimmedLyrics
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          typeof payload?.error === 'string' && payload.error.trim()
+            ? payload.error
+            : t('form.error');
+        throw new Error(message);
+      }
+
+      const createdSong = payload?.song as SongEntry | undefined;
+      if (createdSong) {
+        setSongs(prev => [createdSong, ...prev]);
+      }
+
+      setNewSongTitle('');
+      setNewSongPrompt('');
+      setNewSongLyrics('');
+      setNewSongStatus({ kind: 'success', message: t('form.success') });
+    } catch (saveError) {
+      setNewSongStatus({
+        kind: 'error',
+        message: saveError instanceof Error ? saveError.message : t('form.error')
+      });
+    } finally {
+      setSavingSong(false);
+    }
+  };
 
   const deleteSongsOnServer = async (payload: { ids?: string[]; deleteAll?: boolean }) => {
     if (!user) {
@@ -344,6 +410,62 @@ export default function SunoLibraryPage() {
               </div>
             </div>
           </header>
+
+          <form
+            className="glass-panel suno-new-form"
+            onSubmit={handleSaveSong}
+            style={{ marginTop: 24, display: 'grid', gap: 16 }}
+          >
+            <div style={{ display: 'grid', gap: 12 }}>
+              <label className="suno-form__label" style={{ display: 'grid', gap: 6 }}>
+                <span>{t('form.titleLabel')}</span>
+                <input
+                  type="text"
+                  className="suno-form__input"
+                  value={newSongTitle}
+                  onChange={event => setNewSongTitle(event.target.value)}
+                  placeholder={t('form.titlePlaceholder')}
+                />
+              </label>
+              <label className="suno-form__label" style={{ display: 'grid', gap: 6 }}>
+                <span>{t('form.promptLabel')}</span>
+                <textarea
+                  className="suno-form__textarea"
+                  value={newSongPrompt}
+                  onChange={event => setNewSongPrompt(event.target.value)}
+                  placeholder={t('form.promptPlaceholder')}
+                  rows={3}
+                />
+              </label>
+              <label className="suno-form__label" style={{ display: 'grid', gap: 6 }}>
+                <span>{t('form.lyricsLabel')}</span>
+                <textarea
+                  className="suno-form__textarea"
+                  value={newSongLyrics}
+                  onChange={event => setNewSongLyrics(event.target.value)}
+                  placeholder={t('form.lyricsPlaceholder')}
+                  rows={5}
+                  required
+                />
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button type="submit" className="btn btn--primary" disabled={savingSong}>
+                {savingSong ? t('form.saving') : t('form.save')}
+              </button>
+              {newSongStatus ? (
+                <span
+                  className={`suno-form__status suno-form__status--${newSongStatus.kind}`}
+                  style={{
+                    fontSize: '0.85rem',
+                    color: newSongStatus.kind === 'success' ? '#6ee7b7' : 'var(--danger)'
+                  }}
+                >
+                  {newSongStatus.message}
+                </span>
+              ) : null}
+            </div>
+          </form>
 
           {loading ? (
             <div className="suno-page__status suno-page__status--loading">{t('status.loading')}</div>

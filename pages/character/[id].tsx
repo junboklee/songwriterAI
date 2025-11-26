@@ -31,6 +31,18 @@ type CharacterProfile = {
   visibility: 'private' | 'unlisted' | 'public';
 };
 
+type ConversationListItem = {
+  id: string;
+  threadId?: string | null;
+  characterId?: string | null;
+};
+
+type ConversationMessagePayload = {
+  id?: string;
+  role?: string | null;
+  content?: string | null;
+};
+
 const TEXT = {
   sessionExpired: '세션이 만료되었습니다. 다시 로그인해 주세요.',
   rateLimited: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
@@ -96,6 +108,7 @@ export default function CharacterChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const characterId = useMemo(() => {
     const raw = Array.isArray(router.query.id) ? router.query.id[0] : router.query.id;
@@ -224,6 +237,107 @@ export default function CharacterChatPage() {
       cancelled = true;
     };
   }, [characterId, user]);
+
+  useEffect(() => {
+    setHistoryLoaded(false);
+  }, [characterId, user?.uid]);
+
+  useEffect(() => {
+    if (!user || !characterId || historyLoaded) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadConversationHistory = async () => {
+      try {
+        const idToken = await user.getIdToken();
+        const listResponse = await fetch(
+          `/api/profile/conversations?limit=1&characterId=${encodeURIComponent(characterId)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${idToken}`
+            }
+          }
+        );
+
+        const listPayload = (await listResponse.json().catch(() => ({}))) as {
+          conversations?: ConversationListItem[];
+          error?: string;
+        };
+
+        if (!listResponse.ok) {
+          throw new Error(
+            (listPayload && typeof listPayload.error === 'string' && listPayload.error) ||
+              TEXT.loadError
+          );
+        }
+
+        const matchingConversation = listPayload.conversations?.[0] ?? null;
+
+        if (!matchingConversation) {
+          return;
+        }
+
+        const targetThreadId =
+          matchingConversation.threadId && matchingConversation.threadId.trim()
+            ? matchingConversation.threadId
+            : matchingConversation.id;
+
+        if (!targetThreadId) {
+          return;
+        }
+
+        const detailResponse = await fetch(
+          `/api/profile/conversations/${targetThreadId}?limit=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${idToken}`
+            }
+          }
+        );
+
+        const detailPayload = (await detailResponse.json().catch(() => ({}))) as {
+          messages?: ConversationMessagePayload[];
+          error?: string;
+        };
+
+        if (!detailResponse.ok) {
+          throw new Error(
+            (detailPayload && typeof detailPayload.error === 'string' && detailPayload.error) ||
+              TEXT.loadError
+          );
+        }
+
+        const normalisedHistory = normaliseMessages(
+          (detailPayload.messages ?? []).map(item => ({
+            id: item.id ?? `msg-${Date.now()}`,
+            role: item.role === 'user' ? 'user' : 'assistant',
+            content: item.content ?? ''
+          }))
+        );
+
+        if (!cancelled) {
+          setThreadId(targetThreadId);
+          if (normalisedHistory.length) {
+            setMessages(normalisedHistory);
+          }
+        }
+      } catch (historyError) {
+        console.warn('Failed to load conversation history', historyError);
+      } finally {
+        if (!cancelled) {
+          setHistoryLoaded(true);
+        }
+      }
+    };
+
+    void loadConversationHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [characterId, historyLoaded, user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

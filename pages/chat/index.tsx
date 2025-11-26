@@ -1378,6 +1378,17 @@ useEffect(() => {
           pathname: '/chat',
           query: { characterId, threadId: latestForChar.threadId }
         });
+        return;
+      }
+
+      const mostRecentConversation = conversations?.[0];
+      if (mostRecentConversation) {
+        const fallbackCharacterId =
+          mostRecentConversation.characterId ?? characterId ?? '1';
+        router.replace({
+          pathname: '/chat',
+          query: { characterId: fallbackCharacterId, threadId: mostRecentConversation.threadId }
+        });
       }
     };
 

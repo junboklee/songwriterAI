@@ -11,6 +11,7 @@ const MAX_BATCH = 400;
 type SongInsertPayload = {
   title?: unknown;
   lyrics?: unknown;
+  prompt?: unknown;
   characterId?: unknown;
   threadId?: unknown;
   metadata?: unknown;
@@ -61,6 +62,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         rawPayload?.metadata && typeof rawPayload.metadata === 'object'
           ? rawPayload.metadata
           : {};
+      const prompt =
+        typeof rawPayload?.prompt === 'string' && rawPayload.prompt.trim()
+          ? rawPayload.prompt.trim()
+          : null;
 
       const now = Timestamp.now();
       const songRef = userRef.collection('songs').doc();
@@ -68,6 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await songRef.set({
         title,
         lyrics: rawLyrics,
+        prompt,
         characterId,
         threadId,
         metadata,
@@ -83,6 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id: songRef.id,
           title: (data.title as string | undefined) ?? title,
           lyrics: (data.lyrics as string | undefined) ?? rawLyrics,
+          prompt: (data.prompt as string | undefined) ?? prompt,
           characterId: characterId,
           threadId: threadId,
           metadata,

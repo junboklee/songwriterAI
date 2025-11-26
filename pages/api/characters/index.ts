@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
 import { Bucket } from '@google-cloud/storage';
-import formidable, { Fields, Files } from 'formidable';
+import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
 import { v4 as uuidv4 } from 'uuid';
 
 import { BadRequestError } from '@/lib/errors';
@@ -9,6 +9,7 @@ import { adminDb, adminStorage } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { createCharacterAssistant } from '@/lib/characterAssistants';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { assertValidAvatarFile } from '@/lib/avatarValidation';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
 
 // Disable the default body parser
@@ -62,9 +63,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     let avatarUrl: string | null = null;
     const rawAvatarFile = files.avatar;
-    const avatarFile = Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile;
+    const avatarFile = (Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile) as
+      | FormidableFile
+      | undefined;
 
     if (avatarFile) {
+      assertValidAvatarFile(avatarFile);
       const bucket: Bucket = adminStorage.bucket();
       const fileName = `avatars/${user.uid}/${uuidv4()}-${avatarFile.originalFilename}`;
       
