@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Head from 'next/head';
 import Link from 'next/link';
 
@@ -52,6 +53,15 @@ export default function Home() {
         <main className="landing">
         <section className="hero">
           <p className="eyebrow">AI Songwriting Copilot</p>
+          <div className="hero-image">
+            <Image
+              src="/images/auth-hero.jpg"
+              alt="AI vocalist collaborating in a studio"
+              width={1365}
+              height={768}
+              priority
+            />
+          </div>
           <h1>영감이 떠오를 때, AI 캐릭터들이 함께 가사를 완성해 드립니다</h1>
           <p>
             SongwriterAI는 AI 캐릭터와 실시간으로 대화하며 곡 흐름을 잡고,
@@ -115,11 +125,14 @@ export default function Home() {
         .landing-bg {
           min-height: 100vh;
           background: #0f1015;
-          padding: 3rem 0 5rem;
+          padding: clamp(0.75rem, 2vh, 1.25rem) 0 3rem;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
         }
 
         .landing {
-          padding: 4rem 1.5rem 6rem;
+          padding: 0.75rem 1.5rem 3.5rem;
           max-width: 960px;
           margin: 0 auto;
           font-family: 'Segoe UI', sans-serif;
@@ -139,8 +152,23 @@ export default function Home() {
           margin-bottom: 1rem;
         }
 
+        .hero-image {
+          margin: 0 auto 2rem;
+          border-radius: 1.5rem;
+          overflow: hidden;
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+          max-width: 960px;
+        }
+
+        .hero-image :global(img) {
+          width: 100%;
+          height: auto;
+          object-fit: cover;
+          display: block;
+        }
+
         h1 {
-          font-size: clamp(2rem, 5vw, 3.25rem);
+          font-size: clamp(1.6rem, 4vw, 2.6rem);
           margin-bottom: 1rem;
         }
 
@@ -158,19 +186,19 @@ export default function Home() {
         }
 
         .cta-button {
-          padding: 1.4rem 2.8rem;
+          padding: 1.75rem 3.5rem;
           border-radius: 999px;
           font-weight: 700;
           text-decoration: none;
           color: #fff;
-          font-size: 200%;
+          font-size: 300%;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-width: 240px;
+          min-width: 260px;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
-          box-shadow: 0 35px 70px rgba(99, 102, 241, 0.35);
-          gap: 1rem;
+          box-shadow: 0 45px 90px rgba(99, 102, 241, 0.4);
+          gap: 1.25rem;
           position: relative;
           overflow: hidden;
         }

@@ -1313,7 +1313,7 @@ const displayName =
                 type="button"
                 className="btn btn--ghost"
                 onClick={handleProfileNickname}
-                style={{ justifyContent: 'flex-start' }}
+                style={{ justifyContent: 'center' }}
               >
                 {dashboardText.profileMenuNickname}
               </button>
@@ -1324,7 +1324,7 @@ const displayName =
                   void handleDeleteAccount();
                 }}
                 disabled={isDeletingAccount}
-                style={{ justifyContent: 'flex-start' }}
+                style={{ justifyContent: 'center' }}
               >
                 {isDeletingAccount
                   ? dashboardText.deleteAccountInProgress
