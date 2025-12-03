@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: 'https://www.novasingerai.com',
+  siteUrl: 'https://novasingerai.com',
   generateRobotsTxt: true,
   changefreq: 'weekly',
   priority: 0.7,

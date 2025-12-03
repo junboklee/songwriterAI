@@ -1,4 +1,4 @@
-# songwriterAI
+ï»¿# songwriterAI
 
 ## Backend Overview
 - Next.js API routes backed by Firebase Admin for secure Firestore access.
@@ -69,11 +69,11 @@ All routes require a valid Firebase ID token.
 ## Next Steps
 - Connect UI pages to the new profile and history endpoints for dashboards, recent chats, and saved lyrics.
 
-## SEO ½ÇÇà °¡ÀÌµå (ÃÊº¸¿ë)
-1. **ÆäÀÌÁö È®ÀÎ** ? `npm run dev`·Î ·ÎÄÃ ¼­¹ö¸¦ ¶ç¿ì°í `/`, `/features`, `/pricing` µî °ø°³ ÆäÀÌÁö°¡ Á¤»ó ³ëÃâµÇ´ÂÁö È®ÀÎÇÏ¼¼¿ä.
-2. **ÄÜÅÙÃ÷ ÀÛ¼º** ? ¼­ºñ½º ÇÑ ÁÙ ¿ä¾à, ÇÙ½É ±â´É, CTA ¹®ÀåÀ» ¸ÕÀú ¸Þ¸ðÇÑ µÚ `pages/index.tsx`¿Í Ãß°¡ ÆäÀÌÁöÀÇ ¹®±¸¸¦ ´Ùµë½À´Ï´Ù.
-3. **Lighthouse Á¡°Ë** ? Chrome DevTools > Lighthouse¿¡¼­ Performance¡¤SEO ¸®Æ÷Æ®¸¦ »ý¼ºÇØ LCP, CLS, »öÀÎ ¹®Á¦¸¦ ±â·ÏÇÏ°í Á¦¾ÈµÈ °³¼± »çÇ×À» ¹Ý¿µÇÕ´Ï´Ù.
-4. **i18n ¹Ý¿µ** ? ¹ø¿ª Å°¸¦ `locales` Æú´õ¿¡ Ãß°¡ÇÏ°í `I18nProvider`·Î ³ëÃâ ¾ð¾î¸¦ ÀüÈ¯ÇÕ´Ï´Ù. »õ ÆäÀÌÁö ¹®±¸µµ µ¿ÀÏÇÑ Å°·Î ÃßÃâÇØ Áßº¹ ¹ø¿ªÀ» ¸·À¸¼¼¿ä.
-5. **»çÀÌÆ®¸Ê/robots »ý¼º** ? `npm run build`¸¦ ½ÇÇàÇÏ¸é postbuild ÈÅÀÌ ÀÚµ¿À¸·Î `public/sitemap*.xml`°ú `robots.txt`¸¦ ¸¸µì´Ï´Ù. Search Console¿¡ `https://www.novasingerai.com/sitemap.xml`À» Á¦ÃâÇÏ¼¼¿ä.
-6. **GA4 / Search Console / GTM ¿¬µ¿** ? `.env.local`¿¡ `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_GTM_ID`¸¦ Ã¤¿ì¸é `components/SeoMeta.tsx` + `_document.tsx`°¡ Google ÅÂ±×/Tag Manager/°ËÁõ ¸ÞÅ¸¸¦ ÀÚµ¿À¸·Î »ðÀÔÇÕ´Ï´Ù. ÇÁ·Î´ö¼Ç È¯°æ º¯¼ö¿¡µµ µ¿ÀÏÇÑ Å°·Î °ªÀ» ³ÖÀ¸¼¼¿ä.
-7. **¸ð´ÏÅÍ¸µ** ? ¹èÆ÷ ÈÄ GA4 ¸®Æ÷Æ®¿Í Search Console »öÀÎ ÇöÈ²À» ÁÖ±âÀûÀ¸·Î È®ÀÎÇÏ°í, 404/500 ·Î±×´Â Firebase HostingÀÌ³ª Vercel Logs¿¡¼­ ¸ð´ÏÅÍ¸µÇÏ¼¼¿ä.
+## SEO ì‹¤í–‰ ê°€ì´ë“œ (ì´ˆë³´ìš©)
+1. **íŽ˜ì´ì§€ í™•ì¸** ? `npm run dev`ë¡œ ë¡œì»¬ ì„œë²„ë¥¼ ë„ìš°ê³  `/`, `/features`, `/pricing` ë“± ê³µê°œ íŽ˜ì´ì§€ê°€ ì •ìƒ ë…¸ì¶œë˜ëŠ”ì§€ í™•ì¸í•˜ì„¸ìš”.
+2. **ì½˜í…ì¸  ìž‘ì„±** ? ì„œë¹„ìŠ¤ í•œ ì¤„ ìš”ì•½, í•µì‹¬ ê¸°ëŠ¥, CTA ë¬¸ìž¥ì„ ë¨¼ì € ë©”ëª¨í•œ ë’¤ `pages/index.tsx`ì™€ ì¶”ê°€ íŽ˜ì´ì§€ì˜ ë¬¸êµ¬ë¥¼ ë‹¤ë“¬ìŠµë‹ˆë‹¤.
+3. **Lighthouse ì ê²€** ? Chrome DevTools > Lighthouseì—ì„œ PerformanceÂ·SEO ë¦¬í¬íŠ¸ë¥¼ ìƒì„±í•´ LCP, CLS, ìƒ‰ì¸ ë¬¸ì œë¥¼ ê¸°ë¡í•˜ê³  ì œì•ˆëœ ê°œì„  ì‚¬í•­ì„ ë°˜ì˜í•©ë‹ˆë‹¤.
+4. **i18n ë°˜ì˜** ? ë²ˆì—­ í‚¤ë¥¼ `locales` í´ë”ì— ì¶”ê°€í•˜ê³  `I18nProvider`ë¡œ ë…¸ì¶œ ì–¸ì–´ë¥¼ ì „í™˜í•©ë‹ˆë‹¤. ìƒˆ íŽ˜ì´ì§€ ë¬¸êµ¬ë„ ë™ì¼í•œ í‚¤ë¡œ ì¶”ì¶œí•´ ì¤‘ë³µ ë²ˆì—­ì„ ë§‰ìœ¼ì„¸ìš”.
+5. **ì‚¬ì´íŠ¸ë§µ/robots ìƒì„±** ? `npm run build`ë¥¼ ì‹¤í–‰í•˜ë©´ postbuild í›…ì´ ìžë™ìœ¼ë¡œ `public/sitemap*.xml`ê³¼ `robots.txt`ë¥¼ ë§Œë“­ë‹ˆë‹¤. Search Consoleì— `https://novasingerai.com/sitemap.xml`ì„ ì œì¶œí•˜ì„¸ìš”.
+6. **GA4 / Search Console / GTM ì—°ë™** ? `.env.local`ì— `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_GTM_ID`ë¥¼ ì±„ìš°ë©´ `components/SeoMeta.tsx` + `_document.tsx`ê°€ Google íƒœê·¸/Tag Manager/ê²€ì¦ ë©”íƒ€ë¥¼ ìžë™ìœ¼ë¡œ ì‚½ìž…í•©ë‹ˆë‹¤. í”„ë¡œë•ì…˜ í™˜ê²½ ë³€ìˆ˜ì—ë„ ë™ì¼í•œ í‚¤ë¡œ ê°’ì„ ë„£ìœ¼ì„¸ìš”.
+7. **ëª¨ë‹ˆí„°ë§** ? ë°°í¬ í›„ GA4 ë¦¬í¬íŠ¸ì™€ Search Console ìƒ‰ì¸ í˜„í™©ì„ ì£¼ê¸°ì ìœ¼ë¡œ í™•ì¸í•˜ê³ , 404/500 ë¡œê·¸ëŠ” Firebase Hostingì´ë‚˜ Vercel Logsì—ì„œ ëª¨ë‹ˆí„°ë§í•˜ì„¸ìš”.
