@@ -11,7 +11,7 @@ Disallow: /history
 Disallow: /settings
 
 # Host
-Host: https://www.songwriterai.app
+Host: https://novasingerai.com
 
 # Sitemaps
-Sitemap: https://www.songwriterai.app/sitemap.xml
+Sitemap: https://novasingerai.com/sitemap.xml
