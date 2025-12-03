@@ -64,8 +64,8 @@ export default function Home() {
           </div>
           <h1>영감이 떠오를 때, AI 캐릭터들이 함께 가사를 완성해 드립니다</h1>
           <p>
-            SongwriterAI는 AI 캐릭터와 실시간으로 대화하며 곡 흐름을 잡고,
-            각각의 캐릭터들의 톤조절로 다양한 분위기의 가사를 만드는 워크플로우를 제공합니다.
+            NovasingerAI는 AI 캐릭터와 실시간으로 대화하며 곡 흐름을 잡고,
+            캐릭터들의 톤조절로 다양한 분위기의 가사를 만드는 워크플로우를 제공합니다.
           </p>
           <div className="cta">
             <Link href="/auth/login" className="cta-button primary" role="button">
