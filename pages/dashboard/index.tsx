@@ -248,6 +248,10 @@ export default function Dashboard() {
       clearRecentChatsConfirm: tDashboard('clearRecentChatsConfirm'),
       clearRecentChatsError: tDashboard('clearRecentChatsError'),
       profileMenuNickname: tDashboard('profileMenuNickname'),
+      profileMenuDeleteAccount: tDashboard('profileMenuDeleteAccount'),
+      deleteAccountConfirm: tDashboard('deleteAccountConfirm'),
+      deleteAccountError: tDashboard('deleteAccountError'),
+      deleteAccountInProgress: tDashboard('deleteAccountInProgress'),
       profileMenuSignOut: tDashboard('profileMenuSignOut'),
       profileMenuLabel: tDashboard('profileMenuLabel'),
       nicknameModalTitle: tDashboard('nicknameModalTitle'),
@@ -288,6 +292,7 @@ export default function Dashboard() {
   const [deletingRecentIds, setDeletingRecentIds] = useState<Record<string, boolean>>({});
   const [isClearingRecentChats, setIsClearingRecentChats] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
   const [nicknameValue, setNicknameValue] = useState('');
@@ -971,6 +976,49 @@ const displayName =
     setIsNicknameModalOpen(true);
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) {
+      setLoadError(dashboardText.deleteAccountError);
+      return;
+    }
+
+    const confirmed = window.confirm(dashboardText.deleteAccountConfirm);
+    if (!confirmed) {
+      return;
+    }
+
+    setIsProfileMenuOpen(false);
+    setIsNicknameModalOpen(false);
+    setIsDeletingAccount(true);
+    setLoadError(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/profile/delete-account', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(
+          payload && typeof payload.error === 'string'
+            ? payload.error
+            : dashboardText.deleteAccountError
+        );
+      }
+
+      await signOut(auth);
+    } catch (error) {
+      console.error('Account deletion failed', error);
+      setLoadError(error instanceof Error ? error.message : dashboardText.deleteAccountError);
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   const handleSignOutClick = async () => {
     setIsProfileMenuOpen(false);
     setIsNicknameModalOpen(false);
@@ -1266,6 +1314,19 @@ const displayName =
                 style={{ justifyContent: 'flex-start' }}
               >
                 {dashboardText.profileMenuNickname}
+              </button>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => {
+                  void handleDeleteAccount();
+                }}
+                disabled={isDeletingAccount}
+                style={{ justifyContent: 'flex-start' }}
+              >
+                {isDeletingAccount
+                  ? dashboardText.deleteAccountInProgress
+                  : dashboardText.profileMenuDeleteAccount}
               </button>
               <button
                 type="button"

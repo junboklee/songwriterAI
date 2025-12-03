@@ -86,7 +86,7 @@ export default function Home() {
               <strong>대화로 수정</strong> – 마음에 드는 표현이 나올 때까지 메시지를 주고받으며 다듬습니다.
             </li>
             <li>
-              <strong>버전 저장</strong> – 완성본을 노래별로 저장하고 메타데이터를 추가합니다.
+              <strong>가사 저장</strong> – 완성본을 노래별로 저장하고 메타데이터를 추가합니다.
             </li>
           </ol>
         </section>
