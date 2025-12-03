@@ -17,7 +17,7 @@ const plans = [
   {
     name: 'Label',
     price: '문의',
-    highlights: ['팀 계정', '보안 / 감사 로그', '전담 매니저', '워크플로 API 연동'],
+    highlights: ['팀 계정', '보안 / 감사 로그', '전담 매니저', '워크플로우 API 연동'],
     cta: '영업팀 문의'
   }
 ];
