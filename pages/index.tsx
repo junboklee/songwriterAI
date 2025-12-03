@@ -46,6 +46,7 @@ export default function Home() {
           content="AI 작사가와 협업해 더 빠르게 노래를 완성하세요."
         />
         <meta property="og:type" content="website" />
+        <meta name="naver-site-verification" content="df9da447e53d2d57c84de7189ba4079ad97cdf80" />
       </Head>
       <div className="landing-bg">
         <main className="landing">
