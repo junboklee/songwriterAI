@@ -251,6 +251,7 @@ export default function Dashboard() {
       profileMenuDeleteAccount: tDashboard('profileMenuDeleteAccount'),
       deleteAccountConfirm: tDashboard('deleteAccountConfirm'),
       deleteAccountError: tDashboard('deleteAccountError'),
+      deleteAccountSuccess: tDashboard('deleteAccountSuccess'),
       deleteAccountInProgress: tDashboard('deleteAccountInProgress'),
       profileMenuSignOut: tDashboard('profileMenuSignOut'),
       profileMenuLabel: tDashboard('profileMenuLabel'),
