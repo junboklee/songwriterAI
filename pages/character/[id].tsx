@@ -409,7 +409,8 @@ export default function CharacterChatPage() {
         const cleaned = normaliseMessages(data.messages);
         setMessages(cleaned);
       } else if (data.reply) {
-        setMessages(prev => normaliseMessages([...prev, data.reply]));
+        const replyMessage = data.reply;
+        setMessages(prev => normaliseMessages([...prev, replyMessage]));
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unexpected error.';

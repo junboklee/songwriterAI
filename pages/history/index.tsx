@@ -160,7 +160,12 @@ export default function HistoryPage() {
       new Set(
         conversations
           .map(conversation => conversation.characterId)
-          .filter((id): id is string => Boolean(id) && !characterMap[id])
+          .filter((id): id is string => {
+            if (typeof id !== "string" || !id.trim()) {
+              return false;
+            }
+            return !characterMap[id];
+          })
       )
     );
 

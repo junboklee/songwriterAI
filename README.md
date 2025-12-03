@@ -13,6 +13,9 @@ FIREBASE_PROJECT_ID=your-firebase-project-id
 FIREBASE_CLIENT_EMAIL=service-account@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 OPENAI_ASSISTANT_ID=asst_xxx   # ensure the casing matches this key
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXX        # optional GA4 tracking
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=xxxxx     # optional Search Console verification code
+NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX                 # optional Google Tag Manager container (or set NEXT_PUBLIC_GOOGLE_TAG_ID)
 ```
 
 > **Tip:** When copying the private key, replace literal newlines with `\n` so that the value stays on one line.
@@ -65,3 +68,12 @@ All routes require a valid Firebase ID token.
 
 ## Next Steps
 - Connect UI pages to the new profile and history endpoints for dashboards, recent chats, and saved lyrics.
+
+## SEO 실행 가이드 (초보용)
+1. **페이지 확인** – `npm run dev`로 로컬 서버를 띄우고 `/`, `/features`, `/pricing` 등 공개 페이지가 정상 노출되는지 확인합니다.
+2. **콘텐츠 작성** – 서비스를 한 문장으로 요약한 문구, 주요 기능, CTA 문장을 먼저 메모한 뒤 `pages/index.tsx`와 기타 페이지의 텍스트를 수정합니다.
+3. **Lighthouse 점검** – Chrome DevTools > Lighthouse에서 Performance/SEO 레포트를 생성해 LCP, CLS, 색인 문제를 기록하고, 제안된 항목을 반영합니다.
+4. **i18n 반영** – 번역 키를 `locales` 폴더에 추가하고 `I18nProvider`로 노출 언어를 전환합니다. 새로 만든 페이지의 문구도 동일한 키로 추출해 중복 번역을 피하세요.
+5. **사이트맵/robots 생성** – `npm run build`를 실행하면 postbuild 훅이 자동으로 `public/sitemap*.xml`과 `robots.txt`를 만듭니다. Search Console에 `https://www.songwriterai.app/sitemap.xml`을 제출하세요.
+6. **GA4 / Search Console / GTM 연동** – `.env.local`에 `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_GTM_ID`를 채우면 `components/SeoMeta.tsx` + `_document.tsx`가 자동으로 Google 태그/Tag Manager/검증 메타를 삽입합니다. 프로덕션 환경 변수에도 동일한 키로 값을 넣으세요.
+7. **모니터링** – 배포 후 GA4 리포트와 Search Console 색인 현황을 매주 확인하며, 404/500 로그를 Firebase Hosting이나 Vercel Logs로 모니터링합니다.

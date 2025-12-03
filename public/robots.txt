@@ -1,0 +1,17 @@
+# *
+User-agent: *
+Allow: /
+
+# *
+User-agent: *
+Disallow: /auth
+Disallow: /chat
+Disallow: /dashboard
+Disallow: /history
+Disallow: /settings
+
+# Host
+Host: https://www.songwriterai.app
+
+# Sitemaps
+Sitemap: https://www.songwriterai.app/sitemap.xml

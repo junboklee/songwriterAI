@@ -6,6 +6,7 @@ import { signOut, updateProfile } from 'firebase/auth';
 import { RequireAuth } from '@/components/RequireAuth';
 import CharacterEditorPanel, { CharacterVisibility } from '@/components/CharacterEditorPanel';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { buildConversationTitle } from '@/lib/conversationUtils';
 import { DEFAULT_CHARACTER_NAMES } from '@/lib/defaultCharacterNames';
@@ -84,74 +85,6 @@ type ConversationListItem = {
   updatedAt: string | null;
 };
 
-const TEXT: Record<string, any> = {
-  charactersLoadError: '커스텀 캐릭터를 불러오지 못했습니다.',
-  charactersLoading: '커스텀 캐릭터를 불러오는 중입니다...',
-  charactersEmpty: '아직 만든 커스텀 캐릭터가 없어요.',
-  deleteError: '캐릭터를 삭제하지 못했습니다.',
-  updateError: '캐릭터 정보를 업데이트할 수 없습니다.',
-  updatedUnknown: '업데이트 정보 없음',
-  summaryFallback: '소개가 아직 작성되지 않았어요.',
-  instructionsFallback: 'AI 지침이 아직 작성되지 않았어요.',
-  panelNameRequired: '캐릭터 이름을 입력해 주세요.',
-  panelInstructionsRequired: 'AI 지침을 입력해 주세요.',
-  profileLoadError: '프로필 정보를 불러오지 못했습니다.',
-  profileLoading: '프로필 정보를 불러오는 중...',
-  recentChatsLoadError: '최근 대화를 불러오지 못했습니다.',
-  recentChatsEmpty: '최근 대화가 아직 없습니다.',
-  overviewTitle: '내 활동 요약',
-  conversationsLabel: '대화',
-  songsLabel: '저장된 가사',
-  recentChatsTitle: '최근 대화',
-  recentChatsCount: (count: number) => `${count}개의 메시지`,
-  sidebarRecentTitle: '최근 대화',
-  sidebarEmptyRecent: '최근 대화 내역이 없습니다.',
-  sidebarProfileRole: '크리에이터',
-  continueChat: '대화 이어가기',
-  startChat: '대화 시작',
-  edit: '수정',
-  delete: '삭제',
-  deleting: '삭제 중...',
-  visitCreate: '만들기',
-  navDashboard: '대시보드',
-  navHistory: '대화 기록',
-  navSuno: '라이브러리',
-  searchPlaceholder: '검색',
-  searchButton: '검색',
-  searchNoResults: '검색 결과가 없습니다.',
-  welcome: (name: string) => `${name}님, 다시 만나서 반가워요!`,
-  loadingIndicator: '불러오는 중입니다...',
-  todaysSpotlight: '오늘의 추천 캐릭터',
-  defaultTag: '캐릭터',
-  noMessagesYet: '저장된 메시지가 없습니다.',
-  updatedAt: (value: string | null) => (value ? `업데이트: ${value}` : '업데이트 정보 없음'),
-  createdLabel: '생성',
-  lastUpdatedLabel: '업데이트'
-};
-
-Object.assign(TEXT, {
-  deleteRecentChat: '\uB300\uD654 \uC0AD\uC81C',
-  deletingRecentChat: '\uC0AD\uC81C \uC911...',
-  deleteRecentChatConfirm: '\uC774 \uB300\uD654\uB97C \uC0AD\uC81C\uD560\uAE4C\uC694?',
-  deleteRecentChatError: '\uB300\uD654\uB97C \uC0AD\uC81C\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.',
-  clearRecentChats: '\uC804\uCCB4 \uC0AD\uC81C',
-  clearingRecentChats: '\uC804\uCCB4 \uC0AD\uC81C \uC911...',
-  clearRecentChatsConfirm: '\uCD5C\uADFC \uB300\uD654\uB97C \uBAA8\uB450 \uC0AD\uC81C\uD560\uAE4C\uC694?',
-  clearRecentChatsError: '\uCD5C\uADFC \uB300\uD654\uB97C \uBAA8\uB450 \uC0AD\uC81C\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.',
-  profileMenuNickname: '\uB2C9\uB124\uC784 \uBCC0\uACBD',
-  profileMenuSignOut: '\uB85C\uADF8\uC544\uC6C3',
-  profileMenuLabel: '\uACC4\uC815 \uBA54\uB274',
-  nicknameModalTitle: '\uB2C9\uB124\uC784 \uBCC0\uACBD',
-  nicknameModalDescription: '\uC0C8\uB85C\uC6B4 \uD45C\uC2DC \uC774\uB984\uC744 \uC785\uB825\uD558\uBA74 \uD3B8\uC9C0\uD558\uBA74 \uBAA8\uB4E0 \uD654\uBA74\uC5D0 \uC801\uC6A9\uB429\uB2C8\uB2E4.',
-  nicknameLabel: '\uD45C\uC2DC \uC774\uB984',
-  nicknamePlaceholder: '\uC608: \uADFC\uB370\uB098 \uC218',
-  nicknameSave: '\uC800\uC7A5',
-  nicknameSaving: '\uC800\uC7A5\uC911...',
-  nicknameCancel: '\uCDE8\uC18C',
-  nicknameRequired: '\uD45C\uC2DC \uC774\uB984\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694.',
-  nicknameError: '\uD45C\uC2DC \uC774\uB984 \uC5C5\uB370\uC774\uD2B8\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.'
-});
-
 const featuredCharacters: CharacterCard[] = [
   {
     id: '1',
@@ -198,11 +131,14 @@ const adaptCharacter = (item: CharacterApiItem): UserCharacter => ({
   updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : null
 });
 
-const adaptConversation = (item: ConversationApiItem): ConversationListItem => ({
+const adaptConversation = (
+  item: ConversationApiItem,
+  noMessagesFallback: string
+): ConversationListItem => ({
   id: item.id,
   threadId: item.threadId && item.threadId.trim() ? item.threadId : item.id,
   title: item.title ?? null,
-  lastMessagePreview: item.lastMessagePreview?.trim() || TEXT.noMessagesYet,
+  lastMessagePreview: item.lastMessagePreview?.trim() || noMessagesFallback,
   characterId: item.characterId ?? null,
   messageCount: typeof item.messageCount === 'number' ? item.messageCount : 0,
   updatedAt: item.updatedAt ?? null
@@ -223,9 +159,9 @@ const sortCharacters = (items: UserCharacter[]) =>
 const truncateText = (value: string, maxLength = 140) =>
   value.length > maxLength ? `${value.slice(0, maxLength).trimEnd()}...` : value;
 
-const formatUpdatedAt = (isoDate?: string | null) => {
+const formatUpdatedAt = (isoDate: string | null | undefined, fallback: string) => {
   if (!isoDate) {
-    return TEXT.updatedUnknown;
+    return fallback;
   }
 
   try {
@@ -235,7 +171,7 @@ const formatUpdatedAt = (isoDate?: string | null) => {
       day: '2-digit'
     }).format(new Date(isoDate));
   } catch {
-    return TEXT.updatedUnknown;
+    return fallback;
   }
 };
 
@@ -259,6 +195,75 @@ const formatConversationUpdatedAt = (isoDate?: string | null) => {
 export default function Dashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t: tDashboard } = useTranslation('dashboard');
+
+  const dashboardText = useMemo(
+    () => ({
+      charactersLoadError: tDashboard('charactersLoadError'),
+      charactersLoading: tDashboard('charactersLoading'),
+      charactersEmpty: tDashboard('charactersEmpty'),
+      deleteError: tDashboard('deleteError'),
+      updateError: tDashboard('updateError'),
+      updatedUnknown: tDashboard('updatedUnknown'),
+      summaryFallback: tDashboard('summaryFallback'),
+      instructionsFallback: tDashboard('instructionsFallback'),
+      sidebarProfileRole: tDashboard('sidebarProfileRole'),
+      defaultTag: tDashboard('defaultTag'),
+      profileLoadError: tDashboard('profileLoadError'),
+      profileLoading: tDashboard('profileLoading'),
+      recentChatsLoadError: tDashboard('recentChatsLoadError'),
+      recentChatsEmpty: tDashboard('recentChatsEmpty'),
+      overviewTitle: tDashboard('overviewTitle'),
+      conversationsLabel: tDashboard('conversationsLabel'),
+      songsLabel: tDashboard('songsLabel'),
+      lastUpdatedLabel: tDashboard('lastUpdatedLabel'),
+      recentChatsTitle: tDashboard('recentChatsTitle'),
+      sidebarRecentTitle: tDashboard('sidebarRecentTitle'),
+      sidebarEmptyRecent: tDashboard('sidebarEmptyRecent'),
+      continueChat: tDashboard('continueChat'),
+      startChat: tDashboard('startChat'),
+      edit: tDashboard('edit'),
+      delete: tDashboard('delete'),
+      deleting: tDashboard('deleting'),
+      visitCreate: tDashboard('visitCreate'),
+      navDashboard: tDashboard('navDashboard'),
+      navHistory: tDashboard('navHistory'),
+      navSuno: tDashboard('navSuno'),
+      searchPlaceholder: tDashboard('searchPlaceholder'),
+      searchNoResults: tDashboard('searchNoResults'),
+      copyLink: tDashboard('copyLink'),
+      copyLinkSuccess: tDashboard('copyLinkSuccess'),
+      visibilityLabel: tDashboard('visibilityLabel'),
+      welcome: (name?: string | null) =>
+        tDashboard('welcome', { replacements: { name: name ?? '' } }),
+      loadingIndicator: tDashboard('loadingIndicator'),
+      todaysSpotlight: tDashboard('todaysSpotlight'),
+      noMessagesYet: tDashboard('noMessagesYet'),
+      deleteRecentChat: tDashboard('deleteRecentChat'),
+      deletingRecentChat: tDashboard('deletingRecentChat'),
+      deleteRecentChatConfirm: tDashboard('deleteRecentChatConfirm'),
+      deleteRecentChatError: tDashboard('deleteRecentChatError'),
+      clearRecentChats: tDashboard('clearRecentChats'),
+      clearingRecentChats: tDashboard('clearingRecentChats'),
+      clearRecentChatsConfirm: tDashboard('clearRecentChatsConfirm'),
+      clearRecentChatsError: tDashboard('clearRecentChatsError'),
+      profileMenuNickname: tDashboard('profileMenuNickname'),
+      profileMenuSignOut: tDashboard('profileMenuSignOut'),
+      profileMenuLabel: tDashboard('profileMenuLabel'),
+      nicknameModalTitle: tDashboard('nicknameModalTitle'),
+      nicknameModalDescription: tDashboard('nicknameModalDescription'),
+      nicknameLabel: tDashboard('nicknameLabel'),
+      nicknamePlaceholder: tDashboard('nicknamePlaceholder'),
+      nicknameSave: tDashboard('nicknameSave'),
+      nicknameSaving: tDashboard('nicknameSaving'),
+      nicknameCancel: tDashboard('nicknameCancel'),
+      nicknameRequired: tDashboard('nicknameRequired'),
+      nicknameError: tDashboard('nicknameError'),
+      recentChatsCount: (count: number) =>
+        tDashboard('recentChatsCount', { replacements: { count } })
+    }),
+    [tDashboard]
+  );
 
   const [customCharacters, setCustomCharacters] = useState<UserCharacter[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<UserCharacter | null>(null);
@@ -350,11 +355,13 @@ export default function Dashboard() {
           throw new Error(
             payload && typeof payload.error === 'string'
               ? payload.error
-              : TEXT.charactersLoadError
+              : dashboardText.charactersLoadError
           );
         }
 
-        const items = Array.isArray(payload.characters) ? payload.characters : [];
+        const items: CharacterApiItem[] = Array.isArray(payload.characters)
+          ? (payload.characters as CharacterApiItem[])
+          : [];
         if (!cancelled) {
           const adapted = items.map(adaptCharacter);
           setCustomCharacters(sortCharacters(adapted));
@@ -370,7 +377,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         if (!cancelled) {
-          setLoadError(error instanceof Error ? error.message : TEXT.charactersLoadError);
+          setLoadError(error instanceof Error ? error.message : dashboardText.charactersLoadError);
           setCustomCharacters([]);
         }
       } finally {
@@ -385,7 +392,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, dashboardText]);
 
   useEffect(() => {
     if (!user || !recentChats.length) {
@@ -396,7 +403,12 @@ export default function Dashboard() {
       new Set(
         recentChats
           .map(conversation => conversation.characterId)
-          .filter((id): id is string => Boolean(id) && !characterNames[id])
+          .filter((id): id is string => {
+            if (typeof id !== 'string' || !id.trim()) {
+              return false;
+            }
+            return !characterNames[id];
+          })
       )
     );
 
@@ -495,7 +507,7 @@ export default function Dashboard() {
           throw new Error(
             payload && typeof payload.error === 'string'
               ? payload.error
-              : TEXT.profileLoadError
+              : dashboardText.profileLoadError
           );
         }
 
@@ -504,7 +516,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         if (!cancelled) {
-          setProfileError(error instanceof Error ? error.message : TEXT.profileLoadError);
+          setProfileError(error instanceof Error ? error.message : dashboardText.profileLoadError);
           setProfileData(null);
         }
       } finally {
@@ -519,7 +531,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, dashboardText]);
 
   useEffect(() => {
     let cancelled = false;
@@ -551,13 +563,17 @@ export default function Dashboard() {
           throw new Error(
             payload && typeof payload.error === 'string'
               ? payload.error
-              : TEXT.recentChatsLoadError
+              : dashboardText.recentChatsLoadError
           );
         }
 
-        const items = Array.isArray(payload.conversations) ? payload.conversations : [];
+        const items: ConversationApiItem[] = Array.isArray(payload.conversations)
+          ? (payload.conversations as ConversationApiItem[])
+          : [];
         if (!cancelled) {
-          const normalized = items.map(adaptConversation);
+          const normalized: ConversationListItem[] = items.map(item =>
+            adaptConversation(item, dashboardText.noMessagesYet)
+          );
           setRecentChats(normalized);
           setCharacterNames(prevNames => {
             const nextNames: Record<string, string> = {
@@ -587,7 +603,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         if (!cancelled) {
-          setRecentChatsError(error instanceof Error ? error.message : TEXT.recentChatsLoadError);
+          setRecentChatsError(error instanceof Error ? error.message : dashboardText.recentChatsLoadError);
           setRecentChats([]);
           setCharacterNames({ ...DEFAULT_CHARACTER_NAMES });
         }
@@ -603,9 +619,9 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, dashboardText]);
 
-const spotlightCharacters = useMemo<CharacterCard[]>(() => {
+  const spotlightCharacters = useMemo<CharacterCard[]>(() => {
     const recentIds = profileData?.profile.recentCharacterIds ?? [];
     if (!recentIds.length) {
       return featuredCharacters;
@@ -625,9 +641,9 @@ const spotlightCharacters = useMemo<CharacterCard[]>(() => {
         derived.push({
           id: custom.id,
           title: custom.name,
-          creator: custom.categories[0] ?? TEXT.sidebarProfileRole,
-          description: custom.summary || TEXT.summaryFallback,
-          tag: custom.categories[0] ?? TEXT.defaultTag,
+          creator: custom.categories[0] ?? dashboardText.sidebarProfileRole,
+          description: custom.summary || dashboardText.summaryFallback,
+          tag: custom.categories[0] ?? dashboardText.defaultTag,
           sample: custom.instructions || '',
           style: `scene-card--${((index % 3) + 1).toString()}`,
           chatId: custom.id
@@ -643,9 +659,9 @@ const spotlightCharacters = useMemo<CharacterCard[]>(() => {
       derived.push({
         id,
         title: fallbackTitle,
-        creator: TEXT.sidebarProfileRole,
-        description: TEXT.summaryFallback,
-        tag: TEXT.defaultTag,
+        creator: dashboardText.sidebarProfileRole,
+        description: dashboardText.summaryFallback,
+        tag: dashboardText.defaultTag,
         sample: '',
         style: `scene-card--${((index % 3) + 1).toString()}`,
         chatId: id
@@ -657,7 +673,7 @@ const spotlightCharacters = useMemo<CharacterCard[]>(() => {
     }
 
     return derived.slice(0, featuredCharacters.length);
-  }, [customCharacters, profileData, characterNames, recentChats]);
+  }, [customCharacters, profileData, characterNames, recentChats, dashboardText]);
 
   const filteredSpotlight = useMemo(() => {
     if (!normalizedSearch) {
@@ -731,19 +747,19 @@ const displayName =
   profileData?.profile.displayName?.trim() ||
   user?.displayName ||
   user?.email ||
-    TEXT.sidebarProfileRole;
+    dashboardText.sidebarProfileRole;
 
   const profileEmail = profileData?.profile.email || user?.email || '';
 
   const stats = profileData?.stats ?? { conversationCount: 0, songCount: 0 };
 
-  const welcomeTitle = TEXT.welcome(displayName);
+  const welcomeTitle = dashboardText.welcome(displayName);
   const statusSummary = profileData
-    ? `${TEXT.conversationsLabel}: ${stats.conversationCount.toLocaleString('ko-KR')} · ${
-        TEXT.songsLabel
+    ? `${dashboardText.conversationsLabel}: ${stats.conversationCount.toLocaleString('ko-KR')} · ${
+        dashboardText.songsLabel
       }: ${stats.songCount.toLocaleString('ko-KR')}`
     : isLoadingProfile
-    ? TEXT.profileLoading
+    ? dashboardText.profileLoading
     : profileError ?? '';
 
   const handleStartChat = (characterId: string) => {
@@ -768,7 +784,7 @@ const displayName =
       return;
     }
 
-    if (!window.confirm(TEXT.deleteRecentChatConfirm)) {
+    if (!window.confirm(dashboardText.deleteRecentChatConfirm)) {
       return;
     }
 
@@ -788,7 +804,7 @@ const displayName =
         const payload = await response.json().catch(() => ({}));
         const message =
           (payload && typeof payload.error === 'string' && payload.error) ||
-          TEXT.deleteRecentChatError;
+          dashboardText.deleteRecentChatError;
         throw new Error(message);
       }
 
@@ -820,7 +836,7 @@ const displayName =
         return next;
       });
     } catch (error) {
-      setRecentChatsError(error instanceof Error ? error.message : TEXT.deleteRecentChatError);
+      setRecentChatsError(error instanceof Error ? error.message : dashboardText.deleteRecentChatError);
     } finally {
       setDeletingRecentIds(prev => {
         const next = { ...prev };
@@ -840,7 +856,7 @@ const displayName =
       return;
     }
 
-    if (!window.confirm(TEXT.clearRecentChatsConfirm)) {
+    if (!window.confirm(dashboardText.clearRecentChatsConfirm)) {
       return;
     }
 
@@ -862,7 +878,7 @@ const displayName =
         const payload = await response.json().catch(() => ({}));
         const message =
           (payload && typeof payload.error === 'string' && payload.error) ||
-          TEXT.clearRecentChatsError;
+          dashboardText.clearRecentChatsError;
         throw new Error(message);
       }
 
@@ -870,7 +886,7 @@ const displayName =
       setCharacterNames({ ...DEFAULT_CHARACTER_NAMES });
       setDeletingRecentIds({});
   } catch (error) {
-    setRecentChatsError(error instanceof Error ? error.message : TEXT.clearRecentChatsError);
+    setRecentChatsError(error instanceof Error ? error.message : dashboardText.clearRecentChatsError);
   } finally {
     setIsClearingRecentChats(false);
   }
@@ -888,13 +904,13 @@ const displayName =
     event.preventDefault();
 
     if (!user || !auth.currentUser) {
-      setNicknameError(TEXT.nicknameError);
+      setNicknameError(dashboardText.nicknameError);
       return;
     }
 
     const trimmed = nicknameValue.trim();
     if (!trimmed) {
-      setNicknameError(TEXT.nicknameRequired);
+      setNicknameError(dashboardText.nicknameRequired);
       return;
     }
 
@@ -919,7 +935,7 @@ const displayName =
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         const message =
-          (payload && typeof payload.error === 'string' && payload.error) || TEXT.nicknameError;
+          (payload && typeof payload.error === 'string' && payload.error) || dashboardText.nicknameError;
         throw new Error(message);
       }
 
@@ -938,7 +954,7 @@ const displayName =
       setNicknameValue(trimmed);
       setIsNicknameModalOpen(false);
     } catch (error) {
-      setNicknameError(error instanceof Error ? error.message : TEXT.nicknameError);
+      setNicknameError(error instanceof Error ? error.message : dashboardText.nicknameError);
     } finally {
       setNicknameSaving(false);
     }
@@ -1002,7 +1018,7 @@ const displayName =
 
   const handleDeleteCharacter = async (characterId: string) => {
     if (!user) {
-      setLoadError(TEXT.deleteError);
+      setLoadError(dashboardText.deleteError);
       return;
     }
 
@@ -1021,7 +1037,7 @@ const displayName =
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
         throw new Error(
-          payload && typeof payload.error === 'string' ? payload.error : TEXT.deleteError
+          payload && typeof payload.error === 'string' ? payload.error : dashboardText.deleteError
         );
       }
 
@@ -1034,7 +1050,7 @@ const displayName =
       });
       setLoadError(null);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : TEXT.deleteError);
+      setLoadError(error instanceof Error ? error.message : dashboardText.deleteError);
     } finally {
       setPendingDeleteId(null);
     }
@@ -1047,13 +1063,13 @@ const displayName =
 
   const handleSubmitEditor = async (payload: FormData) => {
     if (!user) {
-      setPanelError(TEXT.updateError);
+      setPanelError(dashboardText.updateError);
       return;
     }
 
     const characterId = payload.get('id');
     if (!characterId) {
-      setPanelError(TEXT.updateError);
+      setPanelError(dashboardText.updateError);
       return;
     }
 
@@ -1076,12 +1092,12 @@ const displayName =
         throw new Error(
           responseBody && typeof responseBody.error === 'string'
             ? responseBody.error
-            : TEXT.updateError
+            : dashboardText.updateError
         );
       }
 
       if (!responseBody.character || typeof responseBody.character.id !== 'string') {
-        throw new Error(TEXT.updateError);
+        throw new Error(dashboardText.updateError);
       }
 
       const updatedCharacter = adaptCharacter(responseBody.character as CharacterApiItem);
@@ -1103,7 +1119,7 @@ const displayName =
       setSelectedCharacter(null);
       setLoadError(null);
     } catch (error) {
-      setPanelError(error instanceof Error ? error.message : TEXT.updateError);
+      setPanelError(error instanceof Error ? error.message : dashboardText.updateError);
     } finally {
       setPanelSubmitting(false);
     }
@@ -1117,7 +1133,7 @@ const displayName =
 
           <div className="dashboard-sidebar__create">
             <Link href="/character/create">
-              {TEXT.visitCreate}
+              {dashboardText.visitCreate}
               <span>＋</span>
             </Link>
           </div>
@@ -1127,37 +1143,37 @@ const displayName =
               href="/dashboard"
               className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
             >
-              <span>{TEXT.navDashboard}</span>
+              <span>{dashboardText.navDashboard}</span>
             </Link>
             <Link href="/history" className="dashboard-sidebar__nav-item">
-              <span>{TEXT.navHistory}</span>
+              <span>{dashboardText.navHistory}</span>
             </Link>
             <Link href="/suno" className="dashboard-sidebar__nav-item">
-              <span>{TEXT.navSuno}</span>
+              <span>{dashboardText.navSuno}</span>
             </Link>
           </nav>
 
           <div className="dashboard-sidebar__search">
             <input
               type="search"
-              placeholder={TEXT.searchPlaceholder}
-              aria-label={TEXT.searchPlaceholder}
+              placeholder={dashboardText.searchPlaceholder}
+              aria-label={dashboardText.searchPlaceholder}
               value={searchQuery}
               onChange={handleSearchInputChange}
             />
           </div>
 
           <div className="dashboard-sidebar__recent">
-            <h3>{TEXT.sidebarRecentTitle}</h3>
+            <h3>{dashboardText.sidebarRecentTitle}</h3>
             <div className="dashboard-sidebar__recent-list">
               {isLoadingRecentChats ? (
-                <div className="dashboard-sidebar__recent-item">{TEXT.loadingIndicator}</div>
+                <div className="dashboard-sidebar__recent-item">{dashboardText.loadingIndicator}</div>
               ) : recentChatsError ? (
                 <div className="dashboard-sidebar__recent-item">{recentChatsError}</div>
               ) : !hasRecentChats ? (
-                <div className="dashboard-sidebar__recent-item">{TEXT.sidebarEmptyRecent}</div>
+                <div className="dashboard-sidebar__recent-item">{dashboardText.sidebarEmptyRecent}</div>
               ) : noRecentSearchResults ? (
-                <div className="dashboard-sidebar__recent-item">{TEXT.searchNoResults}</div>
+                <div className="dashboard-sidebar__recent-item">{dashboardText.searchNoResults}</div>
               ) : (
                 filteredRecentChats.map(chat => {
                   const updated = formatConversationUpdatedAt(chat.updatedAt);
@@ -1173,7 +1189,7 @@ const displayName =
                     >
                       <span>{title}</span>
                       <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
-                        {updated || TEXT.noMessagesYet}
+                        {updated || dashboardText.noMessagesYet}
                       </span>
                     </button>
                   );
@@ -1192,7 +1208,7 @@ const displayName =
             onClick={handleProfileMenuToggle}
             aria-haspopup="true"
             aria-expanded={isProfileMenuOpen}
-            aria-label={TEXT.profileMenuLabel}
+            aria-label={dashboardText.profileMenuLabel}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -1217,7 +1233,7 @@ const displayName =
                   color: 'rgba(255,255,255,0.6)'
                 }}
               >
-                {profileEmail || TEXT.sidebarProfileRole}
+                {profileEmail || dashboardText.sidebarProfileRole}
               </p>
             </div>
             <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)' }}>
@@ -1249,7 +1265,7 @@ const displayName =
                 onClick={handleProfileNickname}
                 style={{ justifyContent: 'flex-start' }}
               >
-                {TEXT.profileMenuNickname}
+                {dashboardText.profileMenuNickname}
               </button>
               <button
                 type="button"
@@ -1259,7 +1275,7 @@ const displayName =
                 }}
                 style={{ justifyContent: 'center' }}
               >
-                {TEXT.profileMenuSignOut}
+                {dashboardText.profileMenuSignOut}
               </button>
             </div>
           ) : null}
@@ -1275,8 +1291,8 @@ const displayName =
             <form className="dashboard-searchbar" onSubmit={handleSearchSubmit}>
               <input
                 type="search"
-                placeholder={TEXT.searchPlaceholder}
-                aria-label={TEXT.searchPlaceholder}
+                placeholder={dashboardText.searchPlaceholder}
+                aria-label={dashboardText.searchPlaceholder}
                 value={searchQuery}
                 onChange={handleSearchInputChange}
               />
@@ -1285,12 +1301,12 @@ const displayName =
 
           <section className="dashboard-section">
             <div className="dashboard-section__header">
-              <h2>{TEXT.overviewTitle}</h2>
+              <h2>{dashboardText.overviewTitle}</h2>
             </div>
             <div className="dashboard-grid">
               {isLoadingProfile ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.profileLoading}</p>
+                  <p className="dashboard-card__meta">{dashboardText.profileLoading}</p>
                 </div>
               ) : profileError ? (
                 <div className="dashboard-card">
@@ -1299,7 +1315,7 @@ const displayName =
               ) : (
                 <>
                   <div className="dashboard-card">
-                    <h3 className="dashboard-card__title">{TEXT.conversationsLabel}</h3>
+                    <h3 className="dashboard-card__title">{dashboardText.conversationsLabel}</h3>
                     <p
                       style={{
                         margin: '8px 0 0',
@@ -1311,7 +1327,7 @@ const displayName =
                     </p>
                   </div>
                   <div className="dashboard-card">
-                    <h3 className="dashboard-card__title">{TEXT.songsLabel}</h3>
+                    <h3 className="dashboard-card__title">{dashboardText.songsLabel}</h3>
                     <p
                       style={{
                         margin: '8px 0 0',
@@ -1329,13 +1345,13 @@ const displayName =
 
           <section className="dashboard-section">
             <div className="dashboard-section__header">
-              <h2>{TEXT.todaysSpotlight}</h2>
+              <h2>{dashboardText.todaysSpotlight}</h2>
             </div>
             <div className="dashboard-grid">
               {filteredSpotlight.length === 0 ? (
                 <div className="dashboard-card">
                   <p className="dashboard-card__meta">
-                    {normalizedSearch ? TEXT.searchNoResults : TEXT.charactersEmpty}
+                    {normalizedSearch ? dashboardText.searchNoResults : dashboardText.charactersEmpty}
                   </p>
                 </div>
               ) : (
@@ -1392,7 +1408,7 @@ const displayName =
 
   <section className="dashboard-section">
     <div className="dashboard-section__header">
-      <h2>{TEXT.recentChatsTitle}</h2>
+      <h2>{dashboardText.recentChatsTitle}</h2>
       {hasRecentChats ? (
         <button
           type="button"
@@ -1406,14 +1422,14 @@ const displayName =
             Object.keys(deletingRecentIds).length > 0
           }
         >
-          {isClearingRecentChats ? TEXT.clearingRecentChats : TEXT.clearRecentChats}
+          {isClearingRecentChats ? dashboardText.clearingRecentChats : dashboardText.clearRecentChats}
         </button>
       ) : null}
     </div>
             <div className="dashboard-grid">
               {isLoadingRecentChats ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.loadingIndicator}</p>
+                  <p className="dashboard-card__meta">{dashboardText.loadingIndicator}</p>
                 </div>
               ) : recentChatsError ? (
                 <div className="dashboard-card">
@@ -1421,11 +1437,11 @@ const displayName =
                 </div>
               ) : !hasRecentChats ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.recentChatsEmpty}</p>
+                  <p className="dashboard-card__meta">{dashboardText.recentChatsEmpty}</p>
                 </div>
               ) : noRecentSearchResults ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.searchNoResults}</p>
+                  <p className="dashboard-card__meta">{dashboardText.searchNoResults}</p>
                 </div>
               ) : (
                 filteredRecentChats.map(chat => {
@@ -1437,8 +1453,8 @@ const displayName =
                       <h3 className="dashboard-card__title">{title}</h3>
                       <p className="dashboard-card__meta">{chat.lastMessagePreview}</p>
                       <div className="dashboard-card__stats">
-                        <span>{TEXT.recentChatsCount(chat.messageCount)}</span>
-                        <span>{updated || TEXT.updatedUnknown}</span>
+                        <span>{dashboardText.recentChatsCount(chat.messageCount)}</span>
+                        <span>{updated || dashboardText.updatedUnknown}</span>
                       </div>
                       <div className="dashboard-card__actions">
                         <button
@@ -1447,7 +1463,7 @@ const displayName =
                           onClick={() => handleContinueChat(chat.threadId, chat.characterId)}
                           disabled={isDeleting}
                         >
-                          {TEXT.continueChat}
+                          {dashboardText.continueChat}
                         </button>
                         <button
                           type="button"
@@ -1457,7 +1473,7 @@ const displayName =
                           }}
                           disabled={isDeleting}
                         >
-                          {isDeleting ? TEXT.deletingRecentChat : TEXT.deleteRecentChat}
+                          {isDeleting ? dashboardText.deletingRecentChat : dashboardText.deleteRecentChat}
                         </button>
                       </div>
                     </div>
@@ -1475,7 +1491,7 @@ const displayName =
             <div className="dashboard-grid">
               {isLoadingCharacters ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.charactersLoading}</p>
+                  <p className="dashboard-card__meta">{dashboardText.charactersLoading}</p>
                 </div>
               ) : loadError ? (
                 <div className="dashboard-card">
@@ -1483,20 +1499,20 @@ const displayName =
                 </div>
               ) : !hasCustomCharacters ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.charactersEmpty}</p>
+                  <p className="dashboard-card__meta">{dashboardText.charactersEmpty}</p>
                 </div>
               ) : noCustomSearchResults ? (
                 <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{TEXT.searchNoResults}</p>
+                  <p className="dashboard-card__meta">{dashboardText.searchNoResults}</p>
                 </div>
               ) : (
                 filteredCharacters.map(character => {
                   const summaryText = character.summary
                     ? truncateText(character.summary, 110)
-                    : TEXT.summaryFallback;
+                    : dashboardText.summaryFallback;
                   const instructionsPreview = character.instructions
                     ? truncateText(character.instructions, 140)
-                    : TEXT.instructionsFallback;
+                    : dashboardText.instructionsFallback;
                   const isDeleting = pendingDeleteId === character.id;
 
                   return (
@@ -1528,14 +1544,20 @@ const displayName =
                               minWidth: '60px'
                             }}
                           >
-                            {copiedId === character.id ? '복사됨!' : '🔗 링크'}
+                            {copiedId === character.id
+                              ? dashboardText.copyLinkSuccess
+                              : `🔗 ${dashboardText.copyLink}`}
                           </button>
                         )}
                       </div>
                       <p className="dashboard-card__meta">{summaryText}</p>
                       <div className="dashboard-card__stats">
-                        <span>공개 범위: {visibilityLabels[character.visibility]}</span>
-                        <span>업데이트: {formatUpdatedAt(character.updatedAt)}</span>
+                        <span>
+                          {dashboardText.visibilityLabel}: {visibilityLabels[character.visibility]}
+                        </span>
+                        <span>
+                          {dashboardText.lastUpdatedLabel}: {formatUpdatedAt(character.updatedAt, dashboardText.updatedUnknown)}
+                        </span>
                       </div>
                       <div className="dashboard-card__actions">
                         <button
@@ -1544,7 +1566,7 @@ const displayName =
                           onClick={() => handleStartChat(character.id)}
                           disabled={panelSubmitting || isDeleting}
                         >
-                          {TEXT.startChat}
+                          {dashboardText.startChat}
                         </button>
                         <button
                           type="button"
@@ -1552,7 +1574,7 @@ const displayName =
                           onClick={() => handleEditCharacter(character.id)}
                           disabled={panelSubmitting || isDeleting}
                         >
-                          {TEXT.edit}
+                          {dashboardText.edit}
                         </button>
                         <button
                           type="button"
@@ -1562,7 +1584,7 @@ const displayName =
                           }}
                           disabled={isDeleting || panelSubmitting}
                         >
-                          {isDeleting ? TEXT.deleting : TEXT.delete}
+                          {isDeleting ? dashboardText.deleting : dashboardText.delete}
                         </button>
                       </div>
                     </div>
@@ -1625,7 +1647,7 @@ const displayName =
           >
             <div>
               <h2 id="nickname-modal-title" style={{ margin: 0, fontSize: '1.4rem' }}>
-                {TEXT.nicknameModalTitle}
+                {dashboardText.nicknameModalTitle}
               </h2>
               <p
                 style={{
@@ -1635,20 +1657,20 @@ const displayName =
                   lineHeight: 1.6
                 }}
               >
-                {TEXT.nicknameModalDescription}
+                {dashboardText.nicknameModalDescription}
               </p>
             </div>
 
             <form onSubmit={handleNicknameSubmit} style={{ display: 'grid', gap: 16 }}>
               <label style={{ display: 'grid', gap: 8 }}>
                 <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
-                  {TEXT.nicknameLabel}
+                  {dashboardText.nicknameLabel}
                 </span>
                 <input
                   type="text"
                   value={nicknameValue}
                   onChange={event => setNicknameValue(event.target.value)}
-                  placeholder={TEXT.nicknamePlaceholder}
+                  placeholder={dashboardText.nicknamePlaceholder}
                   disabled={nicknameSaving}
                   autoFocus
                   style={{
@@ -1673,10 +1695,10 @@ const displayName =
                   onClick={handleNicknameModalClose}
                   disabled={nicknameSaving}
                 >
-                  {TEXT.nicknameCancel}
+                  {dashboardText.nicknameCancel}
                 </button>
                 <button type="submit" className="btn btn--primary" disabled={nicknameSaving}>
-                  {nicknameSaving ? TEXT.nicknameSaving : TEXT.nicknameSave}
+                  {nicknameSaving ? dashboardText.nicknameSaving : dashboardText.nicknameSave}
                 </button>
               </div>
             </form>

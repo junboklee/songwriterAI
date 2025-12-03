@@ -23,7 +23,7 @@ const normalizeStorageBucket = (bucket: string | undefined, projectId?: string) 
   return null;
 };
 
-function getServiceAccountFromEnv(): (ServiceAccountEnv & { storageBucket: string }) | null {
+function getServiceAccountFromEnv(): (ServiceAccountEnv & { storageBucket: string | null }) | null {
   const projectId =
     process.env.APPSECRETS_FIREBASE_ADMIN_PROJECT_ID ??
     process.env.FIREBASE_ADMIN_PROJECT_ID ??

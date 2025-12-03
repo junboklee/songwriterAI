@@ -1493,10 +1493,11 @@ useEffect(() => {
           return [...intro, ...cleaned];
         });
       } else if (data.reply) {
+        const replyMessage = data.reply;
         setMessages(prev => {
           const intro = prev[0]?.id === 'intro' ? [prev[0]] : [];
           const history = prev.filter(item => item.id !== 'intro');
-          const cleaned = normaliseMessages([...history, data.reply]);
+          const cleaned = normaliseMessages([...history, replyMessage]);
           return [...intro, ...cleaned];
         });
       } else {
@@ -1630,10 +1631,10 @@ useEffect(() => {
           actions={
             <>
               <Link href="/dashboard" className="btn btn--ghost">
-                대시보드로 돌아가기
+                                대시보드로 돌아가기
               </Link>
               <Link href="/character/create" className="btn btn--primary">
-                캐릭터 생성
+                                캐릭터 생성
               </Link>
             </>
           }

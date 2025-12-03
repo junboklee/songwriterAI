@@ -25,12 +25,16 @@ const VISIBILITY_OPTIONS = new Set(['private', 'unlisted', 'public']);
 const parseForm = (req: NextApiRequest): Promise<{ fields: Fields; files: Files }> => {
   const form = formidable({});
   return new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        reject(err);
+    form.parse(
+      req,
+      (err: Error | null, fields: Fields, files: Files) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve({ fields, files });
       }
-      resolve({ fields, files });
-    });
+    );
   });
 };
 
@@ -70,12 +74,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (avatarFile) {
       assertValidAvatarFile(avatarFile);
       const bucket: Bucket = adminStorage.bucket();
-      const fileName = `avatars/${user.uid}/${uuidv4()}-${avatarFile.originalFilename}`;
+      const originalName = avatarFile.originalFilename ?? 'avatar';
+      const fileName = `avatars/${user.uid}/${uuidv4()}-${originalName}`;
+      const filePath = avatarFile.filepath;
+
+      if (typeof filePath !== 'string' || !filePath) {
+        throw new BadRequestError('Invalid avatar file.');
+      }
       
-      await bucket.upload(avatarFile.filepath, {
+      await bucket.upload(filePath, {
         destination: fileName,
         metadata: {
-          contentType: avatarFile.mimetype,
+          contentType: avatarFile.mimetype || undefined,
         },
       });
       avatarUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
