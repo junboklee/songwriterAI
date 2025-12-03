@@ -699,12 +699,15 @@ useEffect(() => {
   customCharactersRef.current = customCharacters;
 }, [customCharacters]);
 
-  const characterId = useMemo(() => {
-    const raw = Array.isArray(router.query.characterId)
-      ? router.query.characterId[0]
-      : router.query.characterId;
-    return raw ?? '1';
-  }, [router.query.characterId]);
+const requestedCharacterId = useMemo(() => {
+  if (Array.isArray(router.query.characterId)) {
+    return router.query.characterId[0] ?? null;
+  }
+
+  return typeof router.query.characterId === 'string' ? router.query.characterId : null;
+}, [router.query.characterId]);
+
+const characterId = requestedCharacterId ?? '1';
 
   useEffect(() => {
     if (!characterId) {
@@ -1358,12 +1361,12 @@ useEffect(() => {
       }
     };
 
-    const initialize = async () => {
-      const idToken = await user.getIdToken();
-      const conversations = await loadConversations(idToken);
-      if (characterId) {
-        await fetchCustomCharacters([characterId], idToken);
-      }
+const initialize = async () => {
+  const idToken = await user.getIdToken();
+  const conversations = await loadConversations(idToken);
+  if (characterId) {
+    await fetchCustomCharacters([characterId], idToken);
+  }
 
       const preferredThreadId = typeof router.query.threadId === 'string' ? router.query.threadId : null;
 
@@ -1372,32 +1375,36 @@ useEffect(() => {
         return;
       }
 
-      const latestForChar = conversations?.find(c => c.characterId === characterId);
-      if (latestForChar) {
-        router.replace({
-          pathname: '/chat',
-          query: { characterId, threadId: latestForChar.threadId }
-        });
-        return;
-      }
+  const hasExplicitCharacterSelection = Boolean(requestedCharacterId);
 
-      const mostRecentConversation = conversations?.[0];
-      if (mostRecentConversation) {
-        const fallbackCharacterId =
-          mostRecentConversation.characterId ?? characterId ?? '1';
-        router.replace({
-          pathname: '/chat',
-          query: { characterId: fallbackCharacterId, threadId: mostRecentConversation.threadId }
-        });
-      }
-    };
+  if (!hasExplicitCharacterSelection) {
+    const latestForChar = conversations?.find(c => c.characterId === characterId);
+    if (latestForChar) {
+      router.replace({
+        pathname: '/chat',
+        query: { characterId, threadId: latestForChar.threadId }
+      });
+      return;
+    }
+
+    const mostRecentConversation = conversations?.[0];
+    if (mostRecentConversation) {
+      const fallbackCharacterId =
+        mostRecentConversation.characterId ?? characterId ?? '1';
+      router.replace({
+        pathname: '/chat',
+        query: { characterId: fallbackCharacterId, threadId: mostRecentConversation.threadId }
+      });
+    }
+  }
+};
 
     initialize();
 
     return () => {
       cancelled = true;
     };
-  }, [characterId, fetchCustomCharacters, router, router.query.threadId, user]);
+}, [characterId, fetchCustomCharacters, requestedCharacterId, router, router.query.threadId, user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

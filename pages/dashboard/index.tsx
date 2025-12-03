@@ -1011,6 +1011,7 @@ const displayName =
       }
 
       await signOut(auth);
+      alert(dashboardText.deleteAccountSuccess ?? '탈퇴되었습니다.');
     } catch (error) {
       console.error('Account deletion failed', error);
       setLoadError(error instanceof Error ? error.message : dashboardText.deleteAccountError);

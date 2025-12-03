@@ -337,6 +337,7 @@
     deleteAccountConfirm:
       '정말 탈퇴하시겠어요? 저장된 대화, 캐릭터, 노래가 모두 삭제되며 복구할 수 없습니다.',
     deleteAccountError: '탈퇴 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    deleteAccountSuccess: '탈퇴되었습니다.',
     deleteAccountInProgress: '탈퇴 처리 중...',
     profileMenuSignOut: '로그아웃',
     profileMenuLabel: '계정 메뉴',
