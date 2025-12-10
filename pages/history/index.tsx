@@ -464,7 +464,7 @@ export default function HistoryPage() {
           actions={
             <>
               <Link href="/dashboard" className="btn btn--ghost">
-                대시보드로 돌아가기
+                대시보드
               </Link>
               <Link href="/chat" className="btn btn--ghost">
                 라이브 채팅

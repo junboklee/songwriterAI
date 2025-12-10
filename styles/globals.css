@@ -69,6 +69,7 @@ textarea {
   grid-template-columns: 280px minmax(0, 1fr);
   column-gap: 28px;
   padding: 36px clamp(24px, 5vw, 48px) 48px;
+  position: relative;
 }
 
 .app-shell__sidebar {
@@ -76,22 +77,79 @@ textarea {
   backdrop-filter: blur(26px);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
-  padding: 28px 24px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
   box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.app-shell__sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 28px 24px;
+  overflow-y: auto;
+}
+
+.app-shell__sidebar-close {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1;
+  background: transparent;
 }
 
 .app-shell__content {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  min-height: 0;
+}
+
+.app-shell__mobile-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 11, 20, 0.85);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  z-index: 101;
+}
+
+.app-shell__mobile-toggle span {
+  display: block;
+  height: 2px;
+  width: 22px;
+  background: #fff;
+  border-radius: 2px;
+}
+
+.app-shell__sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  z-index: 99;
+  display: none;
 }
 .main-sidebar {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: 100%;
+  min-height: 0;
 }
 
 .main-sidebar__nav {
@@ -139,6 +197,10 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .history-page {
@@ -711,12 +773,39 @@ textarea {
   line-height: 1.45;
 }
 
+.chat-page .app-shell {
+  align-items: stretch;
+  grid-template-columns: clamp(240px, 22vw, 300px) minmax(0, 1fr);
+  padding: clamp(16px, 3vw, 32px) clamp(20px, 4vw, 40px);
+  gap: 32px;
+}
+
+.chat-page .app-shell__sidebar {
+  min-height: var(--chat-panel-height);
+  height: var(--chat-panel-height);
+}
+
+.chat-page .app-shell__sidebar-inner {
+  height: 100%;
+}
+
+.chat-page .main-sidebar {
+  height: 100%;
+}
+
+.chat-page .app-shell__content {
+  min-height: var(--chat-panel-height);
+  height: var(--chat-panel-height);
+}
+
 .chat-stage {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 560px);
   gap: 28px;
   align-items: stretch;
   width: 100%;
+  height: var(--chat-panel-height);
+  min-height: var(--chat-panel-height);
 }
 
 .chat-stage__conversation {
@@ -881,6 +970,17 @@ textarea {
   }
 
   .chat-stage__conversation .chat-layout {
+    min-height: auto;
+    height: auto;
+  }
+
+  .chat-stage {
+    height: auto;
+    min-height: 0;
+  }
+
+  .chat-page .app-shell__sidebar,
+  .chat-page .app-shell__content {
     min-height: auto;
     height: auto;
   }
@@ -1520,21 +1620,58 @@ textarea {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
+  gap: 32px;
   background: #0c0e14;
   color: var(--text-primary);
+  padding-bottom: 40px;
+  position: relative;
+}
+
+.dashboard-mobile-toggle {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 6, 12, 0.85);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  z-index: 120;
+}
+
+.dashboard-mobile-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
 }
 
 .dashboard-sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 28px;
   padding: 32px 24px;
   background: rgba(12, 14, 22, 0.95);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.dashboard-sidebar__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 4, 8, 0.65);
+  border: none;
+  z-index: 90;
+  display: none;
 }
 
 .dashboard-sidebar__brand {
@@ -2541,20 +2678,6 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .dashboard-page {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dashboard-sidebar {
-    position: static;
-    height: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 16px 20px;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
   .dashboard-sidebar__recent,
   .dashboard-sidebar__footer {
     width: 100%;
@@ -2570,15 +2693,91 @@ textarea {
 }
 
 @media (max-width: 900px) {
+  .dashboard-page {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 24px;
+  }
+
   .app-shell {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 20px;
+    padding: 80px 20px 40px;
   }
 
-  .app-shell__sidebar {
-    position: sticky;
-    top: 16px;
-    z-index: 10;
+  .dashboard-mobile-toggle {
+    display: flex;
+  }
+
+  .dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(80vw, 320px);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 110;
+    border-radius: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dashboard-sidebar.dashboard-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .dashboard-sidebar__backdrop {
+    display: none;
+  }
+
+  .dashboard-sidebar__backdrop--visible {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    border: none;
+    z-index: 100;
+  }
+
+  .chat-page .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 80px 20px 40px;
+  }
+
+  .dashboard-main {
+    padding: 90px 18px 40px;
+  }
+
+  .app-shell--with-sidebar .app-shell__sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 80vw);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 100;
+    border-radius: 0;
+  }
+
+  .app-shell__sidebar-inner {
+    padding: 64px 24px 32px;
+  }
+
+  .app-shell--sidebar-open .app-shell__sidebar {
+    transform: translateX(0);
+  }
+
+  .app-shell__mobile-toggle {
+    display: flex;
+  }
+
+  .app-shell__sidebar-close {
+    display: block;
+  }
+
+  .app-shell--sidebar-open .app-shell__sidebar-backdrop {
+    display: block;
   }
 
   .landing__nav {

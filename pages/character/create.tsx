@@ -165,7 +165,7 @@ export default function CharacterCreate() {
           actions={
             <>
               <Link href="/dashboard" className="btn btn--ghost">
-                대시보드로 돌아가기
+                대시보드
               </Link>
               <button
                 form="character-create-form"

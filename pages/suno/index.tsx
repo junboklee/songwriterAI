@@ -368,7 +368,7 @@ export default function SunoLibraryPage() {
           actions={
             <>
               <Link href="/dashboard" className="btn btn--ghost">
-                대시보드로 돌아가기
+                대시보드
               </Link>
               <Link href="/chat" className="btn btn--ghost">
                 {t('actions.liveChat')}

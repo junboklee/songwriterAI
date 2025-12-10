@@ -52,7 +52,7 @@
     register: {
       title: 'YEON:VERSE',
       subtitle: '10분 만에 감성적인 도버스와 함께 나만의 이야기를 만들어 보세요.',
-      dashboardCta: '대시보드로 돌아가기',
+      dashboardCta: '대시보드',
       loginCta: '로그인',
       audioOn: '배경음 끄기',
       audioOff: '배경음 켜기',
@@ -128,7 +128,7 @@
     missingName: '캐릭터 이름은 필수입니다.',
     missingGreeting: '인사말은 필수입니다.',
     error: '알 수 없는 오류가 발생했습니다. 다시 시도해 주세요.',
-    sidebarBack: '대시보드로 돌아가기',
+    sidebarBack: '대시보드',
     sidebarCancel: '작업 취소',
     form: {
       heroTitle: '새로운 캐릭터를 만들어 보세요',

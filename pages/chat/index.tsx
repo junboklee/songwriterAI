@@ -1250,12 +1250,16 @@ const characterId = requestedCharacterId ?? '1';
     setError(null);
   }, [character, threadId, isLoading]);
 
-  useEffect(() => {
+  const scrollToLatest = useCallback(() => {
     if (!scrollContainerRef.current) {
       return;
     }
     scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-  }, [messages, isLoading]);
+  }, []);
+
+  useEffect(() => {
+    scrollToLatest();
+  }, [messages, isLoading, scrollToLatest]);
 
   useEffect(() => {
     if (!user) {
@@ -1384,6 +1388,11 @@ const characterId = requestedCharacterId ?? '1';
         if (cleaned.length) {
           setMessages(cleaned);
           setError(null);
+          if (typeof window !== 'undefined') {
+            window.requestAnimationFrame(scrollToLatest);
+          } else {
+            scrollToLatest();
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -1481,7 +1490,7 @@ const characterId = requestedCharacterId ?? '1';
     return () => {
       cancelled = true;
     };
-}, [characterId, fetchCustomCharacters, requestedCharacterId, router, router.query.threadId, user]);
+}, [characterId, fetchCustomCharacters, requestedCharacterId, router, router.query.threadId, scrollToLatest, user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1713,12 +1722,13 @@ const characterId = requestedCharacterId ?? '1';
 
   return (
     <RequireAuth>
-      <AppShell sidebar={sidebar}>
+      <div className="chat-page">
+        <AppShell sidebar={sidebar}>
         <AppNav
           actions={
             <>
               <Link href="/dashboard" className="btn btn--ghost">
-                                대시보드로 돌아가기
+                                대시보드
               </Link>
               <Link href="/character/create" className="btn btn--primary">
                                 캐릭터 생성
@@ -1952,7 +1962,8 @@ const characterId = requestedCharacterId ?? '1';
             </div>
           </aside>
         </div>
-      </AppShell>
+        </AppShell>
+      </div>
     </RequireAuth>
   );
 }

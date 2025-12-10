@@ -1,8 +1,9 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { signOut, updateProfile } from 'firebase/auth';
+import { AppShell } from '@/components/AppShell';
 import { RequireAuth } from '@/components/RequireAuth';
 import CharacterEditorPanel, { CharacterVisibility } from '@/components/CharacterEditorPanel';
 import { useAuth } from '@/context/AuthContext';
@@ -89,21 +90,20 @@ const featuredCharacters: CharacterCard[] = [
   {
     id: '1',
     title: 'Dayeon',
-    creator: '친절하고 정감 있는',
+    creator: 'Friendly Muse',
     description:
-      '나는 김다연이야. 가수가 되는 게 꿈이라 매일 가사 쓰고 노래 연습에 푹 빠져 있어!',
+      'Always-ready songwriting partner who loves mellow nights and acoustic jams.',
     tag: 'SingerSongwriter',
-    sample:
-      '오늘 가장 기억에 남는 순간이 뭐였는지 같이 이야기해 볼래요? 편하게 들려줘.',
+    sample: 'What moment stuck with you today? Tell me and we will turn it into lyrics.',
     style: 'scene-card--1',
     chatId: '1'
   }
 ];
 
 const visibilityLabels: Record<CharacterVisibility, string> = {
-  private: '비공개',
-  unlisted: '링크 공개',
-  public: '전체 공개'
+  private: 'Private',
+  unlisted: 'Link Only',
+  public: 'Public'
 };
 
 const isCharacterVisibility = (value: unknown): value is CharacterVisibility =>
@@ -114,7 +114,10 @@ const toTrimmedOrEmpty = (value?: string | null) =>
 
 const adaptCharacter = (item: CharacterApiItem): UserCharacter => ({
   id: item.id,
-  name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : '이름 없는 캐릭터',
+  name:
+    typeof item.name === 'string' && item.name.trim()
+      ? item.name.trim()
+      : 'Unnamed Character',
   summary: toTrimmedOrEmpty(item.summary),
   greeting: toTrimmedOrEmpty(item.greeting),
   longDescription: toTrimmedOrEmpty(item.longDescription ?? item.instructions),
@@ -299,7 +302,6 @@ export default function Dashboard() {
   const [nicknameValue, setNicknameValue] = useState('');
   const [nicknameSaving, setNicknameSaving] = useState(false);
   const [nicknameError, setNicknameError] = useState<string | null>(null);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
@@ -314,7 +316,7 @@ export default function Dashboard() {
       .join(' ')
       .toLowerCase();
 
-const hasCustomCharacters = customCharacters.length > 0;
+  const hasCustomCharacters = customCharacters.length > 0;
   const filteredCharacters = useMemo(() => {
     if (!normalizedSearch) {
       return customCharacters;
@@ -762,7 +764,7 @@ const displayName =
 
   const welcomeTitle = dashboardText.welcome(displayName);
   const statusSummary = profileData
-    ? `${dashboardText.conversationsLabel}: ${stats.conversationCount.toLocaleString('ko-KR')} · ${
+    ? `${dashboardText.conversationsLabel}: ${stats.conversationCount.toLocaleString('ko-KR')} 쨌 ${
         dashboardText.songsLabel
       }: ${stats.songCount.toLocaleString('ko-KR')}`
     : isLoadingProfile
@@ -967,32 +969,15 @@ const displayName =
     }
   };
 
-  const closeMobileNav = useCallback(() => setIsMobileNavOpen(false), [setIsMobileNavOpen]);
-  const openMobileNav = useCallback(() => setIsMobileNavOpen(true), []);
-
-  useEffect(() => {
-    closeMobileNav();
-  }, [router.asPath, closeMobileNav]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth > 900) {
-        closeMobileNav();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [closeMobileNav]);
-
   const handleProfileMenuToggle = () => {
     setIsProfileMenuOpen(prev => !prev);
+  };
+
+  const handleProfileNickname = () => {
+    setIsProfileMenuOpen(false);
+    setNicknameError(null);
+    setNicknameValue(displayName);
+    setIsNicknameModalOpen(true);
   };
 
   const handleDeleteAccount = async () => {
@@ -1030,20 +1015,13 @@ const displayName =
       }
 
       await signOut(auth);
-      alert(dashboardText.deleteAccountSuccess ?? '계정이 삭제되었습니다.');
+      alert(dashboardText.deleteAccountSuccess ?? '?덊눜?섏뿀?듬땲??');
     } catch (error) {
       console.error('Account deletion failed', error);
       setLoadError(error instanceof Error ? error.message : dashboardText.deleteAccountError);
     } finally {
       setIsDeletingAccount(false);
     }
-  };
-
-  const handleProfileNickname = () => {
-    setIsProfileMenuOpen(false);
-    setNicknameError(null);
-    setNicknameValue(displayName);
-    setIsNicknameModalOpen(true);
   };
 
   const handleSignOutClick = async () => {
@@ -1055,175 +1033,6 @@ const displayName =
       console.error('Sign out failed', error);
     }
   };
-
-  const sidebarContent = (
-    <>
-      <div className="dashboard-sidebar__brand">Nova Singer AI</div>
-
-      <div className="dashboard-sidebar__create">
-        <Link href="/character/create" onClick={closeMobileNav}>
-          {dashboardText.visitCreate}
-          <span aria-hidden="true">&rarr;</span>
-        </Link>
-      </div>
-
-      <nav className="dashboard-sidebar__nav">
-        <Link
-          href="/dashboard"
-          className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
-          onClick={closeMobileNav}
-        >
-          <span>{dashboardText.navDashboard}</span>
-        </Link>
-        <Link href="/history" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-          <span>{dashboardText.navHistory}</span>
-        </Link>
-        <Link href="/suno" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-          <span>{dashboardText.navSuno}</span>
-        </Link>
-      </nav>
-
-      <div className="dashboard-sidebar__search">
-        <input
-          type="search"
-          placeholder={dashboardText.searchPlaceholder}
-          aria-label={dashboardText.searchPlaceholder}
-          value={searchQuery}
-          onChange={handleSearchInputChange}
-        />
-      </div>
-
-      <div className="dashboard-sidebar__recent">
-        <h3>{dashboardText.sidebarRecentTitle}</h3>
-        <div className="dashboard-sidebar__recent-list">
-          {isLoadingRecentChats ? (
-            <div className="dashboard-sidebar__recent-item">{dashboardText.loadingIndicator}</div>
-          ) : recentChatsError ? (
-            <div className="dashboard-sidebar__recent-item">{recentChatsError}</div>
-          ) : !hasRecentChats ? (
-            <div className="dashboard-sidebar__recent-item">{dashboardText.sidebarEmptyRecent}</div>
-          ) : noRecentSearchResults ? (
-            <div className="dashboard-sidebar__recent-item">{dashboardText.searchNoResults}</div>
-          ) : (
-            filteredRecentChats.map(chat => {
-              const updated = formatConversationUpdatedAt(chat.updatedAt);
-              const title = buildConversationTitle(chat, characterNames);
-              const disabling = Boolean(deletingRecentIds[chat.threadId]);
-              return (
-                <button
-                  key={chat.id}
-                  type="button"
-                  className="dashboard-sidebar__recent-item"
-                  onClick={() => {
-                    closeMobileNav();
-                    handleContinueChat(chat.threadId, chat.characterId);
-                  }}
-                  disabled={disabling}
-                >
-                  <span>{title}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
-                    {updated || dashboardText.noMessagesYet}
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      <div className="dashboard-sidebar__profile" ref={profileMenuRef} style={{ position: 'relative' }}>
-        <button
-          type="button"
-          onClick={handleProfileMenuToggle}
-          aria-haspopup="true"
-          aria-expanded={isProfileMenuOpen}
-          aria-label={dashboardText.profileMenuLabel}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 14,
-            width: '100%',
-            padding: '12px 16px',
-            borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: isProfileMenuOpen ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)',
-            color: 'inherit',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease'
-          }}
-        >
-          <div style={{ textAlign: 'left' }}>
-            <strong style={{ fontSize: '0.9rem' }}>{displayName}</strong>
-            <p
-              style={{
-                margin: '4px 0 0',
-                fontSize: '0.75rem',
-                color: 'rgba(255,255,255,0.6)'
-              }}
-            >
-              {profileEmail || dashboardText.sidebarProfileRole}
-            </p>
-          </div>
-          <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)' }}>
-            {isProfileMenuOpen ? '닫기' : '메뉴'}
-          </span>
-        </button>
-
-        {isProfileMenuOpen ? (
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              bottom: '115%',
-              display: 'grid',
-              gap: 8,
-              minWidth: 180,
-              padding: 12,
-              borderRadius: 12,
-              background: 'rgba(12,12,12,0.95)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(12px)',
-              zIndex: 20
-            }}
-          >
-            <button
-              type="button"
-              className="btn btn--ghost"
-              onClick={handleProfileNickname}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuNickname}
-            </button>
-            <button
-              type="button"
-              className="btn btn--danger"
-              onClick={() => {
-                void handleDeleteAccount();
-              }}
-              disabled={isDeletingAccount}
-              style={{ justifyContent: 'center' }}
-            >
-              {isDeletingAccount
-                ? dashboardText.deleteAccountInProgress
-                : dashboardText.profileMenuDeleteAccount}
-            </button>
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => {
-                void handleSignOutClick();
-              }}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuSignOut}
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </>
-  );
 
   useEffect(() => {
     if (!isNicknameModalOpen) {
@@ -1369,188 +1178,173 @@ const displayName =
     }
   };
 
-  return (
-    <RequireAuth>
-      <button
-        type="button"
-        className="dashboard-mobile-toggle"
-        aria-label="사이드바 열기"
-        aria-controls="dashboard-sidebar"
-        aria-expanded={isMobileNavOpen}
-        onClick={openMobileNav}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-      <div className="dashboard-page">
-        <aside
-          id="dashboard-sidebar"
-          className={`dashboard-sidebar${isMobileNavOpen ? ' dashboard-sidebar--open' : ''}`}
-        >
-          <div className="dashboard-sidebar__brand">Nova Singer AI</div>
+  const sidebar = (
+    <div className="dashboard-sidebar">
+      <div className="dashboard-sidebar__brand">Nova Singer AI</div>
 
-          <div className="dashboard-sidebar__create">
-            <Link href="/character/create" onClick={closeMobileNav}>
-              {dashboardText.visitCreate}
-              <span>＋</span>
-            </Link>
-          </div>
+      <div className="dashboard-sidebar__create">
+        <Link href="/character/create">
+          {dashboardText.visitCreate}
+          <span aria-hidden="true">&rarr;</span>
+        </Link>
+      </div>
 
-          <nav className="dashboard-sidebar__nav">
-            <Link
-              href="/dashboard"
-              className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
-              onClick={closeMobileNav}
-            >
-              <span>{dashboardText.navDashboard}</span>
-            </Link>
-            <Link href="/history" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-              <span>{dashboardText.navHistory}</span>
-            </Link>
-            <Link href="/suno" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-              <span>{dashboardText.navSuno}</span>
-            </Link>
-          </nav>
+      <nav className="dashboard-sidebar__nav">
+        <Link href="/dashboard" className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active">
+          <span>{dashboardText.navDashboard}</span>
+        </Link>
+        <Link href="/history" className="dashboard-sidebar__nav-item">
+          <span>{dashboardText.navHistory}</span>
+        </Link>
+        <Link href="/suno" className="dashboard-sidebar__nav-item">
+          <span>{dashboardText.navSuno}</span>
+        </Link>
+      </nav>
 
-          <div className="dashboard-sidebar__search">
-            <input
-              type="search"
-              placeholder={dashboardText.searchPlaceholder}
-              aria-label={dashboardText.searchPlaceholder}
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-            />
-          </div>
+      <div className="dashboard-sidebar__search">
+        <input
+          type="search"
+          placeholder={dashboardText.searchPlaceholder}
+          aria-label={dashboardText.searchPlaceholder}
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+        />
+      </div>
 
-          <div className="dashboard-sidebar__recent">
-            <h3>{dashboardText.sidebarRecentTitle}</h3>
-            <div className="dashboard-sidebar__recent-list">
-              {isLoadingRecentChats ? (
-                <div className="dashboard-sidebar__recent-item">{dashboardText.loadingIndicator}</div>
-              ) : recentChatsError ? (
-                <div className="dashboard-sidebar__recent-item">{recentChatsError}</div>
-              ) : !hasRecentChats ? (
-                <div className="dashboard-sidebar__recent-item">{dashboardText.sidebarEmptyRecent}</div>
-              ) : noRecentSearchResults ? (
-                <div className="dashboard-sidebar__recent-item">{dashboardText.searchNoResults}</div>
-              ) : (
-                filteredRecentChats.map(chat => {
-                  const updated = formatConversationUpdatedAt(chat.updatedAt);
-                  const title = buildConversationTitle(chat, characterNames);
-                  const disabling = Boolean(deletingRecentIds[chat.threadId]);
-                  return (
-                    <button
-                      key={chat.id}
-                      type="button"
-                      className="dashboard-sidebar__recent-item"
-                      onClick={() => {
-                        closeMobileNav();
-                        handleContinueChat(chat.threadId, chat.characterId);
-                      }}
-                      disabled={disabling}
-                    >
-                      <span>{title}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
-                        {updated || dashboardText.noMessagesYet}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          <div
-          className="dashboard-sidebar__profile"
-          ref={profileMenuRef}
-          style={{ position: 'relative' }}
-        >
-          <button
-            type="button"
-            onClick={handleProfileMenuToggle}
-            aria-haspopup="true"
-            aria-expanded={isProfileMenuOpen}
-            aria-label={dashboardText.profileMenuLabel}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 14,
-              width: '100%',
-              padding: '12px 16px',
-              borderRadius: 16,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: isProfileMenuOpen ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)',
-              color: 'inherit',
-              cursor: 'pointer',
-              transition: 'background 0.2s ease'
-            }}
-          >
-            <div style={{ textAlign: 'left' }}>
-              <strong style={{ fontSize: '0.9rem' }}>{displayName}</strong>
-              <p
-                style={{
-                  margin: '4px 0 0',
-                  fontSize: '0.75rem',
-                  color: 'rgba(255,255,255,0.6)'
-                }}
-              >
-                {profileEmail || dashboardText.sidebarProfileRole}
-              </p>
-            </div>
-            <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)' }}>
-              {isProfileMenuOpen ? '▲' : '▼'}
-            </span>
-          </button>
-
-          {isProfileMenuOpen ? (
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                bottom: '115%',
-                display: 'grid',
-                gap: 8,
-                minWidth: 180,
-                padding: 12,
-                borderRadius: 12,
-                background: 'rgba(12,12,12,0.95)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
-                backdropFilter: 'blur(12px)',
-                zIndex: 20
-              }}
-            >
-              <button
-                type="button"
-                className="btn btn--ghost"
-                onClick={handleProfileNickname}
-                style={{ justifyContent: 'flex-start' }}
-              >
-                {dashboardText.profileMenuNickname}
-              </button>
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={() => {
-                  void handleSignOutClick();
-                }}
-                style={{ justifyContent: 'center' }}
-              >
-                {dashboardText.profileMenuSignOut}
-              </button>
-            </div>
-          ) : null}
+      <div className="dashboard-sidebar__recent">
+        <h3>{dashboardText.sidebarRecentTitle}</h3>
+        <div className="dashboard-sidebar__recent-list">
+          {isLoadingRecentChats ? (
+            <div className="dashboard-sidebar__recent-item">{dashboardText.loadingIndicator}</div>
+          ) : recentChatsError ? (
+            <div className="dashboard-sidebar__recent-item">{recentChatsError}</div>
+          ) : !hasRecentChats ? (
+            <div className="dashboard-sidebar__recent-item">{dashboardText.sidebarEmptyRecent}</div>
+          ) : noRecentSearchResults ? (
+            <div className="dashboard-sidebar__recent-item">{dashboardText.searchNoResults}</div>
+          ) : (
+            filteredRecentChats.map(chat => {
+              const updated = formatConversationUpdatedAt(chat.updatedAt);
+              const title = buildConversationTitle(chat, characterNames);
+              const disabling = Boolean(deletingRecentIds[chat.threadId]);
+              return (
+                <button
+                  key={chat.id}
+                  type="button"
+                  className="dashboard-sidebar__recent-item"
+                  onClick={() => handleContinueChat(chat.threadId, chat.characterId)}
+                  disabled={disabling}
+                >
+                  <span>{title}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
+                    {updated || dashboardText.noMessagesYet}
+                  </span>
+                </button>
+              );
+            })
+          )}
         </div>
-        </aside>
+      </div>
+
+      <div className="dashboard-sidebar__profile" ref={profileMenuRef} style={{ position: 'relative' }}>
         <button
           type="button"
-          className={`dashboard-sidebar__backdrop${isMobileNavOpen ? ' dashboard-sidebar__backdrop--visible' : ''}`}
-          aria-label="사이드바 닫기"
-          onClick={closeMobileNav}
-        />
-        <main className="dashboard-main">
+          onClick={handleProfileMenuToggle}
+          aria-haspopup="true"
+          aria-expanded={isProfileMenuOpen}
+          aria-label={dashboardText.profileMenuLabel}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 14,
+            width: '100%',
+            padding: '12px 16px',
+            borderRadius: 16,
+            border: '1px solid rgba(255,255,255,0.12)',
+            background: isProfileMenuOpen ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)',
+            color: 'inherit',
+            cursor: 'pointer',
+            transition: 'background 0.2s ease'
+          }}
+        >
+          <div style={{ textAlign: 'left' }}>
+            <strong style={{ fontSize: '0.9rem' }}>{displayName}</strong>
+            <p
+              style={{
+                margin: '4px 0 0',
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.6)'
+              }}
+            >
+              {profileEmail || dashboardText.sidebarProfileRole}
+            </p>
+          </div>
+          <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)' }}>
+            {isProfileMenuOpen ? '닫기' : '메뉴'}
+          </span>
+        </button>
+
+        {isProfileMenuOpen ? (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              bottom: '115%',
+              display: 'grid',
+              gap: 8,
+              minWidth: 180,
+              padding: 12,
+              borderRadius: 12,
+              background: 'rgba(12,12,12,0.95)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
+              backdropFilter: 'blur(12px)',
+              zIndex: 20
+            }}
+          >
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={handleProfileNickname}
+              style={{ justifyContent: 'center' }}
+            >
+              {dashboardText.profileMenuNickname}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={() => {
+                void handleDeleteAccount();
+              }}
+              disabled={isDeletingAccount}
+              style={{ justifyContent: 'center' }}
+            >
+              {isDeletingAccount
+                ? dashboardText.deleteAccountInProgress
+                : dashboardText.profileMenuDeleteAccount}
+            </button>
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => {
+                void handleSignOutClick();
+              }}
+              style={{ justifyContent: 'center' }}
+            >
+              {dashboardText.profileMenuSignOut}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  return (
+    <RequireAuth>
+      <div className="dashboard-page">
+        <AppShell sidebar={sidebar}>
+        <div className="dashboard-main">
           <header className="dashboard-main__header">
             <div className="dashboard-main__title">
               <h1>{welcomeTitle}</h1>
@@ -1814,7 +1608,7 @@ const displayName =
                           >
                             {copiedId === character.id
                               ? dashboardText.copyLinkSuccess
-                              : `🔗 ${dashboardText.copyLink}`}
+                              : `?뵕 ${dashboardText.copyLink}`}
                           </button>
                         )}
                       </div>
@@ -1861,7 +1655,8 @@ const displayName =
               )}
             </div>
           </section>
-        </main>
+          </div>
+        </AppShell>
       </div>
       {selectedCharacter ? (
         <CharacterEditorPanel
@@ -1976,3 +1771,18 @@ const displayName =
     </RequireAuth>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

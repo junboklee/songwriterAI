@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { useTranslation } from '@/context/I18nContext';
 
@@ -20,7 +20,6 @@ const NAV_CONFIG: Array<{
 
 export function MainSidebar({ active, children }: MainSidebarProps) {
   const { t } = useTranslation('sidebar');
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = useMemo(
     () =>
@@ -33,14 +32,7 @@ export function MainSidebar({ active, children }: MainSidebarProps) {
   );
 
   return (
-    <div className={`main-sidebar${isCollapsed ? ' main-sidebar--collapsed' : ''}`}>
-      <button
-        className="main-sidebar__toggle"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {isCollapsed ? '▼' : '▲'}
-      </button>
+    <div className="main-sidebar">
       <nav className="main-sidebar__nav">
         {navItems.map(item => {
           const isActive = item.key === active;
@@ -58,7 +50,7 @@ export function MainSidebar({ active, children }: MainSidebarProps) {
         })}
       </nav>
 
-      {!isCollapsed && children ? <div className="main-sidebar__body">{children}</div> : null}
+      {children ? <div className="main-sidebar__body">{children}</div> : null}
     </div>
   );
 }
