@@ -1,6 +1,6 @@
 const title = 'SongwriterAI';
 const description =
-  'AI 작사가와 실시간으로 대화하며 가사를 쓰고 버전을 관리할 수 있는 SongwriterAI 플랫폼';
+  'AI 작사가와 실시간으로 협업하며 가사를 만들고 버전 관리까지 할 수 있는 SongwriterAI 플랫폼입니다.';
 const url = 'https://novasingerai.com';
 
 const config = {

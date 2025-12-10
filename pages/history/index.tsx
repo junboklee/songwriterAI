@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { AppNav } from "@/components/AppNav";
@@ -459,35 +459,34 @@ export default function HistoryPage() {
   return (
     <RequireAuth>
       <AppShell sidebar={sidebar}>
-        <AppNav
-          showBrand={false}
-          actions={
-            <>
-              <Link href="/dashboard" className="btn btn--ghost">
-                대시보드
-              </Link>
-              <Link href="/chat" className="btn btn--ghost">
-                라이브 채팅
-              </Link>
-              <Link href="/suno" className="btn btn--primary">
-                라이브러리
-              </Link>
-              {conversations.length ? (
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => {
-                    void handleClearAllConversations();
-                  }}
-                  disabled={clearingAll || loading || Object.keys(deletingIds).length > 0}
-                  style={{ marginLeft: 8 }}
-                >
-                  {clearingAll ? HISTORY_TEXT.clearing : HISTORY_TEXT.clearAll}
-                </button>
-              ) : null}
-            </>
-          }
-        />
+        <div className="history-page__nav page-actions-bar">
+          <AppNav
+            showBrand={false}
+            actions={
+              <>
+                <Link href="/dashboard" className="btn btn--ghost">
+                  대시보드
+                </Link>
+                <Link href="/suno" className="btn btn--primary">
+                  라이브러리
+                </Link>
+                {conversations.length ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => {
+                      void handleClearAllConversations();
+                    }}
+                    disabled={clearingAll || loading || Object.keys(deletingIds).length > 0}
+                    style={{ marginLeft: 8 }}
+                  >
+                    {clearingAll ? HISTORY_TEXT.clearing : HISTORY_TEXT.clearAll}
+                  </button>
+                ) : null}
+              </>
+            }
+          />
+        </div>
 
         <div className="history-page">
           <header className="history-page__header">
@@ -625,3 +624,4 @@ export default function HistoryPage() {
     </RequireAuth>
   );
 }
+

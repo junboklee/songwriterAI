@@ -67,13 +67,14 @@ All routes require a valid Firebase ID token.
 - To store a song immediately after generation, send the lyrics and optional metadata via the `songDraft` payload when calling `/api/chat`.
 
 ## Next Steps
-- Connect UI pages to the new profile and history endpoints for dashboards, recent chats, and saved lyrics.
+- Expand automated coverage for /api/chat, 레이트리밋, 자동 가사 저장 흐름, 그리고 대시보드 주요 위젯.
+- Build a regression checklist (또는 자동 Lighthouse 스크립트)로 마케팅 페이지 성능·SEO 점수를 추적하세요.
 
-## SEO 실행 가이드 (초보용)
-1. **페이지 확인** ? `npm run dev`로 로컬 서버를 띄우고 `/`, `/features`, `/pricing` 등 공개 페이지가 정상 노출되는지 확인하세요.
-2. **콘텐츠 작성** ? 서비스 한 줄 요약, 핵심 기능, CTA 문장을 먼저 메모한 뒤 `pages/index.tsx`와 추가 페이지의 문구를 다듬습니다.
-3. **Lighthouse 점검** ? Chrome DevTools > Lighthouse에서 Performance·SEO 리포트를 생성해 LCP, CLS, 색인 문제를 기록하고 제안된 개선 사항을 반영합니다.
-4. **i18n 반영** ? 번역 키를 `locales` 폴더에 추가하고 `I18nProvider`로 노출 언어를 전환합니다. 새 페이지 문구도 동일한 키로 추출해 중복 번역을 막으세요.
-5. **사이트맵/robots 생성** ? `npm run build`를 실행하면 postbuild 훅이 자동으로 `public/sitemap*.xml`과 `robots.txt`를 만듭니다. Search Console에 `https://novasingerai.com/sitemap.xml`을 제출하세요.
-6. **GA4 / Search Console / GTM 연동** ? `.env.local`에 `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_GTM_ID`를 채우면 `components/SeoMeta.tsx` + `_document.tsx`가 Google 태그/Tag Manager/검증 메타를 자동으로 삽입합니다. 프로덕션 환경 변수에도 동일한 키로 값을 넣으세요.
-7. **모니터링** ? 배포 후 GA4 리포트와 Search Console 색인 현황을 주기적으로 확인하고, 404/500 로그는 Firebase Hosting이나 Vercel Logs에서 모니터링하세요.
+## SEO & Localization Checklist
+1. **콘텐츠 정비 (완료)** – /, /features, /pricing 카피와 메타 정보를 최신 한국어 버전으로 갱신했습니다.
+2. **로케일 확장 (완료)** – locales/en.ts 등록 및 Provider 업데이트로 다국어 확장을 위한 기본 구조를 마련했습니다.
+3. **Lighthouse** – `npm run lighthouse` (환경변수 `LIGHTHOUSE_URL` 설정 가능)로 자동 리포트를 생성하거나, Chrome DevTools > Lighthouse에서 Performance·SEO 리포트를 주기적으로 측정하세요.
+4. **Sitemap / Robots** – 
+pm run build 후 공개 URL(https://novasingerai.com/sitemap.xml)을 Search Console에 제출하는 루틴을 유지하세요.
+5. **GA4 / Search Console / GTM** – .env.local에 측정 ID를 채우고 components/SeoMeta.tsx + _document.tsx에서 로딩 여부를 확인하세요.
+6. **모니터링** – GA4·Search Console 지표와 Firebase Hosting/Vercel 로그를 주 1회 이상 확인해 404/500 이벤트를 추적하세요.

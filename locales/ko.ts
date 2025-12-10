@@ -196,6 +196,10 @@
       suno: {
         label: '라이브러리',
         description: '저장된 가사와 프롬프트'
+      },
+      dashboard: {
+        label: '대시보드',
+        description: '전체 현황 살펴보기'
       }
     }
   },

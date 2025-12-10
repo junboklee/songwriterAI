@@ -9,8 +9,10 @@ import {
 
 import { defaultLocale, registerTranslations, translate, TranslateOptions } from '@/lib/i18n';
 import { ko } from '@/locales/ko';
+import { en } from '@/locales/en';
 
 registerTranslations('ko', ko);
+registerTranslations('en', en);
 
 type I18nContextValue = {
   locale: string;
@@ -62,4 +64,3 @@ export const useTranslation = (namespace?: string) => {
     t: scopedTranslate
   };
 };
-

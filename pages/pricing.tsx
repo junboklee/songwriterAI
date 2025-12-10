@@ -5,20 +5,20 @@ const plans = [
   {
     name: 'Free',
     price: '₩0 /월',
-    highlights: ['월 50회 AI 요청', '2개의 즐겨찾는 캐릭터', '기본 버전 히스토리'],
+    highlights: ['월 50회 AI 요청', '즐겨찾기 캐릭터 2개', '기본 가사 버전 관리'],
     cta: '무료로 시작'
   },
   {
     name: 'Studio',
-    price: '₩19,000 /월',
-    highlights: ['무제한 AI 요청', '커스텀 캐릭터 & 스타일', '협업용 공유 폴더', '우선 응답'],
+    price: '₩9,000 /월',
+    highlights: ['무제한 AI 요청', '커스텀 캐릭터 & 공유', '팀 협업 폴더', '우선 지원'],
     cta: '14일 체험'
   },
   {
     name: 'Label',
     price: '문의',
-    highlights: ['팀 계정', '보안 / 감사 로그', '전담 매니저', '워크플로우 API 연동'],
-    cta: '영업팀 문의'
+    highlights: ['다중 계정', '보안 / 감사 로그', '전담 매니저', '워크플로 API 연동'],
+    cta: '세일즈 문의'
   }
 ];
 
@@ -29,30 +29,30 @@ export default function PricingPage() {
         <title>요금제 | SongwriterAI</title>
         <meta
           name="description"
-          content="SongwriterAI Free, Studio, Label 플랜 가격과 혜택을 비교하고 팀에 맞는 옵션을 선택하세요."
+          content="무료·Studio·Label 요금제를 비교하고 팀에 맞는 송라이팅 코파일럿 플랜을 선택하세요."
         />
         <meta property="og:title" content="요금제 | SongwriterAI" />
         <meta
           property="og:description"
-          content="SongwriterAI 플랜을 비교하고 팀에 맞는 옵션을 선택하세요."
+          content="송라이팅 팀을 위한 SongwriterAI 요금제와 혜택을 확인해 보세요."
         />
       </Head>
       <main className="page">
         <header>
-          <h1>요금제 안내</h1>
+          <h1>요금 안내</h1>
           <p>
-            개인 작업부터 레이블 단위 협업까지 단계별 요금제로 제공됩니다. 모든 유료 플랜은 14일 환불 보장을
-            제공합니다.
+            개인 작업부터 팀 단위 협업까지 바로 사용할 수 있는 간단한 가격 정책입니다. 모든 유료 플랜은 14일 환불
+            보장을 제공합니다.
           </p>
         </header>
 
         <section className="plans">
-          {plans.map((plan) => (
+          {plans.map(plan => (
             <article key={plan.name}>
               <h2>{plan.name}</h2>
               <p className="price">{plan.price}</p>
               <ul>
-                {plan.highlights.map((item) => (
+                {plan.highlights.map(item => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
@@ -64,12 +64,12 @@ export default function PricingPage() {
         <section className="faq">
           <h2>결제 관련 FAQ</h2>
           <article>
-            <h3>결제는 어떻게 이루어지나요?</h3>
-            <p>신용카드와 계좌이체를 지원하며, Stripe Billing으로 안전하게 처리됩니다.</p>
+            <h3>결제는 어떻게 진행되나요?</h3>
+            <p>신용/체크카드 또는 계좌이체를 Stripe Billing을 통해 안전하게 처리합니다.</p>
           </article>
           <article>
-            <h3>언제든 해지할 수 있나요?</h3>
-            <p>언제든 대시보드에서 플랜을 다운그레이드하거나 취소할 수 있고 남은 기간만큼 일할 계산됩니다.</p>
+            <h3>언제든 취소할 수 있나요?</h3>
+            <p>대시보드에서 언제든 플랜을 다운그레이드하거나 해지할 수 있으며, 미사용 기간은 일할 계산됩니다.</p>
           </article>
         </section>
       </main>
@@ -88,7 +88,7 @@ export default function PricingPage() {
 
         .plans {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
           gap: 1.5rem;
         }
 

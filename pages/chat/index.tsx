@@ -17,6 +17,7 @@ import { MainSidebar } from '@/components/MainSidebar';
 import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
+import { buildAutoSaveLyricsPayload } from '@/lib/autoSaveLyrics';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { DEFAULT_CHARACTER_NAMES } from '@/lib/defaultCharacterNames';
 
@@ -653,50 +654,29 @@ const fetchCustomCharacters = useCallback(
   );
 
   const persistLyrics = useCallback(async (options: PersistLyricsOptions) => {
-  const { lyrics, title, threadId, characterId, characterName, idToken } = options;
-  const trimmedLyrics = lyrics.trim();
-
-  if (!trimmedLyrics) {
-    return;
-  }
-
-  const firstMeaningfulLine =
-    trimmedLyrics
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .find(line => line.length > 0) ?? '';
-
-  const autoTitle = title?.trim()
-    ? title.trim()
-    : firstMeaningfulLine
-      ? firstMeaningfulLine.slice(0, 60)
-      : characterName
-        ? `${characterName}의 새 노래`
-        : `자동 저장 ${new Date().toLocaleString()}`;
-
-  try {
-    await fetch('/api/profile/songs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`
-      },
-      body: JSON.stringify({
-        title: autoTitle,
-        lyrics: trimmedLyrics,
-        characterId,
-        threadId,
-        metadata: {
-          source: 'auto-from-chat',
-          characterName: characterName ?? null,
-          storedAt: new Date().toISOString()
-        }
-      })
+    const { idToken, ...rest } = options;
+    const payload = buildAutoSaveLyricsPayload({
+      ...rest,
+      timestamp: new Date()
     });
-  } catch (storeError) {
-    console.error('Failed to store lyrics automatically', storeError);
-  }
-}, []);
+
+    if (!payload) {
+      return;
+    }
+
+    try {
+      await fetch('/api/profile/songs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (storeError) {
+      console.error('Failed to store lyrics automatically', storeError);
+    }
+  }, []);
 
 useEffect(() => {
   if (!user) {
@@ -719,7 +699,7 @@ const requestedCharacterId = useMemo(() => {
 
 const characterId = requestedCharacterId ?? '1';
 
-  useEffect(() => {
+useEffect(() => {
     if (!characterId) {
       return;
     }
@@ -1038,6 +1018,15 @@ const characterId = requestedCharacterId ?? '1';
   const videoPanelUrl = videoSourceMeta.url;
   const isDirectVideoSource = videoSourceMeta.isDirect;
   const videoPanelStatus = videoSourceMeta.status;
+  const shouldUseYouTubeLayout =
+    !isDirectVideoSource && (shouldUseFallbackPlaylist || Boolean(videoPanelUrl));
+  const videoFrameClassName = [
+    'chat-video-frame',
+    !videoPanelUrl && !shouldUseFallbackPlaylist ? 'chat-video-frame--empty' : '',
+    shouldUseYouTubeLayout ? 'chat-video-frame--youtube' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const resolveCharacterMeta = useCallback(
     (id?: string | null) => {
@@ -1098,9 +1087,12 @@ const characterId = requestedCharacterId ?? '1';
   );
 
   const sidebar = useMemo(
-    () => (
-      <MainSidebar active="chat">
-        <div>
+    () => {
+      const recentSidebarConversations = sidebarConversations.slice(0, 2);
+
+      return (
+        <MainSidebar active="chat">
+          <div>
           <p className="section-title">{TEXT.sidebarTitle}</p>
           <div className="sidebar-list" style={{ marginTop: 14 }}>
             {sidebarLoading ? (
@@ -1158,7 +1150,7 @@ const characterId = requestedCharacterId ?? '1';
             ) : null}
 
             {!sidebarLoading && !sidebarError
-              ? sidebarConversations.map(conversation => {
+              ? recentSidebarConversations.map(conversation => {
                   const conversationCharacter = resolveCharacterMeta(conversation.characterId);
 
                   return (
@@ -1228,7 +1220,8 @@ const characterId = requestedCharacterId ?? '1';
           </div>
         </div>
       </MainSidebar>
-    ),
+    );
+    },
     [
       characterId,
       resolveCharacterMeta,
@@ -1746,21 +1739,23 @@ const characterId = requestedCharacterId ?? '1';
     <RequireAuth>
       <div className="chat-page">
         <AppShell sidebar={sidebar}>
-        <AppNav
-          actions={
-            <>
-              <Link href="/dashboard" className="btn btn--ghost">
-                                대시보드
-              </Link>
-              <Link href="/character/create" className="btn btn--primary">
-                                캐릭터 생성
-              </Link>
-            </>
-          }
-        />
+          <div className="page-actions-bar">
+            <AppNav
+              actions={
+                <>
+                  <Link href="/dashboard" className="btn btn--ghost">
+                    대시보드
+                  </Link>
+                  <Link href="/character/create" className="btn btn--primary">
+                    캐릭터 생성
+                  </Link>
+                </>
+              }
+            />
+          </div>
 
-        <div className="chat-stage">
-          <div className="chat-stage__conversation">
+          <div className="chat-stage">
+            <div className="chat-stage__conversation">
             <div className="chat-layout">
               <div className="chat-layout__header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -1925,11 +1920,7 @@ const characterId = requestedCharacterId ?? '1';
                 <span className="chat-video-panel__status">{videoPanelStatus}</span>
               </div>
               <div className="chat-video-panel__media">
-                  <div
-                    className={`chat-video-frame${
-                      videoPanelUrl || shouldUseFallbackPlaylist ? '' : ' chat-video-frame--empty'
-                    }`}
-                  >
+                  <div className={videoFrameClassName}>
                   {videoPanelUrl ? (
                     isDirectVideoSource ? (
                       <video

@@ -209,6 +209,14 @@ textarea {
   gap: 24px;
 }
 
+.history-page__nav {
+  width: 100%;
+}
+
+.page-actions-bar {
+  width: 100%;
+}
+
 .history-page__header {
   display: flex;
   align-items: center;
@@ -781,8 +789,8 @@ textarea {
 }
 
 .chat-page .app-shell__sidebar {
-  min-height: var(--chat-panel-height);
-  height: var(--chat-panel-height);
+  min-height: 100%;
+  height: auto;
 }
 
 .chat-page .app-shell__sidebar-inner {
@@ -790,22 +798,28 @@ textarea {
 }
 
 .chat-page .main-sidebar {
-  height: 100%;
+  height: auto;
+  min-height: 100%;
 }
 
+.chat-page .app-shell {
+  min-height: 100vh;
+}
+
+.chat-page .app-shell__sidebar,
 .chat-page .app-shell__content {
-  min-height: var(--chat-panel-height);
-  height: var(--chat-panel-height);
+  min-height: 100%;
+  height: auto;
 }
 
 .chat-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 560px);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.4fr) clamp(260px, 23vw, 380px);
+  gap: 24px;
   align-items: stretch;
   width: 100%;
-  height: var(--chat-panel-height);
-  min-height: var(--chat-panel-height);
+  height: auto;
+  min-height: auto;
 }
 
 .chat-stage__conversation {
@@ -843,7 +857,10 @@ textarea {
 .chat-page .app-shell__sidebar-inner,
 .chat-page .main-sidebar {
   min-height: var(--chat-panel-height);
-  height: var(--chat-panel-height);
+}
+
+.chat-page .app-shell__sidebar {
+  align-self: stretch;
 }
 
 .chat-page .app-shell__sidebar-inner,
@@ -900,8 +917,10 @@ textarea {
 .chat-video-panel__media {
   flex: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
+  width: 100%;
+  margin: 0;
 }
 
 .chat-video-frame {
@@ -913,6 +932,10 @@ textarea {
   background: rgba(5, 7, 14, 0.92);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
   position: relative;
+}
+
+.chat-video-frame--youtube {
+  aspect-ratio: 16 / 9;
 }
 
 .chat-video-frame--empty {
@@ -2877,6 +2900,44 @@ textarea {
   .landing__nav-links {
     flex-wrap: wrap;
     gap: 12px;
+  }
+
+  .page-actions-bar {
+    display: none;
+  }
+
+  .history-page {
+    gap: 16px;
+  }
+
+  .history-page__header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .history-page__header p {
+    margin: 0;
+  }
+
+  .suno-page__header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .suno-page__actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .suno-page__button-group {
+    justify-content: center;
   }
 
   .chat-message__bubble {

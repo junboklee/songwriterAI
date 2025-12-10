@@ -1,298 +1,366 @@
-import Image from 'next/image';
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 
-const sections = [
+const highlights = [
   {
-    title: 'AI와 작곡가의 협업',
-    body: 'SongwriterAI는 아이디어 스케치부터 완성 가사까지 한 번에 도와주는 작사 코파일럿입니다. 캐릭터별로 말투를 설정해 한 줄 멜로디에서도 감성 가사를 뽑아낼 수 있어요.'
+    title: '캐릭터 캔버스',
+    body: '장르와 감정을 캐릭터에 저장해 두면 대화를 시작할 때마다 어울리는 표현을 자동으로 제안받습니다.'
   },
   {
-    title: '실시간 대화형 워크플로우',
-    body: 'AI 캐릭터와 실시간으로 대화하며 곡 흐름을 잡고, 각각의 캐릭터 톤 조절로 다양한 분위기의 가사를 완성합니다.'
+    title: '대화형 편집',
+    body: '피드백을 주고받으며 구절을 다듬고, 마음에 드는 버전만 즉시 저장하거나 공유할 수 있어요.'
   },
   {
-    title: '완성곡 관리',
-    body: '영감이 떠오를 때 바로 스케치하고, 노래별 메타데이터를 정리해 팀원과 공유하거나 라이브 세션용으로 활용하세요.'
+    title: '버전 아카이브',
+    body: '대화 기록과 곡 초안이 Firestore에 자동 정리되어 언제든 이전 버전을 비교·복원할 수 있습니다.'
+  },
+  {
+    title: '안심 보관',
+    body: 'Firebase 인증과 보안 규칙으로 다른 사용자와 데이터가 섞이지 않도록 완전히 분리해 보관합니다.'
   }
 ];
 
 const faqs = [
   {
     q: '누가 사용할 수 있나요?',
-    a: '초보 작사가부터 프로듀서까지, 가사 아이디어가 필요한 누구나 무료로 가입할 수 있습니다.'
+    a: '입문자부터 프로 작사가까지 모두 무료로 체험할 수 있으며, 대화 데이터는 본인 계정에만 저장됩니다.'
   },
   {
     q: '데이터는 안전한가요?',
-    a: 'Firebase Authentication과 Firestore를 사용해 사용자별로 데이터를 분리 저장하며, 언제든 삭제를 요청할 수 있습니다.'
+    a: 'Firebase 인증과 보안 규칙으로 다른 사람이 내 대화·캐릭터·곡 초안을 볼 수 없습니다.'
   },
   {
-    q: '언어는 어떤 것을 지원하나요?',
-    a: '한국어/영어 인터페이스를 기본으로 제공하고, 추가 언어를 순차적으로 확장할 예정입니다.'
+    q: '어떤 언어를 지원하나요?',
+    a: '현재 한국어와 영어 UI를 제공하며, 대화 모델은 여러 언어를 이해하고 자연스럽게 작성할 수 있도록 튜닝되어 있습니다.'
   }
 ];
 
 export default function Home() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
     <>
       <Head>
-        <title>SongwriterAI | AI 작사가 서비스</title>
+        <title>NovaSingerAI | AI 송라이팅 코파일럿</title>
         <meta
           name="description"
-          content="AI와 대화하며 가사를 완성하고 버전을 관리하세요. SongwriterAI로 영감을 빠르게 기록하고 노래 제작 속도를 높이세요."
+          content="AI 작사가와 협업하며 가사를 실시간으로 만들고 버전을 보관하는 가장 간단한 워크플로우."
         />
-        <meta property="og:title" content="SongwriterAI" />
+        <meta property="og:title" content="NovaSingerAI" />
         <meta
           property="og:description"
-          content="AI 작사가와 협업해 더 빠르게 노래를 완성하세요."
+          content="아이디어부터 완성본까지 AI와 함께 쓰는 송라이팅을 경험해 보세요."
         />
-        <meta property="og:type" content="website" />
-        <meta name="naver-site-verification" content="df9da447e53d2d57c84de7189ba4079ad97cdf80" />
       </Head>
       <div className="landing-bg">
         <main className="landing">
-        <section className="hero">
-          <p className="eyebrow">AI Songwriting Copilot</p>
-          <div className="hero-image">
-            <Image
-              src="/images/auth-hero.jpg"
-              alt="AI vocalist collaborating in a studio"
-              width={1365}
-              height={768}
-              priority
-            />
-          </div>
-          <h1>영감이 떠오를 때, AI 캐릭터들이 함께 가사를 완성해 드립니다</h1>
-          <p>
-            NovasingerAI는 AI 캐릭터와 실시간으로 대화하며 곡 흐름을 잡고,
-            캐릭터들의 톤조절로 다양한 분위기의 가사를 만드는 워크플로우를 제공합니다.
-          </p>
-          <div className="cta">
-            <Link href="/auth/login" className="cta-button primary" role="button">
-              무료로 시작하기
+          <section className="hero">
+            <div className="hero-image">
+              <p className="hero-eyebrow">AI Songwriting Copilot</p>
+              <Image
+                src="/images/auth-hero.jpg"
+                alt="AI 작사가와 협업 중인 뮤지션"
+                width={1920}
+                height={1080}
+                priority
+              />
+            </div>
+            <div className="hero-copy">
+              <h1>
+                아이디어부터 완성본까지
+                <span>AI와 함께 쓰는 송라이팅</span>
+              </h1>
+              <p>
+                NovaSingerAI는 캐릭터 중심 대화형 인터페이스로 감정·콘셉트·상황을 빠르게 정의하고, 마음에 드는 가사를
+                버전별로 보관할 수 있는 송라이팅 코파일럿입니다.
+              </p>
+              <div className="hero-cta">
+                <Link href="/auth/login" className="cta primary">
+                  <div className="cta-card">
+                    <span className="cta-label">무료로 시작하기</span>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <section className="highlight-grid">
+            {highlights.map(item => (
+              <article key={item.title}>
+                <h2>{item.title}</h2>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="workflow">
+            <h2>3단계 제작 흐름</h2>
+            <div className="workflow-grid">
+              <article>
+                <span className="badge">STEP 01</span>
+                <h3>캐릭터 선택</h3>
+                <p>곡 분위기에 맞는 캐릭터를 고르고 프롬프트를 입력해 대화를 시작합니다.</p>
+              </article>
+              <article>
+                <span className="badge">STEP 02</span>
+                <h3>대화형 편집</h3>
+                <p>피드백을 주고받으며 구절을 다듬고, 마음에 드는 답만 골라 저장합니다.</p>
+              </article>
+              <article>
+                <span className="badge">STEP 03</span>
+                <h3>가사 보관·공유</h3>
+                <p>완성본을 곡 초안으로 저장하거나 카드 형태로 팀과 공유하세요.</p>
+              </article>
+            </div>
+          </section>
+
+          <section className="faq">
+            <h2>자주 묻는 질문</h2>
+            {faqs.map((item, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <article key={item.q} className={`faq-item${isOpen ? ' open' : ''}`}>
+                  <button
+                    type="button"
+                    className="faq-header"
+                    onClick={() => setOpenFaq(isOpen ? null : index)}
+                    aria-expanded={isOpen}
+                  >
+                    <span>{item.q}</span>
+                    <span aria-hidden>{isOpen ? '−' : '+'}</span>
+                  </button>
+                  {isOpen ? (
+                    <div className="faq-body">
+                      <p>{item.a}</p>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="bottom-cta">
+            <p className="poster-eyebrow">NOW LIVE</p>
+            <h2>지금 바로 NovaSingerAI를 체험해 보세요</h2>
+            <Link href="/auth/login" className="cta primary">
+              <div className="cta-card">
+                <span className="cta-label">무료로 시작하기</span>
+              </div>
             </Link>
-            <Link href="/features" className="cta-button secondary" role="button">
-              기능 살펴보기
-            </Link>
-          </div>
-        </section>
-
-        <section className="grid">
-          {sections.map((section) => (
-            <article key={section.title}>
-              <h2>{section.title}</h2>
-              <p>{section.body}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="workflow">
-          <h2>3단계 작사 워크플로우</h2>
-          <ol>
-            <li>
-              <strong>캐릭터 선택</strong> – 장르/톤에 맞는 캐릭터를 고르고 한줄 프롬프트를 입력합니다.
-            </li>
-            <li>
-              <strong>대화로 수정</strong> – 마음에 드는 표현이 나올 때까지 메시지를 주고받으며 다듬습니다.
-            </li>
-            <li>
-              <strong>가사 저장</strong> – 완성본을 노래별로 저장하고 메타데이터를 추가합니다.
-            </li>
-          </ol>
-        </section>
-
-        <section className="faq">
-          <h2>자주 묻는 질문</h2>
-          {faqs.map((faq) => (
-            <article key={faq.q}>
-              <h3>{faq.q}</h3>
-              <p>{faq.a}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="cta-banner">
-          <h2>지금 바로 AI 작사가와 대화를 시작해 보세요</h2>
-          <p>회원가입은 1분이면 충분합니다. 무료 체험으로 작사 시간을 절약하세요.</p>
-          <div className="cta">
-            <Link href="/auth/login">로그인 / 회원가입</Link>
-          </div>
-        </section>
+          </section>
         </main>
       </div>
 
       <style jsx>{`
         .landing-bg {
           min-height: 100vh;
-          background: #0f1015;
-          padding: clamp(0.75rem, 2vh, 1.25rem) 0 3rem;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
+          background: linear-gradient(180deg, #050710 0%, #0f172a 45%, #020309 100%);
+          color: #f8fafc;
         }
 
         .landing {
-          padding: 0.75rem 1.5rem 3.5rem;
           max-width: 960px;
           margin: 0 auto;
-          font-family: 'Segoe UI', sans-serif;
-          color: #f1f5f9;
+          padding: 4rem 1.5rem 5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 3rem;
         }
 
         .hero {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
           text-align: center;
-          margin-bottom: 4rem;
-        }
-
-        .eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.3rem;
-          font-size: 0.85rem;
-          color: #8f7dff;
-          margin-bottom: 1rem;
         }
 
         .hero-image {
-          margin: 0 auto 2rem;
-          border-radius: 1.5rem;
-          overflow: hidden;
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
-          max-width: 960px;
+          text-align: center;
         }
 
         .hero-image :global(img) {
           width: 100%;
           height: auto;
+          border-radius: 1.5rem;
           object-fit: cover;
+        }
+
+        .hero-eyebrow {
+          text-transform: uppercase;
+          letter-spacing: 0.35rem;
+          font-size: 0.8rem;
+          color: #a5b4fc;
+          margin-bottom: 0.8rem;
+          display: inline-block;
+        }
+
+        .hero-copy {
+          max-width: 720px;
+          margin: 0 auto;
+          text-align: center;
+        }
+
+        .hero-copy h1 {
+          font-size: clamp(2.2rem, 4vw, 3.1rem);
+          line-height: 1.2;
+          margin: 0 0 1rem;
+        }
+
+        .hero-copy h1 span {
           display: block;
+          color: #c4b5fd;
+          margin-top: 0.35rem;
         }
 
-        h1 {
-          font-size: clamp(1.6rem, 4vw, 2.6rem);
-          margin-bottom: 1rem;
-        }
-
-        .hero p {
-          font-size: 1.1rem;
+        .hero-copy p {
           color: #d1d5db;
+          line-height: 1.6;
+          margin: 0 0 2rem;
+        }
+
+        .hero-cta {
+          display: flex;
+          gap: 1.25rem;
+          flex-wrap: wrap;
+          justify-content: center;
         }
 
         .cta {
-          margin-top: 2rem;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
+          text-decoration: none;
+        }
+
+        .cta.primary .cta-card {
+          padding: 1.4rem 2.6rem;
+          border-radius: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(120deg, #f472b6, #6366f1);
+          color: #fff;
+          box-shadow: 0 30px 70px rgba(99, 102, 241, 0.45);
+          display: inline-flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.35rem;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cta-label {
+          font-size: 2rem;
+          letter-spacing: 0.02em;
+        }
+
+        .cta-desc {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        .cta.primary:hover .cta-card {
+          transform: translateY(-3px);
+          box-shadow: 0 35px 80px rgba(99, 102, 241, 0.5);
+        }
+
+        .highlight-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           gap: 1rem;
         }
 
-        .cta-button {
-          padding: 1.75rem 3.5rem;
-          border-radius: 999px;
-          font-weight: 700;
-          text-decoration: none;
-          color: #fff;
-          font-size: 300%;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 260px;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          box-shadow: 0 45px 90px rgba(99, 102, 241, 0.4);
-          gap: 1.25rem;
-          position: relative;
+        .highlight-grid article {
+          padding: 1.25rem;
+          border-radius: 1.25rem;
+          border: 1px solid rgba(148, 163, 184, 0.25);
+          background: rgba(15, 23, 42, 0.7);
+        }
+
+        .workflow {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .workflow-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 1rem;
+        }
+
+        .workflow-grid article {
+          border: 1px solid rgba(148, 163, 184, 0.3);
+          border-radius: 1rem;
+          padding: 1.5rem;
+          background: rgba(15, 23, 42, 0.75);
+        }
+
+        .badge {
+          font-size: 0.75rem;
+          letter-spacing: 0.3rem;
+          text-transform: uppercase;
+          display: inline-block;
+          margin-bottom: 0.5rem;
+          color: #c4b5fd;
+        }
+
+        .faq h2 {
+          margin-bottom: 1rem;
+          text-align: center;
+        }
+
+        .faq-item {
+          border: 1px solid rgba(148, 163, 184, 0.25);
+          border-radius: 1rem;
+          background: rgba(15, 23, 42, 0.7);
+          margin-bottom: 0.75rem;
           overflow: hidden;
         }
 
-        .cta-button::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.4), transparent);
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-
-        .cta-button:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 45px 80px rgba(99, 102, 241, 0.45);
-        }
-
-        .cta-button:hover::after {
-          opacity: 0.7;
-        }
-
-        .cta-button.primary {
-          background: radial-gradient(circle at top, #9f7aea, #5b21b6);
+        .faq-header {
+          width: 100%;
           border: none;
+          background: transparent;
+          color: inherit;
+          font-size: 1rem;
+          font-weight: 600;
+          padding: 1rem 1.2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
         }
 
-        .cta-button.secondary {
-          background: none;
-          color: #e2e8f0;
-          border: 2px solid rgba(226, 232, 240, 0.5);
-          box-shadow: 0 35px 70px rgba(15, 23, 42, 0.35);
+        .faq-body {
+          padding: 0 1.2rem 1rem;
+          color: #d1d5db;
         }
 
-        .cta-button.secondary:hover {
-          background: rgba(99, 102, 241, 0.25);
-          color: #fff;
-        }
-
-
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 4rem;
-        }
-
-        .grid article {
-          padding: 1.75rem;
-          border: 1px solid rgba(148, 163, 184, 0.35);
-          border-radius: 1.25rem;
-          background: radial-gradient(circle at top, rgba(99, 102, 241, 0.2), rgba(15, 23, 42, 0.9));
-          color: #f8fafc;
-          box-shadow: 0 20px 40px rgba(15, 23, 42, 0.45);
-        }
-
-        .workflow,
-        .faq,
-        .cta-banner {
-          margin-bottom: 4rem;
-        }
-
-        ol {
-          padding-left: 1.1rem;
-          color: #cbd5f5;
-        }
-
-        ol li {
-          margin-bottom: 1rem;
-          line-height: 1.6;
-        }
-
-        .faq article {
-          border: 1px solid rgba(148, 163, 184, 0.3);
-          padding: 1rem 1.25rem;
-          border-radius: 1rem;
-          background: rgba(15, 23, 42, 0.75);
-          margin-bottom: 1rem;
-        }
-
-        .cta-banner {
-          background: radial-gradient(circle at top, rgba(99, 102, 241, 0.2), rgba(15, 23, 42, 0.9));
+        .bottom-cta {
+          text-align: center;
           border: 1px solid rgba(148, 163, 184, 0.3);
           border-radius: 1.5rem;
-          text-align: center;
-          padding: 3rem 1.5rem;
+          padding: 2.5rem 1.5rem;
+          background: radial-gradient(circle at top, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.9));
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          align-items: center;
         }
 
-        @media (prefers-color-scheme: dark) {
-          .grid article {
-            border-color: rgba(148, 163, 184, 0.4);
-            background: radial-gradient(circle at top, rgba(99, 102, 241, 0.35), rgba(15, 23, 42, 0.95));
-            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.6);
+        .poster-eyebrow {
+          text-transform: uppercase;
+          letter-spacing: 0.3rem;
+          font-size: 0.8rem;
+          color: #c4b5fd;
+        }
+
+        @media (min-width: 900px) {
+          .highlight-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .hero-cta {
+            flex-direction: column;
           }
         }
       `}</style>

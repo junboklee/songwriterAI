@@ -363,22 +363,24 @@ export default function SunoLibraryPage() {
   return (
     <RequireAuth>
       <AppShell sidebar={sidebar}>
-        <AppNav
-          showBrand={false}
-          actions={
-            <>
-              <Link href="/dashboard" className="btn btn--ghost">
-                대시보드
-              </Link>
-              <Link href="/chat" className="btn btn--ghost">
-                {t('actions.liveChat')}
-              </Link>
-              <Link href="/history" className="btn btn--primary">
-                {t('actions.history')}
-              </Link>
-            </>
-          }
-        />
+        <div className="page-actions-bar">
+          <AppNav
+            showBrand={false}
+            actions={
+              <>
+                <Link href="/dashboard" className="btn btn--ghost">
+                  대시보드
+                </Link>
+                <Link href="/chat" className="btn btn--ghost">
+                  {t('actions.liveChat')}
+                </Link>
+                <Link href="/history" className="btn btn--primary">
+                  {t('actions.history')}
+                </Link>
+              </>
+            }
+          />
+        </div>
 
         <div className="suno-page">
           <header className="suno-page__header">

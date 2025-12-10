@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { useTranslation } from '@/context/I18nContext';
 
 type MainSidebarProps = {
-  active: 'chat' | 'history' | 'suno';
+  active: 'chat' | 'history' | 'suno' | 'dashboard';
   children?: ReactNode;
 };
 
@@ -21,15 +21,22 @@ const NAV_CONFIG: Array<{
 export function MainSidebar({ active, children }: MainSidebarProps) {
   const { t } = useTranslation('sidebar');
 
-  const navItems = useMemo(
-    () =>
-      NAV_CONFIG.map(item => ({
-        ...item,
-        label: t(`nav.${item.key}.label`),
-        description: t(`nav.${item.key}.description`)
-      })),
-    [t]
-  );
+  const navItems = useMemo(() => {
+    const base = NAV_CONFIG.map(item => ({
+      ...item,
+      label: t(`nav.${item.key}.label`),
+      description: t(`nav.${item.key}.description`)
+    }));
+
+    base.push({
+      key: 'dashboard' as MainSidebarProps['active'],
+      href: '/dashboard',
+      label: t('nav.dashboard.label'),
+      description: t('nav.dashboard.description')
+    });
+
+    return base;
+  }, [t]);
 
   return (
     <div className="main-sidebar">
@@ -54,4 +61,3 @@ export function MainSidebar({ active, children }: MainSidebarProps) {
     </div>
   );
 }
-
