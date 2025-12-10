@@ -1232,7 +1232,7 @@ const characterId = requestedCharacterId ?? '1';
   );
 
   useEffect(() => {
-    if (threadId) {
+    if (threadId || isLoading) {
       return;
     }
 
@@ -1248,7 +1248,7 @@ const characterId = requestedCharacterId ?? '1';
       setMessages([]);
     }
     setError(null);
-  }, [character, threadId]);
+  }, [character, threadId, isLoading]);
 
   useEffect(() => {
     if (!scrollContainerRef.current) {
@@ -1265,28 +1265,57 @@ const characterId = requestedCharacterId ?? '1';
 
     let cancelled = false;
 
+    const fetchConversationList = async (
+      idToken: string,
+      options?: { characterId?: string | null; limit?: number }
+    ): Promise<ConversationSummary[]> => {
+      if (cancelled) {
+        return [];
+      }
+
+      const searchParams = new URLSearchParams();
+      const requestedLimit =
+        typeof options?.limit === 'number' && Number.isFinite(options.limit)
+          ? Math.floor(options.limit)
+          : 20;
+      const safeLimit = Math.min(Math.max(requestedLimit, 1), 50);
+      searchParams.set('limit', String(safeLimit));
+
+      if (options?.characterId) {
+        searchParams.set('characterId', options.characterId);
+      }
+
+      const response = await fetch(`/api/profile/conversations?${searchParams.toString()}`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+
+      if (!response.ok) {
+        throw new Error((await response.text()) || TEXT.errorDescription);
+      }
+
+      if (cancelled) {
+        return [];
+      }
+
+      const payload = (await response.json()) as { conversations?: any[] };
+
+      return (payload.conversations ?? []).map(item => ({
+        id: item.id,
+        threadId: item.threadId ?? item.id,
+        title: item.title ?? null,
+        lastMessagePreview: item.lastMessagePreview ?? '',
+        updatedAt: item.updatedAt ?? null,
+        characterId: item.characterId ?? null
+      }));
+    };
+
     const loadConversations = async (idToken: string) => {
-      if (cancelled) return;
+      if (cancelled) return [];
       setSidebarLoading(true);
       setSidebarError(null);
       try {
-        const response = await fetch('/api/profile/conversations?limit=20', {
-          headers: { Authorization: `Bearer ${idToken}` }
-        });
-        if (!response.ok) {
-          throw new Error((await response.text()) || TEXT.errorDescription);
-        }
-        const payload = (await response.json()) as { conversations?: any[] };
-        if (cancelled) return;
-
-        const items: ConversationSummary[] = (payload.conversations ?? []).map(item => ({
-          id: item.id,
-          threadId: item.threadId ?? item.id,
-          title: item.title ?? null,
-          lastMessagePreview: item.lastMessagePreview ?? '',
-          updatedAt: item.updatedAt ?? null,
-          characterId: item.characterId ?? null
-        }));
+        const items = await fetchConversationList(idToken);
+        if (cancelled) return [];
         setSidebarConversations(items);
         if (items.length) {
           setCharacterNames(prev => {
@@ -1310,7 +1339,7 @@ const characterId = requestedCharacterId ?? '1';
 
         return items;
       } catch (err) {
-        if (cancelled) return;
+        if (cancelled) return [];
         setSidebarError(err instanceof Error ? err.message : TEXT.errorDescription);
         return [];
       } finally {
@@ -1382,8 +1411,24 @@ const characterId = requestedCharacterId ?? '1';
         return;
       }
 
-      const latestForChar = conversations?.find(c => c.characterId === characterId);
+      let latestForChar = conversations?.find(c => c.characterId === characterId);
       const hasExplicitCharacterSelection = Boolean(requestedCharacterId);
+
+      if (!latestForChar && characterId) {
+        try {
+          const filtered = await fetchConversationList(idToken, {
+            characterId,
+            limit: 1
+          });
+          if (filtered.length) {
+            latestForChar = filtered[0];
+          }
+        } catch (characterLoadError) {
+          console.warn('Failed to load recent conversation for character', {
+            error: characterLoadError
+          });
+        }
+      }
 
       if (hasExplicitCharacterSelection) {
         if (latestForChar) {

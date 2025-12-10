@@ -15,6 +15,7 @@
   --radius-sm: 12px;
   --shadow-soft: 0 30px 60px -20px rgba(8, 11, 22, 0.6);
   --shadow-card: 0 12px 32px -12px rgba(8, 11, 22, 0.5);
+  --chat-panel-height: min(900px, 85vh);
 }
 
 *,
@@ -714,10 +715,8 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 560px);
   gap: 28px;
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
-  max-height: calc(100vh - 180px);
-  overflow-y: auto;
 }
 
 .chat-stage__conversation {
@@ -725,14 +724,15 @@ textarea {
   max-width: none;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 180px);
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .chat-stage__conversation .chat-layout {
   width: 100%;
   flex: 1;
-  min-height: min(780px, 70vh);
+  min-height: var(--chat-panel-height);
+  height: var(--chat-panel-height);
 }
 
 .chat-stage__video {
@@ -751,7 +751,8 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: min(780px, 70vh);
+  min-height: var(--chat-panel-height);
+  height: var(--chat-panel-height);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(26px);
 }
@@ -856,8 +857,6 @@ textarea {
     display: flex;
     grid-template-columns: none;
     gap: 20px;
-    max-height: none;
-    overflow: visible;
   }
 
   .chat-stage__conversation,
@@ -873,18 +872,25 @@ textarea {
 
   .chat-video-panel {
     min-height: auto;
+    height: auto;
     max-width: 100%;
   }
 
   .chat-video-frame {
     max-width: 100%;
   }
+
+  .chat-stage__conversation .chat-layout {
+    min-height: auto;
+    height: auto;
+  }
 }
 
 .chat-layout {
   display: grid;
   grid-template-rows: auto 1fr auto;
-  min-height: min(780px, 70vh);
+  min-height: var(--chat-panel-height);
+  height: var(--chat-panel-height);
   background: rgba(9, 11, 20, 0.7);
   border-radius: var(--radius-lg);
   border: 1px solid var(--card-border);
