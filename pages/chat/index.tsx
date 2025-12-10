@@ -298,6 +298,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
   const [autoSaveLyrics, setAutoSaveLyrics] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sidebarConversations, setSidebarConversations] = useState<ConversationSummary[]>([]);
@@ -1232,7 +1233,7 @@ const characterId = requestedCharacterId ?? '1';
   );
 
   useEffect(() => {
-    if (threadId || isLoading) {
+    if (threadId || isLoading || !hasAttemptedInitialLoad) {
       return;
     }
 
@@ -1248,7 +1249,7 @@ const characterId = requestedCharacterId ?? '1';
       setMessages([]);
     }
     setError(null);
-  }, [character, threadId, isLoading]);
+  }, [character, threadId, isLoading, hasAttemptedInitialLoad]);
 
   const scrollToLatest = useCallback(() => {
     if (!scrollContainerRef.current) {
@@ -1264,10 +1265,16 @@ const characterId = requestedCharacterId ?? '1';
   useEffect(() => {
     if (!user) {
       setSidebarConversations([]);
+      setHasAttemptedInitialLoad(true);
       return;
     }
 
     let cancelled = false;
+    const markInitialLoadComplete = () => {
+      if (!cancelled) {
+        setHasAttemptedInitialLoad(true);
+      }
+    };
 
     const fetchConversationList = async (
       idToken: string,
@@ -1404,42 +1411,57 @@ const characterId = requestedCharacterId ?? '1';
     };
 
     const initialize = async () => {
-      const idToken = await user.getIdToken();
-      const conversations = await loadConversations(idToken);
-      if (characterId) {
-        await fetchCustomCharacters([characterId], idToken);
-      }
-
-      const preferredThreadId =
-        typeof router.query.threadId === 'string' ? router.query.threadId : null;
-
-      if (preferredThreadId) {
-        if (lastLoadedThreadRef.current !== preferredThreadId) {
-          await loadThreadDetails(idToken, preferredThreadId);
+      try {
+        const idToken = await user.getIdToken();
+        const conversations = await loadConversations(idToken);
+        if (characterId) {
+          await fetchCustomCharacters([characterId], idToken);
         }
-        return;
-      }
 
-      let latestForChar = conversations?.find(c => c.characterId === characterId);
-      const hasExplicitCharacterSelection = Boolean(requestedCharacterId);
+        const preferredThreadId =
+          typeof router.query.threadId === 'string' ? router.query.threadId : null;
 
-      if (!latestForChar && characterId) {
-        try {
-          const filtered = await fetchConversationList(idToken, {
-            characterId,
-            limit: 1
-          });
-          if (filtered.length) {
-            latestForChar = filtered[0];
+        if (preferredThreadId) {
+          if (lastLoadedThreadRef.current !== preferredThreadId) {
+            await loadThreadDetails(idToken, preferredThreadId);
           }
-        } catch (characterLoadError) {
-          console.warn('Failed to load recent conversation for character', {
-            error: characterLoadError
-          });
+          return;
         }
-      }
 
-      if (hasExplicitCharacterSelection) {
+        let latestForChar = conversations?.find(c => c.characterId === characterId);
+        const hasExplicitCharacterSelection = Boolean(requestedCharacterId);
+
+        if (!latestForChar && characterId) {
+          try {
+            const filtered = await fetchConversationList(idToken, {
+              characterId,
+              limit: 1
+            });
+            if (filtered.length) {
+              latestForChar = filtered[0];
+            }
+          } catch (characterLoadError) {
+            console.warn('Failed to load recent conversation for character', {
+              error: characterLoadError
+            });
+          }
+        }
+
+        if (hasExplicitCharacterSelection) {
+          if (latestForChar) {
+            await loadThreadDetails(idToken, latestForChar.threadId);
+            router.replace(
+              {
+                pathname: '/chat',
+                query: { characterId, threadId: latestForChar.threadId }
+              },
+              undefined,
+              { shallow: true }
+            );
+          }
+          return;
+        }
+
         if (latestForChar) {
           await loadThreadDetails(idToken, latestForChar.threadId);
           router.replace(
@@ -1450,38 +1472,27 @@ const characterId = requestedCharacterId ?? '1';
             undefined,
             { shallow: true }
           );
+          return;
         }
-        return;
-      }
 
-      if (latestForChar) {
-        await loadThreadDetails(idToken, latestForChar.threadId);
-        router.replace(
-          {
-            pathname: '/chat',
-            query: { characterId, threadId: latestForChar.threadId }
-          },
-          undefined,
-          { shallow: true }
-        );
-        return;
-      }
-
-      const mostRecentConversation = conversations?.[0];
-      if (mostRecentConversation) {
-        await loadThreadDetails(idToken, mostRecentConversation.threadId);
-        const fallbackCharacterId = mostRecentConversation.characterId ?? characterId ?? '1';
-        router.replace(
-          {
-            pathname: '/chat',
-            query: {
-              characterId: fallbackCharacterId,
-              threadId: mostRecentConversation.threadId
-            }
-          },
-          undefined,
-          { shallow: true }
-        );
+        const mostRecentConversation = conversations?.[0];
+        if (mostRecentConversation) {
+          await loadThreadDetails(idToken, mostRecentConversation.threadId);
+          const fallbackCharacterId = mostRecentConversation.characterId ?? characterId ?? '1';
+          router.replace(
+            {
+              pathname: '/chat',
+              query: {
+                characterId: fallbackCharacterId,
+                threadId: mostRecentConversation.threadId
+              }
+            },
+            undefined,
+            { shallow: true }
+          );
+        }
+      } finally {
+        markInitialLoadComplete();
       }
     };
 
