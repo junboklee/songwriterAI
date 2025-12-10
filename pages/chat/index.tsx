@@ -278,6 +278,14 @@ const isLikelyLyrics = (text: string) => {
   return structured;
 };
 
+const getTimestampValue = (value?: string | null) => {
+  if (!value) {
+    return 0;
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 type PersistLyricsOptions = {
   lyrics: string;
   title?: string | null;
@@ -1327,11 +1335,14 @@ const characterId = requestedCharacterId ?? '1';
       try {
         const items = await fetchConversationList(idToken);
         if (cancelled) return [];
-        setSidebarConversations(items);
-        if (items.length) {
+        const sortedItems = [...items].sort(
+          (a, b) => getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt)
+        );
+        setSidebarConversations(sortedItems);
+        if (sortedItems.length) {
           setCharacterNames(prev => {
             const next = { ...prev };
-            items.forEach(item => {
+            sortedItems.forEach(item => {
               if (item.characterId && item.title && item.title.trim()) {
                 next[item.characterId] = item.title.trim();
               }
@@ -1340,7 +1351,7 @@ const characterId = requestedCharacterId ?? '1';
           });
         }
 
-        const idsToPreload = items
+        const idsToPreload = sortedItems
           .map(item => item.characterId)
           .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
 
@@ -1348,7 +1359,7 @@ const characterId = requestedCharacterId ?? '1';
           await fetchCustomCharacters(idsToPreload, idToken);
         }
 
-        return items;
+        return sortedItems;
       } catch (err) {
         if (cancelled) return [];
         setSidebarError(err instanceof Error ? err.message : TEXT.errorDescription);
