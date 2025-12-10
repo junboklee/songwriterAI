@@ -311,6 +311,7 @@ export default function ChatPage() {
     () => ({ ...BASE_CHARACTER_NAMES })
   );
   const lastStoredMessageIdRef = useRef<string | null>(null);
+  const lastLoadedThreadRef = useRef<string | null>(null);
   const fallbackVideoIds = useMemo(
     () =>
       CHAT_VIDEO_FALLBACKS.map(url => extractYouTubeVideoId(url))
@@ -984,6 +985,7 @@ const characterId = requestedCharacterId ?? '1';
 
   useEffect(() => {
     setThreadId(null);
+    lastLoadedThreadRef.current = null;
   }, [characterId]);
 
   useEffect(() => {
@@ -1338,7 +1340,9 @@ const characterId = requestedCharacterId ?? '1';
             content: m.content ?? ''
           }));
 
-        setThreadId(payload.conversation?.threadId ?? threadIdToLoad);
+        const resolvedThreadId = payload.conversation?.threadId ?? threadIdToLoad;
+        setThreadId(resolvedThreadId);
+        lastLoadedThreadRef.current = resolvedThreadId;
 
         const relatedCharacterId =
           typeof payload.conversation?.characterId === 'string'
@@ -1361,43 +1365,71 @@ const characterId = requestedCharacterId ?? '1';
       }
     };
 
-const initialize = async () => {
-  const idToken = await user.getIdToken();
-  const conversations = await loadConversations(idToken);
-  if (characterId) {
-    await fetchCustomCharacters([characterId], idToken);
-  }
+    const initialize = async () => {
+      const idToken = await user.getIdToken();
+      const conversations = await loadConversations(idToken);
+      if (characterId) {
+        await fetchCustomCharacters([characterId], idToken);
+      }
 
-      const preferredThreadId = typeof router.query.threadId === 'string' ? router.query.threadId : null;
+      const preferredThreadId =
+        typeof router.query.threadId === 'string' ? router.query.threadId : null;
 
       if (preferredThreadId) {
-        await loadThreadDetails(idToken, preferredThreadId);
+        if (lastLoadedThreadRef.current !== preferredThreadId) {
+          await loadThreadDetails(idToken, preferredThreadId);
+        }
         return;
       }
 
-  const hasExplicitCharacterSelection = Boolean(requestedCharacterId);
+      const latestForChar = conversations?.find(c => c.characterId === characterId);
+      const hasExplicitCharacterSelection = Boolean(requestedCharacterId);
 
-  if (!hasExplicitCharacterSelection) {
-    const latestForChar = conversations?.find(c => c.characterId === characterId);
-    if (latestForChar) {
-      router.replace({
-        pathname: '/chat',
-        query: { characterId, threadId: latestForChar.threadId }
-      });
-      return;
-    }
+      if (hasExplicitCharacterSelection) {
+        if (latestForChar) {
+          await loadThreadDetails(idToken, latestForChar.threadId);
+          router.replace(
+            {
+              pathname: '/chat',
+              query: { characterId, threadId: latestForChar.threadId }
+            },
+            undefined,
+            { shallow: true }
+          );
+        }
+        return;
+      }
 
-    const mostRecentConversation = conversations?.[0];
-    if (mostRecentConversation) {
-      const fallbackCharacterId =
-        mostRecentConversation.characterId ?? characterId ?? '1';
-      router.replace({
-        pathname: '/chat',
-        query: { characterId: fallbackCharacterId, threadId: mostRecentConversation.threadId }
-      });
-    }
-  }
-};
+      if (latestForChar) {
+        await loadThreadDetails(idToken, latestForChar.threadId);
+        router.replace(
+          {
+            pathname: '/chat',
+            query: { characterId, threadId: latestForChar.threadId }
+          },
+          undefined,
+          { shallow: true }
+        );
+        return;
+      }
+
+      const mostRecentConversation = conversations?.[0];
+      if (mostRecentConversation) {
+        await loadThreadDetails(idToken, mostRecentConversation.threadId);
+        const fallbackCharacterId = mostRecentConversation.characterId ?? characterId ?? '1';
+        router.replace(
+          {
+            pathname: '/chat',
+            query: {
+              characterId: fallbackCharacterId,
+              threadId: mostRecentConversation.threadId
+            }
+          },
+          undefined,
+          { shallow: true }
+        );
+      }
+    };
 
     initialize();
 
@@ -1481,6 +1513,9 @@ const initialize = async () => {
       } = raw ? JSON.parse(raw) : { threadId: '', messages: [], reply: null };
 
       setThreadId(data.threadId);
+      if (data.threadId) {
+        lastLoadedThreadRef.current = data.threadId;
+      }
 
       if (data.threadId && router.query.threadId !== data.threadId) {
         router.replace(

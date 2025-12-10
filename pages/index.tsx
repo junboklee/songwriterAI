@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const sections = [
   {
-    title: 'AI와 음악가의 협업',
+    title: 'AI와 작곡가의 협업',
     body: 'SongwriterAI는 아이디어 스케치부터 완성 가사까지 한 번에 도와주는 작사 코파일럿입니다. 캐릭터별로 말투를 설정해 한 줄 멜로디에서도 감성 가사를 뽑아낼 수 있어요.'
   },
   {
