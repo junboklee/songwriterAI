@@ -74,7 +74,7 @@ All routes require a valid Firebase ID token.
 1. **콘텐츠 정비 (완료)** – /, /features, /pricing 카피와 메타 정보를 최신 한국어 버전으로 갱신했습니다.
 2. **로케일 확장 (완료)** – locales/en.ts 등록 및 Provider 업데이트로 다국어 확장을 위한 기본 구조를 마련했습니다.
 3. **Lighthouse** – `npm run lighthouse` (환경변수 `LIGHTHOUSE_URL` 설정 가능)로 자동 리포트를 생성하거나, Chrome DevTools > Lighthouse에서 Performance·SEO 리포트를 주기적으로 측정하세요.
-4. **Sitemap / Robots** – 
-pm run build 후 공개 URL(https://novasingerai.com/sitemap.xml)을 Search Console에 제출하는 루틴을 유지하세요.
-5. **GA4 / Search Console / GTM** – .env.local에 측정 ID를 채우고 components/SeoMeta.tsx + _document.tsx에서 로딩 여부를 확인하세요.
-6. **모니터링** – GA4·Search Console 지표와 Firebase Hosting/Vercel 로그를 주 1회 이상 확인해 404/500 이벤트를 추적하세요.
+4. **자동 체크리스트** – `npm run seo:check` 명령으로 robots.txt, sitemap, GA4/GTM, canonical 기본 구성이 유지되는지 즉시 확인하세요.
+5. **Sitemap / Robots** – `npm run build` 후 배포 URL(https://novasingerai.com/sitemap.xml)을 Search Console에 제출해 지도가 최신인지 확인하세요.
+6. **GA4 / Search Console / GTM** – .env.local에 발급받은 ID를 기입하고 components/SeoMeta.tsx + _document.tsx에서 로드 여부를 점검하세요.
+7. **알림** – GA4·Search Console 알림을 Firebase Hosting/Vercel 로그와 함께 모니터링하며 404/500 이벤트를 주기적으로 확인하세요.

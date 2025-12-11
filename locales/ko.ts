@@ -201,6 +201,10 @@
         label: '대시보드',
         description: '전체 현황 살펴보기'
       }
+    },
+    create: {
+      label: '캐릭터 생성',
+      description: '새로운 페르소나를 만들어 보세요'
     }
   },
   shareModal: {
@@ -316,10 +320,10 @@
     edit: '수정',
     delete: '삭제',
     deleting: '삭제 중...',
-    visitCreate: '만들러 가기',
+    visitCreate: '캐릭터 만들기',
     navDashboard: '대시보드',
     navHistory: '대화 기록',
-    navSuno: '라이브러리',
+    navSuno: '음악 라이브러리',
     searchPlaceholder: '검색',
     searchNoResults: '검색 결과가 없습니다.',
     copyLink: '링크 복사',
@@ -369,9 +373,12 @@
     pinnedTitle: '역할 놀이 프롬프트',
     emptyPreview: '최근 메시지가 없습니다.',
     sessionExpired: '세션이 만료되었습니다. 다시 로그인해 주세요.',
-    rateLimited: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
+    rateLimited: '요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
+    quickReplies: '빠른 응답',
     loadingRecent: '여러 대화를 불러오고 있습니다.',
     summaryFallback: '사용자가 만든 맞춤형 캐릭터입니다.',
     defaultTag: '커스텀 캐릭터'
   }
 };
+
+

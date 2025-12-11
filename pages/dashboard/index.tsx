@@ -296,6 +296,7 @@ export default function Dashboard() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [nicknameValue, setNicknameValue] = useState('');
   const [nicknameSaving, setNicknameSaving] = useState(false);
   const [nicknameError, setNicknameError] = useState<string | null>(null);
@@ -1001,13 +1002,9 @@ const displayName =
       return;
     }
 
-    const confirmed = window.confirm(dashboardText.deleteAccountConfirm);
-    if (!confirmed) {
-      return;
-    }
-
     setIsProfileMenuOpen(false);
     setIsNicknameModalOpen(false);
+    setIsDeleteConfirmOpen(false);
     setIsDeletingAccount(true);
     setLoadError(null);
 
@@ -1037,6 +1034,19 @@ const displayName =
     } finally {
       setIsDeletingAccount(false);
     }
+  };
+
+  const handleOpenDeleteConfirm = () => {
+    setIsProfileMenuOpen(false);
+    setIsNicknameModalOpen(false);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleCancelDeleteConfirm = () => {
+    if (isDeletingAccount) {
+      return;
+    }
+    setIsDeleteConfirmOpen(false);
   };
 
   const handleProfileNickname = () => {
@@ -1198,19 +1208,6 @@ const displayName =
             </button>
             <button
               type="button"
-              className="btn btn--danger"
-              onClick={() => {
-                void handleDeleteAccount();
-              }}
-              disabled={isDeletingAccount}
-              style={{ justifyContent: 'center' }}
-            >
-              {isDeletingAccount
-                ? dashboardText.deleteAccountInProgress
-                : dashboardText.profileMenuDeleteAccount}
-            </button>
-            <button
-              type="button"
               className="btn btn--primary"
               onClick={() => {
                 void handleSignOutClick();
@@ -1218,6 +1215,15 @@ const displayName =
               style={{ justifyContent: 'center' }}
             >
               {dashboardText.profileMenuSignOut}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={handleOpenDeleteConfirm}
+              disabled={isDeletingAccount}
+              style={{ justifyContent: 'center' }}
+            >
+              {dashboardText.profileMenuDeleteAccount}
             </button>
           </div>
         ) : null}
@@ -1398,18 +1404,18 @@ const displayName =
           </div>
 
           <nav className="dashboard-sidebar__nav">
-            <Link
-              href="/dashboard"
-              className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
-              onClick={closeMobileNav}
-            >
-              <span>{dashboardText.navDashboard}</span>
-            </Link>
-            <Link href="/history" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-              <span>{dashboardText.navHistory}</span>
-            </Link>
-            <Link href="/suno" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-              <span>{dashboardText.navSuno}</span>
+        <Link
+          href="/dashboard"
+          className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
+          onClick={closeMobileNav}
+        >
+          <span>{dashboardText.navDashboard}</span>
+        </Link>
+        <Link href="/history" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
+          <span>{dashboardText.navHistory}</span>
+        </Link>
+        <Link href="/suno" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
+          <span>{dashboardText.navSuno}</span>
             </Link>
           </nav>
 
@@ -1532,17 +1538,26 @@ const displayName =
               </button>
               <button
                 type="button"
-                className="btn btn--primary"
-                onClick={() => {
-                  void handleSignOutClick();
-                }}
-                style={{ justifyContent: 'center' }}
-              >
-                {dashboardText.profileMenuSignOut}
-              </button>
-            </div>
-          ) : null}
-        </div>
+              className="btn btn--primary"
+              onClick={() => {
+                void handleSignOutClick();
+              }}
+              style={{ justifyContent: 'center' }}
+            >
+              {dashboardText.profileMenuSignOut}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={handleOpenDeleteConfirm}
+              disabled={isDeletingAccount}
+              style={{ justifyContent: 'center' }}
+            >
+              {dashboardText.profileMenuDeleteAccount}
+            </button>
+          </div>
+        ) : null}
+      </div>
         </aside>
         <button
           type="button"
@@ -1970,6 +1985,79 @@ const displayName =
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+      {isDeleteConfirmOpen ? (
+        <div
+          role="presentation"
+          onClick={handleCancelDeleteConfirm}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            zIndex: 130
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-title"
+            onClick={event => event.stopPropagation()}
+            style={{
+              width: 'min(420px, 92vw)',
+              background: 'rgba(20,20,20,0.96)',
+              borderRadius: 18,
+              padding: 28,
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 24px 48px rgba(0,0,0,0.45)',
+              display: 'grid',
+              gap: 18
+            }}
+          >
+            <div>
+              <h2 id="delete-confirm-title" style={{ margin: 0, fontSize: '1.35rem', color: '#f87171' }}>
+                {dashboardText.profileMenuDeleteAccount}
+              </h2>
+              <p
+                style={{
+                  margin: '8px 0 0',
+                  fontSize: '0.9rem',
+                  color: 'rgba(255,255,255,0.75)',
+                  lineHeight: 1.6
+                }}
+              >
+                {dashboardText.deleteAccountConfirm}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={handleCancelDeleteConfirm}
+                disabled={isDeletingAccount}
+              >
+                {dashboardText.nicknameCancel}
+              </button>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => {
+                  void handleDeleteAccount();
+                }}
+                disabled={isDeletingAccount}
+              >
+                {isDeletingAccount
+                  ? dashboardText.deleteAccountInProgress
+                  : dashboardText.profileMenuDeleteAccount}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

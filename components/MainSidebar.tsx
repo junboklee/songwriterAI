@@ -40,6 +40,14 @@ export function MainSidebar({ active, children }: MainSidebarProps) {
 
   return (
     <div className="main-sidebar">
+      <div className="main-sidebar__cta">
+        <p>{t('create.description')}</p>
+        <Link href="/character/create" className="main-sidebar__cta-button">
+          <span>{t('create.label')}</span>
+          <span aria-hidden="true">+</span>
+        </Link>
+      </div>
+
       <nav className="main-sidebar__nav">
         {navItems.map(item => {
           const isActive = item.key === active;

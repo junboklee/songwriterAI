@@ -3,6 +3,8 @@ import { ChangeEvent, FormEvent, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { AppNav } from '@/components/AppNav';
+import { AppShell } from '@/components/AppShell';
+import { MainSidebar } from '@/components/MainSidebar';
 import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
@@ -160,224 +162,226 @@ export default function CharacterCreate() {
 
   return (
     <RequireAuth>
-      <div className="cai-create-page">
-        <AppNav
-          actions={
-            <>
-              <Link href="/dashboard" className="btn btn--ghost">
-                대시보드
-              </Link>
-              <button
-                form="character-create-form"
-                type="submit"
-                className="btn btn--primary"
-                disabled={saving}
-              >
-                {saving ? '캐릭터 생성 중...' : '캐릭터 생성'}
-              </button>
-            </>
-          }
-        />
-
-        <main className="cai-create-main">
-          <header className="cai-create-hero">
-            <h1>{t('form.heroTitle')}</h1>
-            <p>{t('form.description')}</p>
-          </header>
-
-          <form id="character-create-form" className="cai-form" onSubmit={handleSubmit}>
-            <div className="cai-form-section">
-              <label htmlFor="name">{t('form.name')}</label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={event => setName(event.target.value)}
-                placeholder={t('form.namePlaceholder')}
-                required
-              />
-            </div>
-
-            <div className="cai-form-section">
-            <label htmlFor="greeting">{t('form.greeting')}</label>
-            <textarea
-              id="greeting"
-              value={greeting}
-              onChange={event => setGreeting(event.target.value)}
-              placeholder={t('form.greetingPlaceholder')}
-            />
-              <p className="cai-char-count">{greetingCountLabel}</p>
-            </div>
-
-            <div className="cai-form-section">
-              <label htmlFor="shortDescription">{t('form.shortDescription')}</label>
-              <input
-                id="shortDescription"
-                type="text"
-                value={shortDescription}
-                onChange={event => setShortDescription(event.target.value)}
-                placeholder={t('form.shortDescriptionPlaceholder')}
-              />
-            </div>
-
-            <div className="cai-form-section">
-              <label htmlFor="longDescription">{t('form.longDescription')}</label>
-              <textarea
-                id="longDescription"
-                value={longDescription}
-                onChange={event => setLongDescription(event.target.value)}
-                placeholder={t('form.longDescriptionPlaceholder')}
-              />
-              <p className="cai-char-count">{longDescriptionCount}</p>
-            </div>
-
-            <div className="cai-form-section">
-              <label className="cai-form-label">{t('form.avatar')}</label>
-              <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                <div
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 18,
-                    overflow: 'hidden',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    display: 'grid',
-                    placeItems: 'center'
-                  }}
+      <AppShell sidebar={<MainSidebar active="dashboard" />}>
+        <div className="cai-create-page">
+          <AppNav
+            actions={
+              <>
+                <Link href="/dashboard" className="btn btn--ghost">
+                  {t('sidebarCancel')}
+                </Link>
+                <button
+                  form="character-create-form"
+                  type="submit"
+                  className="btn btn--primary"
+                  disabled={saving}
                 >
-                  {
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={avatarPreview ?? DEFAULT_CHARACTER_AVATAR}
-                      alt={name || 'avatar preview'}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  }
-                </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleAvatarChange}
-                    disabled={saving}
-                  />
-                  <button
-                    type="button"
-                    className="cai-btn cai-btn-primary"
-                    onClick={() => avatarInputRef.current?.click()}
-                    disabled={saving}
-                  >
-                    {t('form.avatarUpload')}
-                  </button>
-                  <button
-                    type="button"
-                    className="cai-btn cai-btn-ghost"
-                    onClick={() => {
-                      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-                      setAvatarFile(null);
-                    }}
-                    disabled={saving}
-                  >
-                    {t('form.avatarReset')}
-                  </button>
-                </div>
-              </div>
-            </div>
+                  {saving ? t('form.submitting') : t('form.submit')}
+                </button>
+              </>
+            }
+          />
 
-            <div className="cai-form-section">
-              <label htmlFor="categories">{t('form.categories')}</label>
-              <div className="cai-selected-tags">
-                {categories.map(category => (
-                  <div key={category} className="cai-selected-tag">
-                    {category}
+          <main className="cai-create-main">
+            <header className="cai-create-hero">
+              <h1>{t('form.heroTitle')}</h1>
+              <p>{t('form.description')}</p>
+            </header>
+
+            <form id="character-create-form" className="cai-form" onSubmit={handleSubmit}>
+              <div className="cai-form-section">
+                <label htmlFor="name">{t('form.name')}</label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={event => setName(event.target.value)}
+                  placeholder={t('form.namePlaceholder')}
+                  required
+                />
+              </div>
+
+              <div className="cai-form-section">
+                <label htmlFor="greeting">{t('form.greeting')}</label>
+                <textarea
+                  id="greeting"
+                  value={greeting}
+                  onChange={event => setGreeting(event.target.value)}
+                  placeholder={t('form.greetingPlaceholder')}
+                />
+                <p className="cai-char-count">{greetingCountLabel}</p>
+              </div>
+
+              <div className="cai-form-section">
+                <label htmlFor="shortDescription">{t('form.shortDescription')}</label>
+                <input
+                  id="shortDescription"
+                  type="text"
+                  value={shortDescription}
+                  onChange={event => setShortDescription(event.target.value)}
+                  placeholder={t('form.shortDescriptionPlaceholder')}
+                />
+              </div>
+
+              <div className="cai-form-section">
+                <label htmlFor="longDescription">{t('form.longDescription')}</label>
+                <textarea
+                  id="longDescription"
+                  value={longDescription}
+                  onChange={event => setLongDescription(event.target.value)}
+                  placeholder={t('form.longDescriptionPlaceholder')}
+                />
+                <p className="cai-char-count">{longDescriptionCount}</p>
+              </div>
+
+              <div className="cai-form-section">
+                <label className="cai-form-label">{t('form.avatar')}</label>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 18,
+                      overflow: 'hidden',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      display: 'grid',
+                      placeItems: 'center'
+                    }}
+                  >
+                    {
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarPreview ?? DEFAULT_CHARACTER_AVATAR}
+                        alt={name || 'avatar preview'}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    }
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleAvatarChange}
+                      disabled={saving}
+                    />
                     <button
                       type="button"
-                      onClick={() =>
-                        setCategories(previous => previous.filter(item => item !== category))
-                      }
+                      className="cai-btn cai-btn-primary"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={saving}
                     >
-                      &times;
+                      {t('form.avatarUpload')}
+                    </button>
+                    <button
+                      type="button"
+                      className="cai-btn cai-btn-ghost"
+                      onClick={() => {
+                        setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
+                        setAvatarFile(null);
+                      }}
+                      disabled={saving}
+                    >
+                      {t('form.avatarReset')}
                     </button>
                   </div>
-                ))}
+                </div>
               </div>
-              <input
-                id="categories"
-                type="text"
-                value={categoryInput}
-                onChange={event => setCategoryInput(event.target.value)}
-                onKeyDown={event => {
-                  if (event.key === 'Enter' && categoryInput.trim()) {
-                    event.preventDefault();
-                    const nextCategory = categoryInput.trim();
-                    if (!categories.includes(nextCategory)) {
-                      setCategories(prev => [...prev, nextCategory]);
-                    }
-                    setCategoryInput('');
-                  }
-                }}
-                placeholder={t('form.categoryPlaceholder')}
-              />
-              <div className="cai-category-tags">
-                {categoryOptions.map(option => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`cai-category-tag ${categories.includes(option) ? 'active' : ''}`}
-                    onClick={() => {
-                      if (!categories.includes(option)) {
-                        setCategories(prev => [...prev, option]);
-                      }
-                    }}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            <div className="cai-form-section">
-              <label className="cai-form-label">{t('form.visibility')}</label>
-              <div className="cai-visibility-options">
-                {visibilityDescriptors.map(option => (
-                  <label
-                    key={option.value}
-                    className={`cai-visibility-option ${
-                      visibility === option.value ? 'active' : ''
-                    }`}
-                  >
+              <div className="cai-form-section">
+                <label htmlFor="categories">{t('form.categories')}</label>
+                <div className="cai-selected-tags">
+                  {categories.map(category => (
+                    <div key={category} className="cai-selected-tag">
+                      {category}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCategories(previous => previous.filter(item => item !== category))
+                        }
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <input
+                  id="categories"
+                  type="text"
+                  value={categoryInput}
+                  onChange={event => setCategoryInput(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' && categoryInput.trim()) {
+                      event.preventDefault();
+                      const nextCategory = categoryInput.trim();
+                      if (!categories.includes(nextCategory)) {
+                        setCategories(prev => [...prev, nextCategory]);
+                      }
+                      setCategoryInput('');
+                    }
+                  }}
+                  placeholder={t('form.categoryPlaceholder')}
+                />
+                <div className="cai-category-tags">
+                  {categoryOptions.map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`cai-category-tag ${categories.includes(option) ? 'active' : ''}`}
+                      onClick={() => {
+                        if (!categories.includes(option)) {
+                          setCategories(prev => [...prev, option]);
+                        }
+                      }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="cai-form-section">
+                <label className="cai-form-label">{t('form.visibility')}</label>
+                <div className="cai-visibility-options">
+                  {visibilityDescriptors.map(option => (
+                    <label
+                      key={option.value}
+                      className={`cai-visibility-option ${
+                        visibility === option.value ? 'active' : ''
+                      }`}
+                    >
                     <input
                       type="radio"
-                      name="visibility"
-                      value={option.value}
-                      checked={visibility === option.value}
-                      onChange={() => setVisibility(option.value)}
-                    />
-                    <div className="cai-visibility-info">
-                      <strong>{t(option.titleKey)}</strong>
-                      <p>{t(option.descriptionKey)}</p>
-                    </div>
-                  </label>
-                ))}
+                        name="visibility"
+                        value={option.value}
+                        checked={visibility === option.value}
+                        onChange={() => setVisibility(option.value)}
+                      />
+                      <div className="cai-visibility-info">
+                        <strong>{t(option.titleKey)}</strong>
+                        <p>{t(option.descriptionKey)}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="cai-form-actions">
-              <Link href="/dashboard" className="cai-btn cai-btn-ghost">
-                {t('sidebarCancel')}
-              </Link>
-              <button type="submit" className="cai-btn cai-btn-primary" disabled={saving}>
-                {saving ? t('form.submitting') : t('form.submit')}
-              </button>
-            </div>
-          </form>
+              <div className="cai-form-actions">
+                <Link href="/dashboard" className="cai-btn cai-btn-ghost">
+                  {t('sidebarCancel')}
+                </Link>
+                <button type="submit" className="cai-btn cai-btn-primary" disabled={saving}>
+                  {saving ? t('form.submitting') : t('form.submit')}
+                </button>
+              </div>
+            </form>
 
-          {error ? <p className="cai-form-error">{error}</p> : null}
-          {successMessage ? <p className="cai-form-success">{successMessage}</p> : null}
-        </main>
-      </div>
+            {error ? <p className="cai-form-error">{error}</p> : null}
+            {successMessage ? <p className="cai-form-success">{successMessage}</p> : null}
+          </main>
+        </div>
+      </AppShell>
     </RequireAuth>
   );
 }

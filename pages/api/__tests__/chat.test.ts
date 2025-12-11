@@ -4,6 +4,7 @@ import handler from '@/pages/api/chat';
 import { authenticateRequest } from '@/lib/serverAuth';
 import { saveThreadSnapshot } from '@/lib/chatPersistence';
 import { enforceRateLimit } from '@/lib/rateLimiter';
+import { RateLimitError } from '@/lib/errors';
 
 const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
 const mockSaveThreadSnapshot = saveThreadSnapshot as jest.MockedFunction<typeof saveThreadSnapshot>;
@@ -190,5 +191,43 @@ describe('/api/chat handler', () => {
       role: 'user',
       content: '첫 줄'
     });
+  });
+
+  it('uses the default assistant id for known built-in characters', async () => {
+    const req = createRequest({
+      body: {
+        message: 'default character test',
+        characterId: '1'
+      }
+    });
+    const res = createResponse();
+
+    await handler(req, res);
+
+    expect(openAiMockState.runCreateMock).toHaveBeenCalledWith('thread-1', {
+      assistant_id: 'asst_ED99NuKgahDCWbPaId4kUwq1'
+    });
+  });
+
+  it('returns 429 when enforceRateLimit throws a RateLimitError', async () => {
+    mockEnforceRateLimit.mockRejectedValueOnce(new RateLimitError('Too many requests'));
+
+    const req = createRequest({
+      body: {
+        message: 'rate limit',
+        characterId: '1'
+      }
+    });
+    const res = createResponse();
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(res.body).toEqual({
+      error: 'Too many requests',
+      code: 'RATE_LIMIT_EXCEEDED'
+    });
+    expect(openAiMockState.threadCreateMock).not.toHaveBeenCalled();
+    expect(mockSaveThreadSnapshot).not.toHaveBeenCalled();
   });
 });

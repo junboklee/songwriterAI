@@ -1779,7 +1779,7 @@ useEffect(() => {
                     </p>
                   </div>
                 </div>
-                <div className="status-indicator">{character.availability}</div>
+                <div className="status-indicator status-indicator--desktop">{character.availability}</div>
               </div>
 
               <div className="chat-status-bar">
@@ -1853,18 +1853,21 @@ useEffect(() => {
               </div>
 
               <form ref={formRef} onSubmit={handleSubmit} className="chat-footer">
-                <div className="chip-list" style={{ marginBottom: QUICK_REPLIES.length ? 16 : 0 }}>
-                  {QUICK_REPLIES.map(reply => (
-                    <button
-                      key={reply}
-                      type="button"
-                      className="chip"
-                      onClick={() => setInput(reply)}
-                    >
-                      {reply}
-                    </button>
-                  ))}
-                </div>
+                <details className="chip-accordion">
+                  <summary>{tChat('quickReplies')}</summary>
+                  <div className="chip-list chip-list--scroll">
+                    {QUICK_REPLIES.map(reply => (
+                      <button
+                        key={reply}
+                        type="button"
+                        className="chip"
+                        onClick={() => setInput(reply)}
+                      >
+                        {reply}
+                      </button>
+                    ))}
+                  </div>
+                </details>
                 <div className="chat-input">
               <textarea
                 ref={chatInputRef}

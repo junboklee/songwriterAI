@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const highlights = [
   {
-    title: '캐릭터 캔버스',
+    title: '캐릭터 만들기',
     body: '장르와 감정을 캐릭터에 저장해 두면 대화를 시작할 때마다 어울리는 표현을 자동으로 제안받습니다.'
   },
   {
@@ -13,12 +13,12 @@ const highlights = [
     body: '피드백을 주고받으며 구절을 다듬고, 마음에 드는 버전만 즉시 저장하거나 공유할 수 있어요.'
   },
   {
-    title: '버전 아카이브',
-    body: '대화 기록과 곡 초안이 Firestore에 자동 정리되어 언제든 이전 버전을 비교·복원할 수 있습니다.'
+    title: '가사 보관 아카이브',
+    body: '대화 기록과 곡 초안이 자동 정리되어 언제든 이전 가사 버전을 비교·복원할 수 있습니다.'
   },
   {
-    title: '안심 보관',
-    body: 'Firebase 인증과 보안 규칙으로 다른 사용자와 데이터가 섞이지 않도록 완전히 분리해 보관합니다.'
+    title: '데이터 안심 보관',
+    body: '시스템 인증과 보안 규칙으로 다른 사용자와 데이터가 섞이지 않도록 완전히 분리해 보관합니다.'
   }
 ];
 
@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: '데이터는 안전한가요?',
-    a: 'Firebase 인증과 보안 규칙으로 다른 사람이 내 대화·캐릭터·곡 초안을 볼 수 없습니다.'
+    a: '시스템 인증과 보안 규칙으로 다른 사람이 내 대화·캐릭터·곡 초안을 볼 수 없습니다.'
   },
   {
     q: '어떤 언어를 지원하나요?',
@@ -46,12 +46,12 @@ export default function Home() {
         <title>NovaSingerAI | AI 송라이팅 코파일럿</title>
         <meta
           name="description"
-          content="AI 작사가와 협업하며 가사를 실시간으로 만들고 버전을 보관하는 가장 간단한 워크플로우."
+          content="AI작사가와 협업하며 가사를 실시간으로 만들고 가사를 보관하는 가장 간단한 워크플로우."
         />
         <meta property="og:title" content="NovaSingerAI" />
         <meta
           property="og:description"
-          content="아이디어부터 완성본까지 AI와 함께 쓰는 송라이팅을 경험해 보세요."
+          content="아이디어부터 완성본까지 AI캐릭터와 함께 작사 작업을 경험해 보세요."
         />
       </Head>
       <div className="landing-bg">
