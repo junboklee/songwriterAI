@@ -18,6 +18,7 @@ import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { buildAutoSaveLyricsPayload } from '@/lib/autoSaveLyrics';
+import { getAssistantBubbleColor, isDayeonAssistant } from '@/lib/assistantBubbleColors';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { DEFAULT_CHARACTER_NAMES } from '@/lib/defaultCharacterNames';
 
@@ -148,7 +149,9 @@ const CHAT_VIDEO_FALLBACKS = [
   'https://youtube.com/shorts/eQ49JMHQBhs',
   'https://youtube.com/shorts/puhfko17-1M',
   'https://youtu.be/gcq4B9b-pbs',
-  'https://youtu.be/S0cQj30xYrE'
+  'https://youtu.be/S0cQj30xYrE',
+  'https://youtu.be/RNdr6vSw_es',
+  'https://youtube.com/shorts/6MBgpCGZDjU'
 ];
 
 const BASE_CHARACTER_NAMES = { ...DEFAULT_CHARACTER_NAMES };
@@ -785,6 +788,16 @@ useEffect(() => {
     };
   }, [characterId, customCharacters, getCharacterName]);
 
+  const assistantBubbleStyle = useMemo(() => {
+    if (isDayeonAssistant(character.id, character.name)) {
+      return undefined;
+    }
+    return {
+      background: getAssistantBubbleColor(character.id),
+      boxShadow: '0 38px 72px -34px rgba(5, 6, 11, 0.45)'
+    };
+  }, [character.id, character.name]);
+
   const shouldUseFallbackPlaylist =
     !character.videoUrl && !CHAT_VIDEO_EMBED_URL && fallbackVideoIds.length > 0;
 
@@ -1017,6 +1030,13 @@ useEffect(() => {
 
   const videoPanelUrl = videoSourceMeta.url;
   const isDirectVideoSource = videoSourceMeta.isDirect;
+  const iframeVideoUrl = useMemo(() => {
+    if (!videoPanelUrl || isDirectVideoSource) {
+      return null;
+    }
+    const separator = videoPanelUrl.includes('?') ? '&' : '?';
+    return `${videoPanelUrl}${separator}enablejsapi=1&controls=1&rel=0`;
+  }, [videoPanelUrl, isDirectVideoSource]);
   const videoPanelStatus = videoSourceMeta.status;
   const shouldUseYouTubeLayout =
     !isDirectVideoSource && (shouldUseFallbackPlaylist || Boolean(videoPanelUrl));
@@ -1823,6 +1843,11 @@ useEffect(() => {
                           ? 'chat-message__bubble--user'
                           : 'chat-message__bubble--assistant'
                       }`}
+                      style={
+                        message.role === 'assistant' && assistantBubbleStyle
+                          ? assistantBubbleStyle
+                          : undefined
+                      }
                     >
                       {message.content}
                     </div>
@@ -1838,7 +1863,10 @@ useEffect(() => {
                       height={32}
                       style={{ borderRadius: 12, marginTop: 4 }}
                     />
-                    <div className="chat-message__bubble chat-message__bubble--assistant typing-indicator-wrapper">
+                  <div
+                    className="chat-message__bubble chat-message__bubble--assistant typing-indicator-wrapper"
+                    style={assistantBubbleStyle}
+                  >
                       <div className="typing-indicator">
                         <span className="typing-indicator__dot" />
                         <span className="typing-indicator__dot" />
@@ -1949,10 +1977,12 @@ useEffect(() => {
                       />
                     ) : (
                       <iframe
-                        src={videoPanelUrl}
+                        key={iframeVideoUrl ?? videoPanelUrl}
+                        src={iframeVideoUrl ?? videoPanelUrl}
                         title={`${character.name} video`}
-                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
+                        frameBorder="0"
                       />
                     )
                   ) : shouldUseFallbackPlaylist ? (

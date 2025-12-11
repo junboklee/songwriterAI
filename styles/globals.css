@@ -845,7 +845,7 @@ textarea {
 
 .chat-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) clamp(260px, 23vw, 380px);
+  grid-template-columns: minmax(0, 1fr) 400px;
   gap: 24px;
   align-items: stretch;
   width: 100%;
@@ -1190,8 +1190,9 @@ textarea {
 }
 
 .chat-message__bubble--assistant {
-  background: linear-gradient(135deg, rgba(120, 136, 255, 0.22), rgba(194, 173, 255, 0.2));
-  color: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(135deg, rgba(255, 167, 214, 0.75), rgba(133, 146, 255, 0.75));
+  color: #fff;
+  box-shadow: 0 38px 72px -34px rgba(255, 145, 220, 0.65);
 }
 
 .share-modal {
@@ -1341,10 +1342,10 @@ textarea {
 
 .chat-message__bubble--user {
   margin-left: auto;
-  background: linear-gradient(135deg, rgba(255, 167, 214, 0.95), rgba(133, 146, 255, 0.95));
-  color: #fff;
-  border: none;
-  box-shadow: 0 35px 65px -32px rgba(255, 145, 220, 0.65);
+  background: linear-gradient(135deg, rgba(120, 136, 255, 0.12), rgba(194, 173, 255, 0.1));
+  color: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 55px -34px rgba(0, 0, 0, 0.55);
 }
 
 .chat-footer {

@@ -13,6 +13,7 @@ import { AppShell } from '@/components/AppShell';
 import { AppNav } from '@/components/AppNav';
 import { MainSidebar } from '@/components/MainSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { getAssistantBubbleColor, isDayeonAssistant } from '@/lib/assistantBubbleColors';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 
 type ChatMessage = {
@@ -109,6 +110,15 @@ export default function CharacterChatPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const assistantBubbleStyle = useMemo(() => {
+    if (!character || isDayeonAssistant(character.id, character.name)) {
+      return undefined;
+    }
+    return {
+      background: getAssistantBubbleColor(character.id),
+      boxShadow: '0 38px 72px -34px rgba(5, 6, 11, 0.45)'
+    };
+  }, [character?.id, character?.name]);
 
   const characterId = useMemo(() => {
     const raw = Array.isArray(router.query.id) ? router.query.id[0] : router.query.id;
@@ -545,6 +555,11 @@ export default function CharacterChatPage() {
                     ? 'chat-message__bubble--user'
                     : 'chat-message__bubble--assistant'
                 }`}
+                style={
+                  message.role === 'assistant' && assistantBubbleStyle
+                    ? assistantBubbleStyle
+                    : undefined
+                }
               >
                 {message.content}
               </div>
@@ -554,7 +569,10 @@ export default function CharacterChatPage() {
           {isLoading ? (
             <div className="chat-message">
               <div style={{ width: 32, height: 32 }} />
-              <div className="chat-message__bubble chat-message__bubble--assistant">
+              <div
+                className="chat-message__bubble chat-message__bubble--assistant"
+                style={assistantBubbleStyle}
+              >
                 The assistant is thinking...
               </div>
             </div>
