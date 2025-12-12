@@ -38,7 +38,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const characters = snapshot.docs.map(doc => {
       const data = doc.data();
       const categories = Array.isArray(data.categories)
-        ? data.categories.filter((item): item is string => typeof item === 'string' && item.trim())
+        ? data.categories.filter(
+            (item): item is string =>
+              typeof item === 'string' && typeof item.trim === 'function' && item.trim().length > 0
+          )
         : [];
 
       return {

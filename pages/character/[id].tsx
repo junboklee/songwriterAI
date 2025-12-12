@@ -118,7 +118,7 @@ export default function CharacterChatPage() {
       background: getAssistantBubbleColor(character.id),
       boxShadow: '0 38px 72px -34px rgba(5, 6, 11, 0.45)'
     };
-  }, [character?.id, character?.name]);
+  }, [character]);
 
   const characterId = useMemo(() => {
     const raw = Array.isArray(router.query.id) ? router.query.id[0] : router.query.id;
