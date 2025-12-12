@@ -18,6 +18,7 @@ type CharacterDocument = {
   avatarUrl?: string | null;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
+  gender?: string | null;
 };
 
 const CHUNK_SIZE = 10;
@@ -79,6 +80,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           categories: Array.isArray(data.categories)
             ? data.categories.filter((category): category is string => typeof category === 'string')
             : [],
+          gender:
+            typeof data.gender === 'string' && data.gender.trim() ? data.gender.trim() : 'none',
           createdAt: serializeTimestamp(data.createdAt),
           updatedAt: serializeTimestamp(data.updatedAt)
         });
@@ -97,4 +100,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
-

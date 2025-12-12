@@ -14,7 +14,8 @@ const baseCharacter = {
   longDescription: 'Original description',
   visibility: 'private' as const,
   avatarUrl: null,
-  categories: [] as string[]
+  categories: [] as string[],
+  gender: 'none' as const
 };
 
 const renderPanel = (
@@ -30,7 +31,7 @@ const renderPanel = (
     jest.fn<void, [FormData]>();
 
   const utils = render(
-    <I18nProvider>
+    <I18nProvider initialLocale="en">
       <CharacterEditorPanel
         character={{ ...baseCharacter, ...(overrides.character ?? {}) }}
         onClose={onClose}
@@ -71,8 +72,11 @@ describe('CharacterEditorPanel', () => {
     const descriptionInput =
       container.querySelector<HTMLTextAreaElement>('#character-long-description');
     const categoryInput = container.querySelector<HTMLInputElement>('#categories');
+    const genderSelect = container.querySelector<HTMLSelectElement>('#character-gender');
 
-    expect(nameInput && summaryInput && greetingInput && descriptionInput && categoryInput).toBeTruthy();
+    expect(
+      nameInput && summaryInput && greetingInput && descriptionInput && categoryInput && genderSelect
+    ).toBeTruthy();
 
     fireEvent.change(nameInput!, { target: { value: '  Midnight Muse  ' } });
     fireEvent.change(summaryInput!, { target: { value: '  Dreamy synthwave ' } });
@@ -83,6 +87,7 @@ describe('CharacterEditorPanel', () => {
 
     fireEvent.change(categoryInput!, { target: { value: '  lunar  ' } });
     fireEvent.keyDown(categoryInput!, { key: 'Enter', code: 'Enter' });
+    fireEvent.change(genderSelect!, { target: { value: 'female' } });
 
     const form = container.querySelector('form');
     fireEvent.submit(form!);
@@ -98,6 +103,7 @@ describe('CharacterEditorPanel', () => {
     expect(entries.greeting).toBe('Whisper a tune');
     expect(entries.longDescription).toBe('Focus on moody pop progressions.');
     expect(entries.visibility).toBe('private');
+    expect(entries.gender).toBe('female');
     expect(entries.categories).toBe(JSON.stringify(['lunar']));
 
     const expectedInstructions = buildCharacterInstructions({
@@ -108,5 +114,21 @@ describe('CharacterEditorPanel', () => {
     });
 
     expect(entries.instructions).toBe(expectedInstructions);
+  });
+
+  it('sends avatar removal flag when resetting to the default image', () => {
+    const { container, onSubmit } = renderPanel();
+
+    const resetButton = screen.getByRole('button', { name: 'Remove image' });
+    fireEvent.click(resetButton);
+
+    const form = container.querySelector('form');
+    fireEvent.submit(form!);
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const formData = (onSubmit as jest.Mock).mock.calls[0][0] as FormData;
+    const entries = Object.fromEntries(formData.entries());
+
+    expect(entries.avatarRemoved).toBe('true');
   });
 });

@@ -62,6 +62,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               (category: unknown): category is string => typeof category === 'string'
             )
           : [],
+        gender:
+          typeof data.gender === 'string' && data.gender.trim()
+            ? data.gender.trim()
+            : 'none',
         createdAt: serializeTimestamp(data.createdAt),
         updatedAt: serializeTimestamp(data.updatedAt)
       };

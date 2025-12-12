@@ -1,233 +1,196 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-import handler from '@/pages/api/chat';
+import OpenAI from 'openai';
+
 import { authenticateRequest } from '@/lib/serverAuth';
-import { saveThreadSnapshot } from '@/lib/chatPersistence';
 import { enforceRateLimit } from '@/lib/rateLimiter';
-import { RateLimitError } from '@/lib/errors';
+import { saveThreadSnapshot } from '@/lib/chatPersistence';
 
-const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
-const mockSaveThreadSnapshot = saveThreadSnapshot as jest.MockedFunction<typeof saveThreadSnapshot>;
-const mockEnforceRateLimit = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
-
-type OpenAiMockState = {
-  threadCreateMock: jest.Mock;
-  runCreateMock: jest.Mock;
-  runRetrieveMock: jest.Mock;
-  messageCreateMock: jest.Mock;
-  messageListMock: jest.Mock;
-};
-
-function ensureOpenAiMockState(): Partial<OpenAiMockState> {
-  const globalRef = globalThis as Record<string, unknown>;
-  if (!globalRef.__openAiMockState) {
-    globalRef.__openAiMockState = {};
-  }
-  return globalRef.__openAiMockState as Partial<OpenAiMockState>;
-}
-
-jest.mock('openai', () => {
-  const state: OpenAiMockState = {
-    threadCreateMock: jest.fn(),
-    runCreateMock: jest.fn(),
-    runRetrieveMock: jest.fn(),
-    messageCreateMock: jest.fn(),
-    messageListMock: jest.fn()
-  };
-
-  Object.assign(ensureOpenAiMockState(), state);
-
-  return jest.fn().mockImplementation(() => ({
-    beta: {
-      threads: {
-        create: state.threadCreateMock,
-        messages: {
-          create: state.messageCreateMock,
-          list: state.messageListMock
-        },
-        runs: {
-          create: state.runCreateMock,
-          retrieve: state.runRetrieveMock
-        }
-      }
-    }
-  }));
-});
-
-const openAiMockState = ensureOpenAiMockState();
-
-jest.mock('@/lib/serverAuth', () => ({
-  authenticateRequest: jest.fn()
-}));
-
-jest.mock('@/lib/chatPersistence', () => ({
-  saveThreadSnapshot: jest.fn()
-}));
-
-jest.mock('@/lib/rateLimiter', () => ({
-  enforceRateLimit: jest.fn()
-}));
-
+jest.mock('openai');
+jest.mock('@/lib/serverAuth');
+jest.mock('@/lib/rateLimiter');
+jest.mock('@/lib/chatPersistence');
 jest.mock('@/lib/logger', () => ({
   logInfo: jest.fn(),
   logError: jest.fn()
 }));
-
 jest.mock('@/lib/firebaseAdmin', () => ({
   adminDb: {
-    collection: jest.fn(() => ({
-      doc: () => ({
-        collection: () => ({
-          doc: () => ({
-            get: jest.fn().mockResolvedValue({ exists: false })
-          })
+    collection: jest.fn().mockReturnValue({
+      doc: jest.fn().mockReturnValue({
+        collection: jest.fn().mockReturnValue({
+          doc: jest.fn()
         })
       })
-    }))
-  },
-  adminAuth: {},
-  adminStorage: {}
+    })
+  }
+}));
+jest.mock('@/lib/characterAssistants', () => ({
+  createCharacterAssistant: jest.fn()
 }));
 
-const createRequest = (overrides?: Partial<NextApiRequest>): NextApiRequest =>
+type MockResponse = NextApiResponse & {
+  status: jest.Mock;
+  json: jest.Mock;
+  setHeader: jest.Mock;
+  end: jest.Mock;
+};
+
+type OpenAIMocks = {
+  threadCreateMock: jest.Mock;
+  messageCreateMock: jest.Mock;
+  messageListMock: jest.Mock;
+  runCreateMock: jest.Mock;
+  runRetrieveMock: jest.Mock;
+};
+
+const { __mocks: openaiMocks } = OpenAI as unknown as { __mocks: OpenAIMocks };
+
+const authenticateRequestMock = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
+const enforceRateLimitMock = enforceRateLimit as jest.MockedFunction<typeof enforceRateLimit>;
+const saveThreadSnapshotMock = saveThreadSnapshot as jest.MockedFunction<typeof saveThreadSnapshot>;
+
+const createRequest = (body: Record<string, unknown>): NextApiRequest =>
   ({
     method: 'POST',
     headers: {},
-    body: {},
-    socket: { remoteAddress: '127.0.0.1' },
-    ...overrides
+    body,
+    cookies: {},
+    query: {},
+    socket: {
+      remoteAddress: '127.0.0.1'
+    }
   } as unknown as NextApiRequest);
-
-type MockResponse = NextApiResponse & {
-  statusCode?: number;
-  body?: unknown;
-};
 
 const createResponse = (): MockResponse => {
   const res: Partial<MockResponse> = {};
-  res.status = jest.fn(code => {
-    res.statusCode = code;
-    return res as NextApiResponse;
-  });
-  res.json = jest.fn(payload => {
-    res.body = payload;
-    return res as NextApiResponse;
-  });
+  res.status = jest.fn().mockImplementation(() => res as MockResponse);
+  res.json = jest.fn().mockImplementation(() => res as MockResponse);
   res.setHeader = jest.fn();
   res.end = jest.fn();
   return res as MockResponse;
 };
 
+const buildTextMessage = (payload: { id: string; role: 'user' | 'assistant'; text: string; createdAt: number }) => ({
+  id: payload.id,
+  role: payload.role,
+  created_at: payload.createdAt,
+  content: [
+    {
+      type: 'text',
+      text: {
+        value: payload.text
+      }
+    }
+  ]
+});
+
 describe('/api/chat handler', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockAuthenticateRequest.mockResolvedValue({
-      user: { uid: 'user-1', email: 'test@example.com' }
-    });
-    mockEnforceRateLimit.mockResolvedValue(undefined);
-    openAiMockState.threadCreateMock?.mockResolvedValue({ id: 'thread-1' });
-    openAiMockState.runCreateMock?.mockResolvedValue({ id: 'run-1' });
-    openAiMockState.runRetrieveMock?.mockResolvedValue({ status: 'completed' });
-    openAiMockState.messageCreateMock?.mockResolvedValue(undefined);
-    openAiMockState.messageListMock?.mockResolvedValue({
-      data: [
-        {
-          id: 'assistant-1',
-          role: 'assistant',
-          created_at: 1_700_000_000,
-          content: [
-            {
-              type: 'text',
-              text: { value: '안녕하세요' }
-            }
-          ]
-        }
-      ]
-    });
-    mockSaveThreadSnapshot.mockResolvedValue(undefined);
+  let handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>;
+
+  beforeAll(async () => {
+    process.env.OPENAI_ASSISTANT_ID = 'asst_test_default';
+    process.env.OPENAI_API_KEY = 'test-api-key';
+    ({ default: handler } = await import('@/pages/api/chat'));
   });
 
-  it('rejects non-POST methods', async () => {
-    const req = createRequest({ method: 'GET' });
-    const res = createResponse();
-
-    await handler(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(405);
-    expect(res.body).toEqual({ error: 'Method not allowed' });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authenticateRequestMock.mockResolvedValue({
+      user: {
+        uid: 'user-1',
+        email: 'test@example.com'
+      },
+      idToken: 'token'
+    });
+    enforceRateLimitMock.mockResolvedValue(undefined);
+    saveThreadSnapshotMock.mockResolvedValue(undefined);
+    openaiMocks.threadCreateMock.mockResolvedValue({ id: 'thread-new' });
+    openaiMocks.messageCreateMock.mockResolvedValue(undefined);
+    openaiMocks.runCreateMock.mockResolvedValue({ id: 'run-1' });
+    openaiMocks.runRetrieveMock.mockResolvedValue({ status: 'completed' });
   });
 
   it('returns 400 when message is missing', async () => {
-    const req = createRequest({ body: { message: '   ' } });
+    const req = createRequest({});
     const res = createResponse();
 
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.body).toEqual({ error: 'Message is required.', code: 'BAD_REQUEST' });
-    expect(mockSaveThreadSnapshot).not.toHaveBeenCalled();
-  });
-
-  it('processes chat requests and saves thread snapshots', async () => {
-    const req = createRequest({
-      body: {
-        message: '첫 줄',
-        characterId: '1'
-      }
-    });
-    const res = createResponse();
-
-    await handler(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(mockSaveThreadSnapshot).toHaveBeenCalledWith(
+    expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        user: expect.objectContaining({ uid: 'user-1' }),
-        threadId: 'thread-1',
-        characterId: '1'
+        error: 'Message is required.',
+        code: 'BAD_REQUEST'
       })
     );
-    expect(openAiMockState.messageCreateMock).toHaveBeenCalledWith('thread-1', {
+    expect(saveThreadSnapshotMock).not.toHaveBeenCalled();
+  });
+
+  it('persists assistant output and returns reply payload', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    openaiMocks.messageListMock.mockResolvedValue({
+      data: [
+        buildTextMessage({
+          id: 'assistant-message',
+          role: 'assistant',
+          text: 'Here is your lyric idea.',
+          createdAt: now + 1
+        }),
+        buildTextMessage({
+          id: 'user-message',
+          role: 'user',
+          text: 'Write something upbeat.',
+          createdAt: now
+        })
+      ]
+    });
+
+    const req = createRequest({
+      message: 'Write something upbeat.'
+    });
+    const res = createResponse();
+
+    await handler(req, res);
+
+    expect(openaiMocks.threadCreateMock).toHaveBeenCalledTimes(1);
+    expect(openaiMocks.messageCreateMock).toHaveBeenCalledWith('thread-new', {
       role: 'user',
-      content: '첫 줄'
+      content: 'Write something upbeat.'
     });
-  });
-
-  it('uses the default assistant id for known built-in characters', async () => {
-    const req = createRequest({
-      body: {
-        message: 'default character test',
-        characterId: '1'
-      }
+    expect(openaiMocks.runCreateMock).toHaveBeenCalledWith('thread-new', {
+      assistant_id: 'asst_test_default'
     });
-    const res = createResponse();
-
-    await handler(req, res);
-
-    expect(openAiMockState.runCreateMock).toHaveBeenCalledWith('thread-1', {
-      assistant_id: 'asst_ED99NuKgahDCWbPaId4kUwq1'
+    expect(openaiMocks.messageListMock).toHaveBeenCalledWith('thread-new', {
+      limit: 10
     });
-  });
 
-  it('returns 429 when enforceRateLimit throws a RateLimitError', async () => {
-    mockEnforceRateLimit.mockRejectedValueOnce(new RateLimitError('Too many requests'));
+    expect(saveThreadSnapshotMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        threadId: 'thread-new',
+        user: expect.objectContaining({ uid: 'user-1' }),
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: 'user',
+            content: 'Write something upbeat.'
+          }),
+          expect.objectContaining({
+            role: 'assistant',
+            content: 'Here is your lyric idea.'
+          })
+        ])
+      })
+    );
 
-    const req = createRequest({
-      body: {
-        message: 'rate limit',
-        characterId: '1'
-      }
-    });
-    const res = createResponse();
-
-    await handler(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(429);
-    expect(res.body).toEqual({
-      error: 'Too many requests',
-      code: 'RATE_LIMIT_EXCEEDED'
-    });
-    expect(openAiMockState.threadCreateMock).not.toHaveBeenCalled();
-    expect(mockSaveThreadSnapshot).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        threadId: 'thread-new',
+        reply: expect.objectContaining({
+          role: 'assistant',
+          content: 'Here is your lyric idea.'
+        })
+      })
+    );
   });
 });

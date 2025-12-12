@@ -61,10 +61,11 @@ type CharacterDocument = {
   avatarUrl?: string | null;
   categories?: string[];
   creatorId?: string | null;
-
+  gender?: string | null;
 };
 
 const VISIBILITY_OPTIONS = new Set(['private', 'unlisted', 'public']);
+const GENDER_OPTIONS = new Set(['male', 'female', 'none']);
 
 const serializeCharacter = (id: string, data: CharacterDocument) => ({
   id,
@@ -84,6 +85,7 @@ const serializeCharacter = (id: string, data: CharacterDocument) => ({
       ? data.avatarUrl
       : null, // Changed from DEFAULT_CHARACTER_AVATAR to null
   categories: Array.isArray(data.categories) ? data.categories : [],
+  gender: typeof data.gender === 'string' ? data.gender : 'none'
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -168,6 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const categoriesRaw = getSingleValue(fields.categories);
     const example = getSingleValue(fields.example);
     const avatarRemoved = getSingleValue(fields.avatarRemoved); // Added avatarRemoved field
+    const genderField = getSingleValue(fields.gender);
 
     if (typeof name === 'string') {
       const trimmed = name.trim();
@@ -191,6 +194,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     if (visibility && VISIBILITY_OPTIONS.has(visibility)) {
       updates.visibility = visibility;
+    }
+    if (genderField && GENDER_OPTIONS.has(genderField)) {
+      updates.gender = genderField;
     }
     if (categoriesRaw) {
       try {

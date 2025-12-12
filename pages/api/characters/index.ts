@@ -20,6 +20,7 @@ export const config = {
 };
 
 const VISIBILITY_OPTIONS = new Set(['private', 'unlisted', 'public']);
+const GENDER_OPTIONS = new Set(['male', 'female', 'none']);
 
 // Helper to parse the form
 const parseForm = (req: NextApiRequest): Promise<{ fields: Fields; files: Files }> => {
@@ -60,6 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shortDescription = getSingleValue(fields.shortDescription);
     const longDescription = getSingleValue(fields.longDescription);
     const visibility = getSingleValue(fields.visibility);
+    const genderField = getSingleValue(fields.gender);
     const categoriesRaw = getSingleValue(fields.categories);
 
     if (!name || !name.trim()) {
@@ -93,6 +95,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const finalVisibility =
       typeof visibility === 'string' && VISIBILITY_OPTIONS.has(visibility) ? visibility : 'private';
+    const resolvedGender =
+      typeof genderField === 'string' && GENDER_OPTIONS.has(genderField) ? genderField : 'none';
     let categories: string[] = [];
     if (categoriesRaw) {
       try {
@@ -148,6 +152,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       longDescription: trimmedLong || null,
       instructions,
       visibility: finalVisibility,
+      gender: resolvedGender,
       categories,
       avatarUrl: avatarUrl ?? DEFAULT_CHARACTER_AVATAR,
       assistantId,

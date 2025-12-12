@@ -8,6 +8,7 @@ const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 export type CharacterVisibility = 'private' | 'unlisted' | 'public';
+export type CharacterGender = 'male' | 'female' | 'none';
 
 const categoryOptions = [
   'Helpers',
@@ -29,6 +30,7 @@ type FormState = {
   longDescription: string;
   visibility: CharacterVisibility;
   categories: string[];
+  gender: CharacterGender;
 };
 
 type CharacterEditorPanelProps = {
@@ -41,6 +43,7 @@ type CharacterEditorPanelProps = {
     visibility: CharacterVisibility;
     avatarUrl?: string | null;
     categories?: string[];
+    gender?: CharacterGender;
   };
   onClose: () => void;
   onSubmit: (payload: FormData) => void;
@@ -49,6 +52,7 @@ type CharacterEditorPanelProps = {
 };
 
 const VISIBILITY_VALUES: CharacterVisibility[] = ['private', 'unlisted', 'public'];
+const GENDER_VALUES: CharacterGender[] = ['male', 'female', 'none'];
 
 export default function CharacterEditorPanel({
   character,
@@ -66,13 +70,15 @@ export default function CharacterEditorPanel({
     greeting: character.greeting,
     longDescription: character.longDescription,
     visibility: character.visibility,
-    categories: character.categories ?? []
+    categories: character.categories ?? [],
+    gender: character.gender ?? 'none'
   });
   const [categoryInput, setCategoryInput] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     character.avatarUrl ?? DEFAULT_CHARACTER_AVATAR
   );
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,12 +89,14 @@ export default function CharacterEditorPanel({
       greeting: character.greeting,
       longDescription: character.longDescription,
       visibility: character.visibility,
-      categories: character.categories ?? []
+      categories: character.categories ?? [],
+      gender: character.gender ?? 'none'
     });
     setAvatarPreview(character.avatarUrl ?? DEFAULT_CHARACTER_AVATAR);
     setAvatarFile(null);
     setCategoryInput('');
     setAvatarError(null);
+    setAvatarRemoved(false);
   }, [character]);
 
   const handleChange =
@@ -107,8 +115,6 @@ export default function CharacterEditorPanel({
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
-      setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
       setAvatarError(null);
       return;
     }
@@ -129,6 +135,7 @@ export default function CharacterEditorPanel({
 
     setAvatarError(null);
     setAvatarFile(file);
+    setAvatarRemoved(false);
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -190,10 +197,13 @@ export default function CharacterEditorPanel({
     formData.append('longDescription', trimmedLong);
     formData.append('instructions', instructions);
     formData.append('visibility', formState.visibility);
+    formData.append('gender', formState.gender);
     formData.append('categories', JSON.stringify(formState.categories));
 
     if (avatarFile) {
       formData.append('avatar', avatarFile);
+    } else if (avatarRemoved) {
+      formData.append('avatarRemoved', 'true');
     }
 
     onSubmit(formData);
@@ -242,6 +252,25 @@ export default function CharacterEditorPanel({
               disabled={isSubmitting}
               required
             />
+          </div>
+
+          <div className="dashboard-panel__field">
+            <label htmlFor="character-gender" className="dashboard-panel__label">
+              {t('labels.gender')}
+            </label>
+            <select
+              id="character-gender"
+              className="dashboard-panel__input"
+              value={formState.gender}
+              onChange={handleChange('gender')}
+              disabled={isSubmitting}
+            >
+              {GENDER_VALUES.map(option => (
+                <option key={option} value={option}>
+                  {t(`genderOptions.${option}`)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="dashboard-panel__field">
@@ -349,9 +378,13 @@ export default function CharacterEditorPanel({
                   type="button"
                   className="dashboard-card__button"
                   onClick={() => {
+                    if (avatarInputRef.current) {
+                      avatarInputRef.current.value = '';
+                    }
                     setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
                     setAvatarFile(null);
                     setAvatarError(null);
+                    setAvatarRemoved(true);
                   }}
                   disabled={isSubmitting}
                 >

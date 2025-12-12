@@ -93,7 +93,13 @@
       longDescription: '상세 설명',
       instructions: 'AI 지침 미리보기',
       categories: '카테고리',
-      visibility: '공개 범위'
+      visibility: '공개 범위',
+      gender: '성별'
+    },
+    genderOptions: {
+      male: '남성',
+      female: '여성',
+      none: '성별 없음'
     },
     placeholders: {
       name: '예) 김다연',
@@ -132,8 +138,27 @@
     sidebarCancel: '작업 취소',
     form: {
       heroTitle: '새로운 캐릭터를 만들어 보세요',
+      heroEyebrow: 'Persona Studio',
       description: '말투, 분위기, 역할을 정의해 나만의 캐릭터를 구성할 수 있어요.',
+      highlights: {
+        persona: '감정과 말투를 정교하게 다듬어 보세요.',
+        mood: '상황별 한 줄 소개로 대화의 톤을 결정하세요.',
+        sharing: '전체 공개로 커뮤니티와 캐릭터를 공유할 수 있어요.'
+      },
+      cardEyebrow: 'Creative Capsule',
+      cardTitle: 'AI 감성 설계 가이드',
+      cardSubtitle: '캐릭터 목적과 감정을 명확하게 적을수록 응답 품질이 향상돼요.',
+      cardStat1: '필수 단계',
+      cardStat2: '평균 제작 시간',
+      cardStatValue1: '4단계',
+      cardStatValue2: '약 5분',
       name: '캐릭터 이름 *',
+      genderLabel: '성별',
+      genderOptions: {
+        male: '남성',
+        female: '여성',
+        none: '성별 없음'
+      },
       greeting: '첫 인사 (선택)',
       shortDescription: '짧은 소개',
       longDescription: '상세 설명',
@@ -150,7 +175,23 @@
       submit: '캐릭터 생성',
       submitting: '생성 중...',
       greetingCount: '{{count}} / 2048',
-      longDescriptionCount: '{{count}} / 4096'
+      longDescriptionCount: '{{count}} / 4096',
+      tips: {
+        personaTitle: '페르소나 디테일',
+        personaBody: '캐릭터의 배경, 분위기, 말투 예시를 구체적으로 적을수록 몰입감이 깊어집니다.',
+        visibilityTitle: '공개 범위 가이드',
+        visibilityBody: '전체 공개를 선택하면 다른 사용자도 당신의 캐릭터를 탐험할 수 있어요.'
+      },
+      sections: {
+        identityTitle: '페르소나 설정',
+        identitySubtitle: '기본 정보와 첫인사를 통해 캐릭터의 분위기를 정리하세요.',
+        storyTitle: '스토리라인',
+        storySubtitle: '상세설명에 캐릭터의 배경과 행동규칙을 담아주세요.',
+        avatarTitle: '아바타 & 카테고리',
+        avatarSubtitle: '이미지와 태그로 캐릭터의 세계관을 표현해 보세요.',
+        visibilityTitle: '공개 범위',
+        visibilitySubtitle: '공개 옵션을 선택해 다른 사용자와 캐릭터를 공유할 수 있어요.'
+      }
     },
     visibilityOptions: {
       public: {
@@ -360,7 +401,17 @@
     nicknameError: '표시 이름 업데이트에 실패했습니다.',
     recentChatsCount: '{{count}}개의 메시지',
     visibilityLabel: '공개 범위',
-    lastUpdatedLabel: '업데이트'
+    lastUpdatedLabel: '업데이트',
+    showcaseTitle: '커스텀 캐릭터 자랑하기',
+    showcaseSubtitle: '전체 공개로 공유된 캐릭터를 만나고 대화를 시작해 보세요.',
+    showcaseEmpty: '아직 공유된 커스텀 캐릭터가 없습니다. 가장 먼저 자랑해 보세요!',
+    showcaseLoadError: '공유된 커스텀 캐릭터를 불러오지 못했습니다.',
+    showcaseCta: '캐릭터 생성하기',
+    customCharactersTitle: '커스텀 캐릭터',
+    sortLabel: '정렬 방식',
+    sortPopularity: '인기순',
+    sortRecent: '최신순',
+    sortGender: '성별순'
   },
   chatPage: {
     sidebarTitle: '최근 대화',
@@ -380,5 +431,7 @@
     defaultTag: '커스텀 캐릭터'
   }
 };
+
+
 
 

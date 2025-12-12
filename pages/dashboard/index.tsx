@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { signOut, updateProfile } from 'firebase/auth';
 import { RequireAuth } from '@/components/RequireAuth';
-import CharacterEditorPanel, { CharacterVisibility } from '@/components/CharacterEditorPanel';
+import CharacterEditorPanel, { CharacterVisibility, CharacterGender } from '@/components/CharacterEditorPanel';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
@@ -35,6 +35,7 @@ type UserCharacter = {
   avatarUrl: string | null;
   categories: string[];
   updatedAt: string | null;
+  gender: CharacterGender;
 };
 
 type CharacterApiItem = {
@@ -49,7 +50,10 @@ type CharacterApiItem = {
   avatarUrl?: string | null;
   categories?: string[] | null;
   updatedAt?: string | null;
+  gender?: string | null;
 };
+
+type CharacterSortMode = 'popularity' | 'recent' | 'gender';
 
 type ProfileResponse = {
   profile: {
@@ -108,6 +112,8 @@ const visibilityLabels: Record<CharacterVisibility, string> = {
 
 const isCharacterVisibility = (value: unknown): value is CharacterVisibility =>
   value === 'private' || value === 'unlisted' || value === 'public';
+const isCharacterGender = (value: unknown): value is CharacterGender =>
+  value === 'male' || value === 'female' || value === 'none';
 
 const toTrimmedOrEmpty = (value?: string | null) =>
   typeof value === 'string' ? value.trim() : '';
@@ -128,7 +134,8 @@ const adaptCharacter = (item: CharacterApiItem): UserCharacter => ({
   categories: Array.isArray(item.categories)
     ? item.categories.filter((category): category is string => typeof category === 'string')
     : [],
-  updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : null
+  updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : null,
+  gender: isCharacterGender(item.gender) ? item.gender : 'none'
 });
 
 const adaptConversation = (
@@ -192,6 +199,12 @@ const formatConversationUpdatedAt = (isoDate?: string | null) => {
   }
 };
 
+const GENDER_ORDER: Record<CharacterGender, number> = {
+  male: 0,
+  female: 1,
+  none: 2
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const router = useRouter();
@@ -217,6 +230,16 @@ export default function Dashboard() {
       conversationsLabel: tDashboard('conversationsLabel'),
       songsLabel: tDashboard('songsLabel'),
       lastUpdatedLabel: tDashboard('lastUpdatedLabel'),
+      showcaseTitle: tDashboard('showcaseTitle'),
+      showcaseSubtitle: tDashboard('showcaseSubtitle'),
+      showcaseEmpty: tDashboard('showcaseEmpty'),
+      showcaseLoadError: tDashboard('showcaseLoadError'),
+      showcaseCta: tDashboard('showcaseCta'),
+      customCharactersTitle: tDashboard('customCharactersTitle'),
+      sortLabel: tDashboard('sortLabel'),
+      sortPopularity: tDashboard('sortPopularity'),
+      sortRecent: tDashboard('sortRecent'),
+      sortGender: tDashboard('sortGender'),
       recentChatsTitle: tDashboard('recentChatsTitle'),
       sidebarRecentTitle: tDashboard('sidebarRecentTitle'),
       sidebarEmptyRecent: tDashboard('sidebarEmptyRecent'),
@@ -274,11 +297,15 @@ export default function Dashboard() {
   const [selectedCharacter, setSelectedCharacter] = useState<UserCharacter | null>(null);
   const [isLoadingCharacters, setIsLoadingCharacters] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [publicCharacters, setPublicCharacters] = useState<UserCharacter[]>([]);
+  const [isLoadingPublicCharacters, setIsLoadingPublicCharacters] = useState(true);
+  const [publicCharactersError, setPublicCharactersError] = useState<string | null>(null);
   const [panelSubmitting, setPanelSubmitting] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [characterSort, setCharacterSort] = useState<CharacterSortMode>('popularity');
 
   const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -304,6 +331,18 @@ export default function Dashboard() {
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
+  const conversationUsage = useMemo(() => {
+    const usage: Record<string, number> = {};
+    recentChats.forEach(chat => {
+      if (!chat.characterId) {
+        return;
+      }
+      const count = typeof chat.messageCount === 'number' ? chat.messageCount : 0;
+      usage[chat.characterId] = (usage[chat.characterId] || 0) + count;
+    });
+    return usage;
+  }, [recentChats]);
+
   const buildSearchTarget = (...values: Array<string | null | undefined | string[]>) =>
     values
       .map(value => {
@@ -315,7 +354,38 @@ export default function Dashboard() {
       .join(' ')
       .toLowerCase();
 
-const hasCustomCharacters = customCharacters.length > 0;
+  const hasCustomCharacters = customCharacters.length > 0;
+  const hasPublicCharacters = publicCharacters.length > 0;
+  const sortedPublicCharacters = useMemo(() => {
+    if (!publicCharacters.length) {
+      return [];
+    }
+
+    const base = [...publicCharacters];
+    switch (characterSort) {
+      case 'gender':
+        return base.sort((a, b) => {
+          const orderDiff = GENDER_ORDER[a.gender] - GENDER_ORDER[b.gender];
+          if (orderDiff !== 0) {
+            return orderDiff;
+          }
+          return a.name.localeCompare(b.name);
+        });
+      case 'recent':
+        return base.sort(
+          (a, b) => getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt)
+        );
+      case 'popularity':
+      default:
+        return base.sort((a, b) => {
+          const categoryDiff = b.categories.length - a.categories.length;
+          if (categoryDiff !== 0) {
+            return categoryDiff;
+          }
+          return getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt);
+        });
+    }
+  }, [characterSort, publicCharacters]);
   const filteredCharacters = useMemo(() => {
     if (!normalizedSearch) {
       return customCharacters;
@@ -328,10 +398,39 @@ const hasCustomCharacters = customCharacters.length > 0;
         character.instructions,
         character.greeting,
         character.longDescription,
-        character.categories
+        character.categories,
+        character.gender
       ).includes(normalizedSearch)
     );
   }, [customCharacters, normalizedSearch]);
+
+  const sortedCustomCharacters = useMemo(() => {
+    const base = [...filteredCharacters];
+    switch (characterSort) {
+      case 'gender':
+        return base.sort((a, b) => {
+          const orderDiff = GENDER_ORDER[a.gender] - GENDER_ORDER[b.gender];
+          if (orderDiff !== 0) {
+            return orderDiff;
+          }
+          return a.name.localeCompare(b.name);
+        });
+      case 'recent':
+        return base.sort(
+          (a, b) => getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt)
+        );
+      case 'popularity':
+      default:
+        return base.sort((a, b) => {
+          const usageDiff =
+            (conversationUsage[b.id] ?? 0) - (conversationUsage[a.id] ?? 0);
+          if (usageDiff !== 0) {
+            return usageDiff;
+          }
+          return getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt);
+        });
+    }
+  }, [characterSort, conversationUsage, filteredCharacters]);
 
   useEffect(() => {
     let cancelled = false;
@@ -401,6 +500,67 @@ const hasCustomCharacters = customCharacters.length > 0;
       cancelled = true;
     };
   }, [user, dashboardText]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchPublicCharacters = async () => {
+      if (!user) {
+        if (!cancelled) {
+          setPublicCharacters([]);
+          setIsLoadingPublicCharacters(false);
+          setPublicCharactersError(null);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setIsLoadingPublicCharacters(true);
+        setPublicCharactersError(null);
+      }
+
+      try {
+        const idToken = await user.getIdToken();
+        const response = await fetch('/api/characters/explore?limit=12', {
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(
+            payload && typeof payload.error === 'string'
+              ? payload.error
+              : dashboardText.showcaseLoadError
+          );
+        }
+
+        const items: CharacterApiItem[] = Array.isArray(payload?.characters)
+          ? (payload?.characters as CharacterApiItem[])
+          : [];
+
+        if (!cancelled) {
+          setPublicCharacters(sortCharacters(items.map(adaptCharacter)));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPublicCharactersError(
+            error instanceof Error ? error.message : dashboardText.showcaseLoadError
+          );
+          setPublicCharacters([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPublicCharacters(false);
+        }
+      }
+    };
+
+    void fetchPublicCharacters();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dashboardText.showcaseLoadError, user]);
 
   useEffect(() => {
     if (!user || !recentChats.length) {
@@ -714,6 +874,7 @@ const hasCustomCharacters = customCharacters.length > 0;
     normalizedSearch.length > 0 && hasRecentChats && filteredRecentChats.length === 0;
   const noCustomSearchResults =
     normalizedSearch.length > 0 && hasCustomCharacters && filteredCharacters.length === 0;
+  const displayedCharacters = sortedCustomCharacters;
 
   useEffect(() => {
   if (!isProfileMenuOpen) {
@@ -743,6 +904,10 @@ const hasCustomCharacters = customCharacters.length > 0;
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+  };
+
+  const handleSortChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setCharacterSort(event.target.value as CharacterSortMode);
   };
 
 useEffect(() => {
@@ -1584,50 +1749,6 @@ const displayName =
 
           <section className="dashboard-section">
             <div className="dashboard-section__header">
-              <h2>{dashboardText.overviewTitle}</h2>
-            </div>
-            <div className="dashboard-grid">
-              {isLoadingProfile ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.profileLoading}</p>
-                </div>
-              ) : profileError ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{profileError}</p>
-                </div>
-              ) : (
-                <>
-                  <div className="dashboard-card">
-                    <h3 className="dashboard-card__title">{dashboardText.conversationsLabel}</h3>
-                    <p
-                      style={{
-                        margin: '8px 0 0',
-                        fontSize: '2rem',
-                        fontWeight: 700
-                      }}
-                    >
-                      {stats.conversationCount.toLocaleString('ko-KR')}
-                    </p>
-                  </div>
-                  <div className="dashboard-card">
-                    <h3 className="dashboard-card__title">{dashboardText.songsLabel}</h3>
-                    <p
-                      style={{
-                        margin: '8px 0 0',
-                        fontSize: '2rem',
-                        fontWeight: 700
-                      }}
-                    >
-                      {stats.songCount.toLocaleString('ko-KR')}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          <section className="dashboard-section">
-            <div className="dashboard-section__header">
               <h2>{dashboardText.todaysSpotlight}</h2>
             </div>
             <div className="dashboard-grid">
@@ -1689,9 +1810,83 @@ const displayName =
             </div>
           </section>
 
-  <section className="dashboard-section">
-    <div className="dashboard-section__header">
-      <h2>{dashboardText.recentChatsTitle}</h2>
+          <section className="dashboard-section">
+            <div className="dashboard-section__header">
+              <div>
+                <h2>{dashboardText.showcaseTitle}</h2>
+                <p className="dashboard-section__subtitle">{dashboardText.showcaseSubtitle}</p>
+              </div>
+              <div className="dashboard-section__controls">
+                <label htmlFor="character-sort" className="sr-only">
+                  {dashboardText.sortLabel}
+                </label>
+                <select
+                  id="character-sort"
+                  className="dashboard-section__select"
+                  value={characterSort}
+                  onChange={handleSortChange}
+                >
+                  <option value="popularity">{dashboardText.sortPopularity}</option>
+                  <option value="recent">{dashboardText.sortRecent}</option>
+                  <option value="gender">{dashboardText.sortGender}</option>
+                </select>
+              </div>
+            </div>
+            <div className="dashboard-grid">
+              {isLoadingPublicCharacters ? (
+                <div className="dashboard-card">
+                  <p className="dashboard-card__meta">{dashboardText.charactersLoading}</p>
+                </div>
+              ) : publicCharactersError ? (
+                <div className="dashboard-card">
+                  <p className="dashboard-card__meta">{publicCharactersError}</p>
+                </div>
+              ) : !hasPublicCharacters ? (
+                <div className="dashboard-card">
+                  <p className="dashboard-card__meta">{dashboardText.showcaseEmpty}</p>
+                </div>
+              ) : (
+                sortedPublicCharacters.map(character => {
+                  const summaryText = character.summary
+                    ? truncateText(character.summary, 110)
+                    : dashboardText.summaryFallback;
+                  const instructionsPreview = character.instructions
+                    ? truncateText(character.instructions, 140)
+                    : dashboardText.instructionsFallback;
+
+                  return (
+                    <div key={character.id} className="dashboard-card">
+                      {character.avatarUrl ? (
+                        <Image
+                          src={character.avatarUrl}
+                          alt={`${character.name} avatar`}
+                          width={60}
+                          height={60}
+                          style={{ borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' }}
+                        />
+                      ) : null}
+                      <h3 className="dashboard-card__title">{character.name}</h3>
+                      <p className="dashboard-card__meta">{summaryText}</p>
+                      <p className="dashboard-card__meta">{instructionsPreview}</p>
+                      <div className="dashboard-card__actions">
+                        <button
+                          type="button"
+                          className="dashboard-card__button dashboard-card__button--primary"
+                          onClick={() => handleStartChat(character.id)}
+                        >
+                          {dashboardText.startChat}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          <section className="dashboard-section">
+            <div className="dashboard-section__header">
+              <h2>{dashboardText.recentChatsTitle}</h2>
       {hasRecentChats ? (
         <button
           type="button"
@@ -1768,7 +1963,7 @@ const displayName =
 
           <section className="dashboard-section">
             <div className="dashboard-section__header">
-              <h2>내 커스텀 캐릭터</h2>
+              <h2>{dashboardText.customCharactersTitle}</h2>
               <span className="section-link" />
             </div>
             <div className="dashboard-grid">
@@ -1789,7 +1984,7 @@ const displayName =
                   <p className="dashboard-card__meta">{dashboardText.searchNoResults}</p>
                 </div>
               ) : (
-                filteredCharacters.map(character => {
+                displayedCharacters.map(character => {
                   const summaryText = character.summary
                     ? truncateText(character.summary, 110)
                     : dashboardText.summaryFallback;
@@ -1888,7 +2083,8 @@ const displayName =
             longDescription: selectedCharacter.longDescription,
             visibility: selectedCharacter.visibility,
             avatarUrl: selectedCharacter.avatarUrl,
-            categories: selectedCharacter.categories
+            categories: selectedCharacter.categories,
+            gender: selectedCharacter.gender
           }}
           onClose={handleCloseEditor}
           onSubmit={handleSubmitEditor}
