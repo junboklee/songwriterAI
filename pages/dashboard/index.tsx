@@ -1850,8 +1850,13 @@ const displayName =
                   const summaryText = character.summary
                     ? truncateText(character.summary, 110)
                     : dashboardText.summaryFallback;
-                  const instructionsPreview = character.instructions
-                    ? truncateText(character.instructions, 140)
+                  const detailSource =
+                    character.longDescription ||
+                    character.greeting ||
+                    character.instructions ||
+                    null;
+                  const detailText = detailSource
+                    ? truncateText(detailSource, 140)
                     : dashboardText.instructionsFallback;
 
                   return (
@@ -1867,7 +1872,7 @@ const displayName =
                       ) : null}
                       <h3 className="dashboard-card__title">{character.name}</h3>
                       <p className="dashboard-card__meta">{summaryText}</p>
-                      <p className="dashboard-card__meta">{instructionsPreview}</p>
+                      <p className="dashboard-card__meta">{detailText}</p>
                       <div className="dashboard-card__actions">
                         <button
                           type="button"

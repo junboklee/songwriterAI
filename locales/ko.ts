@@ -342,7 +342,7 @@
     deleteError: '캐릭터를 삭제하지 못했습니다.',
     updateError: '캐릭터 정보를 업데이트하지 못했습니다.',
     updatedUnknown: '업데이트 정보 없음',
-    summaryFallback: '소개가 아직 작성되지 않았어요.',
+    summaryFallback: '사용자가 만든 맞춤형 캐릭터입니다.',
     instructionsFallback: 'AI 지침이 아직 작성되지 않았어요.',
     sidebarProfileRole: '프로필',
     defaultTag: '캐릭터',
@@ -431,6 +431,11 @@
     defaultTag: '커스텀 캐릭터'
   }
 };
+
+
+
+
+
 
 
 

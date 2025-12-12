@@ -4,7 +4,6 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
 
 const MAX_LIMIT = 24;
-const MAX_FETCH_SLICE = 3;
 
 const coerceLimit = (value: string | string[] | undefined) => {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -26,30 +25,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const limit = coerceLimit(req.query.limit);
-    const fetchLimit = Math.min(limit * MAX_FETCH_SLICE, MAX_LIMIT * MAX_FETCH_SLICE);
     const snapshot = await adminDb
       .collection('characters')
+      .where('visibility', '==', 'public')
       .orderBy('updatedAt', 'desc')
-      .limit(fetchLimit)
+      .limit(limit)
       .get();
 
-    const characters = snapshot.docs.reduce<Array<Record<string, unknown>>>((acc, doc) => {
-      if (acc.length >= limit) {
-        return acc;
-      }
-
+    const characters = snapshot.docs.map(doc => {
       const data = doc.data();
-      if ((typeof data.visibility === 'string' ? data.visibility : 'private') !== 'public') {
-        return acc;
-      }
-
       const categories = Array.isArray(data.categories)
         ? data.categories.filter(
             (item): item is string => typeof item === 'string' && item.trim().length > 0
           )
         : [];
 
-      acc.push({
+      return {
         id: doc.id,
         name: normalizeString(data.name),
         summary: normalizeString(data.shortDescription ?? data.summary),
@@ -62,10 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         avatarUrl: normalizeString(data.avatarUrl),
         categories,
         updatedAt: serializeTimestamp(data.updatedAt)
-      });
-
-      return acc;
-    }, []);
+      };
+    });
 
     return res.status(200).json({ characters });
   } catch (error) {

@@ -348,8 +348,8 @@ export const en = {
     deleteError: 'Failed to delete that character.',
     updateError: 'Failed to update the character.',
     updatedUnknown: 'No update info',
-    summaryFallback: 'No bio has been written yet.',
-    instructionsFallback: 'No AI instructions yet.',
+    summaryFallback: 'This creator has not added a short bio yet.',
+    instructionsFallback: 'Detailed background has not been shared yet.',
     sidebarProfileRole: 'Profile',
     defaultTag: 'Character',
     profileLoadError: 'Could not load your profile.',
@@ -433,7 +433,7 @@ export const en = {
     rateLimited: 'Request limit exceeded. Try again in a moment.',
     quickReplies: 'Quick replies',
     loadingRecent: 'Loading multiple conversations...',
-    summaryFallback: 'Custom character created by the user.',
+    summaryFallback: 'Custom character created by this user.',
     defaultTag: 'Custom character'
   }
 };
