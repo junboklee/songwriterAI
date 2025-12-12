@@ -148,8 +148,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (Array.isArray(userData.recentCharacterIds)) {
           const filtered = userData.recentCharacterIds.filter(
-            (value: unknown): value is string =>
-              typeof value === 'string' && value.trim() && value !== characterId
+            (value): value is string =>
+              typeof value === 'string' && value.trim().length > 0 && value !== characterId
           );
 
           if (filtered.length !== userData.recentCharacterIds.length) {
