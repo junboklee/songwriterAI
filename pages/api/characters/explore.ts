@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { adminDb } from '@/lib/firebaseAdmin';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
-import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 
 const MAX_LIMIT = 24;
 
@@ -25,8 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    await requireUser(req);
-
     const limit = coerceLimit(req.query.limit);
     const snapshot = await adminDb
       .collection('characters')
@@ -61,10 +58,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({ characters });
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return res.status(401).json({ error: error.message });
-    }
-
     console.error('Failed to list shared characters', error);
     return res.status(500).json({ error: 'Failed to load shared characters.' });
   }

@@ -1078,6 +1078,7 @@ textarea {
   background: linear-gradient(140deg, rgba(18, 18, 32, 0.96), rgba(7, 7, 15, 0.98));
   box-shadow: 0 45px 90px -45px rgba(6, 4, 18, 0.85);
   overflow: hidden;
+  width: 100%;
 }
 
 .chat-layout__header {

@@ -505,24 +505,24 @@ export default function Dashboard() {
     let cancelled = false;
 
     const fetchPublicCharacters = async () => {
-      if (!user) {
-        if (!cancelled) {
-          setPublicCharacters([]);
-          setIsLoadingPublicCharacters(false);
-          setPublicCharactersError(null);
-        }
-        return;
-      }
-
       if (!cancelled) {
         setIsLoadingPublicCharacters(true);
         setPublicCharactersError(null);
       }
 
       try {
-        const idToken = await user.getIdToken();
+        const headers: Record<string, string> = {};
+        if (user) {
+          try {
+            const idToken = await user.getIdToken();
+            headers.Authorization = `Bearer ${idToken}`;
+          } catch {
+            // Ignore token fetch errors; continue unauthenticated.
+          }
+        }
+
         const response = await fetch('/api/characters/explore?limit=12', {
-          headers: { Authorization: `Bearer ${idToken}` }
+          headers
         });
         const payload = await response.json().catch(() => null);
 
