@@ -110,15 +110,17 @@ export default function CharacterChatPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const assistantId = character?.id ?? null;
+  const assistantName = character?.name ?? null;
   const assistantBubbleStyle = useMemo(() => {
-    if (!character || isDayeonAssistant(character.id, character.name)) {
+    if (!assistantId || !assistantName || isDayeonAssistant(assistantId, assistantName)) {
       return undefined;
     }
     return {
-      background: getAssistantBubbleColor(character.id),
+      background: getAssistantBubbleColor(assistantId),
       boxShadow: '0 38px 72px -34px rgba(5, 6, 11, 0.45)'
     };
-  }, [character]);
+  }, [assistantId, assistantName]);
 
   const characterId = useMemo(() => {
     const raw = Array.isArray(router.query.id) ? router.query.id[0] : router.query.id;
