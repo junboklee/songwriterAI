@@ -302,7 +302,7 @@ export default function CharacterCreate() {
                         <p className="cai-char-count">{greetingCountLabel}</p>
                       </div>
 
-                      <div className="cai-form-section cai-grid-span-2">
+                      <div className="cai-form-section cai-grid-span-2 cai-form-section--wide">
                         <label htmlFor="shortDescription">{t('form.shortDescription')}</label>
                         <input
                           id="shortDescription"

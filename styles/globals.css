@@ -1081,6 +1081,22 @@ textarea {
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  .chat-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chat-stage__conversation {
+    width: 100%;
+  }
+
+  .chat-layout {
+    border-radius: 12px;
+  }
+}
+
 .chat-layout__header {
   display: flex;
   align-items: center;
@@ -3480,6 +3496,28 @@ textarea {
   width: 100%;
 }
 
+.cai-form-section--wide {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.cai-form-section--wide label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f5f5ff;
+  align-self: flex-start;
+  text-align: left;
+  width: 100%;
+}
+
+.cai-form-section--wide input[type='text'] {
+  width: 100%;
+}
+
 .cai-form-section > label {
   color: #f1f1f1;
   font-weight: 600;
@@ -3500,6 +3538,7 @@ textarea {
 .cai-form-section--left input[type='text'] {
   width: 100%;
 }
+
 
 .cai-form-section input[type='text']:focus,
 .cai-form-section textarea:focus {
