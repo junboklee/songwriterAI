@@ -25,35 +25,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const limit = coerceLimit(req.query.limit);
-    const snapshot = await adminDb
-      .collection('characters')
-      .where('visibility', '==', 'public')
-      .orderBy('updatedAt', 'desc')
-      .limit(limit)
-      .get();
+    const characters = await adminDb.runTransaction(async tx => {
+      const snapshot = await tx.get(
+        adminDb
+          .collection('characters')
+          .orderBy('updatedAt', 'desc')
+          .limit(Math.min(limit + 10, MAX_LIMIT * 2))
+      );
 
-    const characters = snapshot.docs.map(doc => {
-      const data = doc.data();
-      const categories = Array.isArray(data.categories)
-        ? data.categories.filter(
-            (item): item is string => typeof item === 'string' && item.trim().length > 0
-          )
-        : [];
+      return snapshot.docs
+        .map(doc => {
+          const data = doc.data();
 
-      return {
-        id: doc.id,
-        name: normalizeString(data.name),
-        summary: normalizeString(data.shortDescription ?? data.summary),
-        greeting: normalizeString(data.greeting),
-        longDescription: normalizeString(data.longDescription),
-        instructions: normalizeString(data.instructions),
-        example: normalizeString(data.example),
-        visibility: 'public',
-        gender: normalizeString(data.gender) ?? 'none',
-        avatarUrl: normalizeString(data.avatarUrl),
-        categories,
-        updatedAt: serializeTimestamp(data.updatedAt)
-      };
+          if (typeof data.visibility !== 'string' || data.visibility !== 'public') {
+            return null;
+          }
+
+          const categories = Array.isArray(data.categories)
+            ? data.categories.filter(
+                (item): item is string => typeof item === 'string' && item.trim().length > 0
+              )
+            : [];
+
+          return {
+            id: doc.id,
+            name: normalizeString(data.name),
+            summary: normalizeString(data.shortDescription ?? data.summary),
+            greeting: normalizeString(data.greeting),
+            longDescription: normalizeString(data.longDescription),
+            instructions: normalizeString(data.instructions),
+            example: normalizeString(data.example),
+            visibility: 'public',
+            gender: normalizeString(data.gender) ?? 'none',
+            avatarUrl: normalizeString(data.avatarUrl),
+            categories,
+            updatedAt: serializeTimestamp(data.updatedAt)
+          };
+        })
+        .filter(Boolean)
+        .slice(0, limit) as Array<Record<string, unknown>>;
     });
 
     return res.status(200).json({ characters });
