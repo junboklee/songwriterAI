@@ -96,3 +96,28 @@ export async function deleteAllConversations(userId: string) {
 
   await deleteConversations({ userId, threadIds: ids });
 }
+
+export async function deleteConversationsByCharacter({
+  userId,
+  characterId
+}: {
+  userId: string;
+  characterId: string;
+}) {
+  if (!characterId) {
+    return;
+  }
+
+  const userRef = adminDb.collection('users').doc(userId);
+  const snapshot = await userRef
+    .collection('conversations')
+    .where('characterId', '==', characterId)
+    .get();
+
+  if (snapshot.empty) {
+    return;
+  }
+
+  const threadIds = snapshot.docs.map(doc => doc.id);
+  await deleteConversations({ userId, threadIds });
+}

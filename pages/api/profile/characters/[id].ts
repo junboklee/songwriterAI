@@ -12,6 +12,7 @@ import {
   deleteCharacterAssistant,
   updateCharacterAssistant
 } from '@/lib/characterAssistants';
+import { deleteConversationsByCharacter } from '@/lib/conversationCleanup';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
 import { assertValidAvatarFile } from '@/lib/avatarValidation';
@@ -133,8 +134,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? data.assistantId.trim()
           : null;
 
-      await characterRef.delete();
-      await publicCharacterRef.delete().catch(() => undefined);
+      await adminDb.runTransaction(async tx => {
+        tx.delete(characterRef);
+        tx.delete(publicCharacterRef);
+      });
+
+      await deleteConversationsByCharacter({ userId: authUser.uid, characterId });
+
+      const userSnapshot = await userRef.get();
+      if (userSnapshot.exists) {
+        const userData = userSnapshot.data() ?? {};
+        const profileUpdates: Record<string, unknown> = {};
+
+        if (Array.isArray(userData.recentCharacterIds)) {
+          const filtered = userData.recentCharacterIds.filter(
+            (value: unknown): value is string =>
+              typeof value === 'string' && value.trim() && value !== characterId
+          );
+
+          if (filtered.length !== userData.recentCharacterIds.length) {
+            profileUpdates.recentCharacterIds = filtered;
+          }
+        }
+
+        if (userData.lastCharacterId === characterId) {
+          profileUpdates.lastCharacterId = null;
+        }
+
+        if (Object.keys(profileUpdates).length > 0) {
+          await userRef.update(profileUpdates);
+        }
+      }
 
       if (assistantId) {
         try {
