@@ -5,10 +5,11 @@ rules_version = '2';
 //    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    // Character 아바타는 공개 조회 허용, 소유자 인증 시에만 쓰기 허용
+    // Character 아바타는 공개 조회 허용. 업로드는 서버(Admin SDK, lib/avatarStorage.ts)에서만 수행하므로
+    // 클라이언트 직접 쓰기는 막는다 (크기·형식 검증 우회 방지).
     match /avatars/{userId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
     }
 
     // 나머지 경로는 기본적으로 차단

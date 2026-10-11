@@ -8,7 +8,7 @@ jest.mock('@/lib/serverAuth', () => ({
   UnauthorizedError: class UnauthorizedError extends Error {}
 }));
 
-const mockQuery = {
+const mockQuery: Record<string, jest.Mock> = {
   orderBy: jest.fn(() => mockQuery),
   limit: jest.fn(() => mockQuery),
   startAfter: jest.fn(() => mockQuery),

@@ -71,6 +71,19 @@ export async function authenticateRequest(
   return { user, idToken };
 }
 
+// For public endpoints that personalise the response when a valid token is present.
+export async function getOptionalUser(req: NextApiRequest): Promise<AuthenticatedUser | null> {
+  const idToken = extractIdToken(req);
+  if (!idToken) {
+    return null;
+  }
+  try {
+    return await verifyFirebaseIdToken(idToken);
+  } catch {
+    return null;
+  }
+}
+
 export async function requireUser(req: NextApiRequest): Promise<AuthenticatedUser> {
   const { user } = await authenticateRequest(req);
   return user;

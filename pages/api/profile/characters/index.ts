@@ -91,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.error('Characters API error:', error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unexpected server error.'
+      error: 'Unexpected server error.'
     });
   }
 }
