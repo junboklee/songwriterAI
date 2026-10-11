@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { AppNav } from '@/components/AppNav';
 import { AppShell } from '@/components/AppShell';
@@ -20,6 +20,32 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [usage, setUsage] = useState<{
+    month: string;
+    plan: string;
+    limit: number | null;
+    chatRequests: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    let cancelled = false;
+    user
+      .getIdToken()
+      .then(idToken => fetch('/api/profile', { headers: { Authorization: `Bearer ${idToken}` } }))
+      .then(response => (response.ok ? response.json() : null))
+      .then(payload => {
+        if (!cancelled && payload?.usage) {
+          setUsage(payload.usage);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,7 +103,7 @@ export default function SettingsPage() {
               <p className="section-title">Account</p>
               <div className="sidebar-list" style={{ marginTop: 14 }}>
                 <div className="sidebar-item">
-                  <span className="sidebar-item__icon">\uD83D\uDCE7</span>
+                  <span className="sidebar-item__icon">{'\uD83D\uDCE7'}</span>
                   <div>
                     <p style={{ margin: 0, fontWeight: 600 }}>Email</p>
                     <p
@@ -92,7 +118,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="sidebar-item">
-                  <span className="sidebar-item__icon">\u2B50</span>
+                  <span className="sidebar-item__icon">{'\u2B50'}</span>
                   <div>
                     <p style={{ margin: 0, fontWeight: 600 }}>Plan</p>
                     <p
@@ -102,15 +128,32 @@ export default function SettingsPage() {
                         fontSize: '0.85rem'
                       }}
                     >
-                      Creator (free tier)
+                      {usage?.plan === 'studio' ? 'Studio' : 'Beta (free)'}
+                    </p>
+                  </div>
+                </div>
+                <div className="sidebar-item">
+                  <span className="sidebar-item__icon">{'\uD83C\uDFB5'}</span>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 600 }}>AI requests this month</p>
+                    <p
+                      style={{
+                        margin: '4px 0 0',
+                        color: 'var(--text-secondary)',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      {usage
+                        ? `${usage.chatRequests}${usage.limit ? ` / ${usage.limit}` : ''} (${usage.month})`
+                        : '\u2014'}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="callout">
-              Need higher limits? Connect this UI with your billing portal to manage subscription
-              plans and usage quotas.
+              All features are free during the beta. Paid plans with higher limits will be announced on
+              the pricing page before launch.
             </div>
           </div>
         }

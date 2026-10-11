@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
+import { getMonthlyUsage } from '@/lib/usage';
 
 type ProfilePatchPayload = {
   displayName?: unknown;
@@ -24,10 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userRef = adminDb.collection('users').doc(authUser.uid);
 
     if (req.method === 'GET') {
-      const [userSnapshot, conversationCountSnap, songCountSnap] = await Promise.all([
+      const [userSnapshot, conversationCountSnap, songCountSnap, usage] = await Promise.all([
         userRef.get(),
         userRef.collection('conversations').count().get(),
-        userRef.collection('songs').count().get()
+        userRef.collection('songs').count().get(),
+        getMonthlyUsage(authUser.uid)
       ]);
 
       const userData = userSnapshot.exists ? userSnapshot.data() ?? {} : {};
@@ -60,7 +62,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         songCount: songCountSnap.data().count
       };
 
-      return res.status(200).json({ profile, stats });
+      return res.status(200).json({
+        profile,
+        stats,
+        usage: {
+          month: usage.month,
+          plan: usage.plan,
+          limit: usage.limit,
+          chatRequests: usage.chatRequests
+        }
+      });
     }
 
     const payload = req.body as ProfilePatchPayload;
@@ -132,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.error('Profile API error:', error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unexpected server error.'
+      error: 'Unexpected server error.'
     });
   }
 }

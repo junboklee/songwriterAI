@@ -8,6 +8,17 @@ jest.mock('@/lib/serverAuth', () => ({
   requireUser: jest.fn()
 }));
 
+jest.mock('@/lib/usage', () => ({
+  getMonthlyUsage: jest.fn(async () => ({
+    month: '2026-10',
+    plan: 'free',
+    limit: null,
+    chatRequests: 7,
+    inputTokens: 0,
+    outputTokens: 0
+  }))
+}));
+
 jest.mock('@/lib/firebaseAdmin', () => ({
   adminDb: {
     collection: jest.fn()
@@ -138,7 +149,8 @@ describe('/api/profile handler', () => {
       stats: {
         conversationCount: 4,
         songCount: 2
-      }
+      },
+      usage: { month: '2026-10', plan: 'free', limit: null, chatRequests: 7 }
     });
     expect(ref.collection).toHaveBeenCalledWith('conversations');
     expect(ref.collection).toHaveBeenCalledWith('songs');
