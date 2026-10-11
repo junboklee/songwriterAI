@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
+    "typecheck": "tsc --noEmit",
     "lighthouse": "node scripts/run-lighthouse.mjs",
     "seo:check": "node scripts/check-seo.mjs"
   },
