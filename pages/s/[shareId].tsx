@@ -32,7 +32,8 @@ export const getServerSideProps: GetServerSideProps<SharedSongProps> = async ({ 
   }
 
   const data = snapshot.data() ?? {};
-  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  // Never cache at the CDN: un-sharing or deleting a song must take effect immediately.
+  res.setHeader('Cache-Control', 'private, no-store');
 
   return {
     props: {

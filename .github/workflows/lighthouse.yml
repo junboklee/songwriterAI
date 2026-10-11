@@ -31,6 +31,15 @@ jobs:
         run: npm ci
 
       - name: Build
+        # Public Firebase web config (same values as apphosting.yaml); lib/firebase.ts refuses to load without it.
+        # No server secrets are needed: Lighthouse only audits static pages.
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyCQNZwdX8XclqhIxkczKaORSu8ciN0B6oo
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: character-ai-12ae8.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: character-ai-12ae8
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: character-ai-12ae8.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '119066434041'
+          NEXT_PUBLIC_FIREBASE_APP_ID: '1:119066434041:web:d5e8672925b11818b40528'
         run: npm run build
 
       - name: Start server
