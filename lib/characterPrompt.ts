@@ -3,18 +3,21 @@ type PromptInput = {
   shortDescription?: string | null;
   greeting?: string | null;
   longDescription?: string | null;
+  example?: string | null;
 };
 
 const sanitize = (value?: string | null) => (typeof value === 'string' ? value.trim() : '');
 
+// Persona section only — the shared songwriting rules are added at request time (lib/llm.ts).
 export function buildCharacterInstructions({
   name,
   shortDescription,
   greeting,
-  longDescription
+  longDescription,
+  example
 }: PromptInput) {
   const persona = [
-    `You are ${name.trim()}, a custom persona inside the SongwriterAI application.`,
+    `You are ${name.trim()}, a custom persona inside the NovaSingerAI application.`,
     sanitize(shortDescription)
   ]
     .filter(Boolean)
@@ -30,11 +33,18 @@ export function buildCharacterInstructions({
     ? sanitize(longDescription)
     : 'Stay supportive, collaborative, and focused on songwriting flows.';
 
-  return [
+  const sections = [
     persona,
     greetingLine,
     'Always stay in character, reference previous interactions when helpful, and keep responses concise but emotionally resonant.',
     `Core behavioural guidelines: ${behaviour}`
-  ].join('\n\n');
-}
+  ];
 
+  if (sanitize(example)) {
+    sections.push(
+      `Example of this persona's writing style (match the tone, do not copy it):\n${sanitize(example)}`
+    );
+  }
+
+  return sections.join('\n\n');
+}

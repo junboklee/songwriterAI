@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Timestamp } from 'firebase-admin/firestore';
-import OpenAI from 'openai';
+import { FieldValue } from 'firebase-admin/firestore';
 
 import { authenticateRequest } from '@/lib/serverAuth';
 import { saveThreadSnapshot } from '@/lib/chatPersistence';
@@ -8,201 +7,141 @@ import { enforceRateLimit } from '@/lib/rateLimiter';
 import { logError, logInfo } from '@/lib/logger';
 import { AppError, BadRequestError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
-import { createCharacterAssistant } from '@/lib/characterAssistants';
+import { buildCharacterInstructions } from '@/lib/characterPrompt';
+import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
+import { generateReply, streamReply, type ChatTurn } from '@/lib/llm';
+import { assertWithinMonthlyQuota, recordChatUsage, type TokenUsage } from '@/lib/usage';
 
-const openai = new OpenAI({
-  apiKey: process.env.APPSECRETS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY
-});
-
-const defaultAssistantId =
-  process.env.APPSECRETS_OPENAI_ASSISTANT_ID ?? process.env.OPENAI_ASSISTANT_ID ?? null;
+const MAX_MESSAGE_LENGTH = 4000;
+const HISTORY_LIMIT = 30;
 
 type CharacterDocument = {
   name?: string;
   summary?: string | null;
+  shortDescription?: string | null;
   greeting?: string | null;
+  longDescription?: string | null;
   instructions?: string | null;
   example?: string | null;
-  assistantId?: string | null;
+  visibility?: string | null;
 };
 
-type ResolvedAssistantContext = {
-  assistantId: string;
-  characterName?: string | null;
-  greeting?: string | null;
-  origin: 'default' | 'custom';
+type ResponseMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: Date | null;
 };
-
-const getClientIp = (req: NextApiRequest) => {
-  const forwarded = req.headers['x-forwarded-for'];
-
-  if (typeof forwarded === 'string' && forwarded.trim()) {
-    return forwarded.split(',')[0]?.trim() || 'forwarded';
-  }
-
-  if (Array.isArray(forwarded) && forwarded.length) {
-    return forwarded[0]?.trim() || 'forwarded';
-  }
-
-  return req.socket.remoteAddress ?? 'unknown';
-};
-
-const wait = (ms: number) =>
-  new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
 
 const sanitize = (value?: string | null) =>
   typeof value === 'string' ? value.trim() : '';
 
-async function pollRunCompletion(threadId: string, runId: string) {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const run = await openai.beta.threads.runs.retrieve(threadId, runId);
-
-    if (run.status === 'completed') {
-      return run;
-    }
-
-    if (run.status === 'requires_action') {
-      throw new Error('Assistant requested an unsupported action.');
-    }
-
-    if (run.status === 'failed' || run.status === 'cancelled' || run.status === 'expired') {
-      throw new Error(run.last_error?.message || `Run ended with status ${run.status}`);
-    }
-
-    await wait(1500);
-  }
-
-  throw new Error('Timed out waiting for assistant response.');
-}
-
-const defaultCharacterAssistantIds: Record<string, string | undefined> = {
-  '1':
-    process.env.APPSECRETS_OPENAI_ASSISTANT_ID_DAYEON ??
-    process.env.OPENAI_ASSISTANT_ID_DAYEON ??
-    'asst_ED99NuKgahDCWbPaId4kUwq1', // Dayeon
-};
-
-async function resolveAssistantContext(
-  userId: string,
-  characterId?: string | null
-): Promise<ResolvedAssistantContext> {
-  // Handle default characters first
-  if (characterId && defaultCharacterAssistantIds[characterId]) {
-    const assistantId = defaultCharacterAssistantIds[characterId];
-    if (assistantId) {
-      return {
-        assistantId,
-        origin: 'default'
-      };
-    }
-  }
-
+async function resolvePersonaInstructions(userId: string, characterId: string | null) {
   if (!characterId) {
-    if (!defaultAssistantId) {
-      throw new AppError('Assistant configuration is missing.', {
-        statusCode: 500,
-        code: 'ASSISTANT_NOT_CONFIGURED'
-      });
-    }
-
-    return {
-      assistantId: defaultAssistantId,
-      origin: 'default'
-    };
+    return { instructions: DEFAULT_PERSONA.instructions, origin: 'default' as const };
   }
 
-  let characterRef = adminDb.collection('users').doc(userId).collection('characters').doc(characterId);
-  let snapshot = await characterRef.get();
-
-  if (!snapshot.exists) {
-    characterRef = adminDb.collection('characters').doc(characterId);
-    snapshot = await characterRef.get();
+  const builtIn = getDefaultCharacter(characterId);
+  if (builtIn) {
+    return { instructions: builtIn.instructions, origin: 'default' as const };
   }
 
-  if (!snapshot.exists) {
-    if (!defaultAssistantId) {
-      throw new BadRequestError('선택한 캐릭터를 찾을 수 없습니다.');
-    }
+  let snapshot = await adminDb
+    .collection('users')
+    .doc(userId)
+    .collection('characters')
+    .doc(characterId)
+    .get();
 
-    return {
-      assistantId: defaultAssistantId,
-      origin: 'default'
-    };
+  if (!snapshot.exists) {
+    snapshot = await adminDb.collection('characters').doc(characterId).get();
+  }
+
+  // Public collection only ever holds public/unlisted characters, but guard anyway.
+  const isForeign = snapshot.exists && snapshot.get('creatorId') !== userId;
+  const isBlocked =
+    isForeign && (snapshot.get('visibility') === 'private' || snapshot.get('hidden') === true);
+
+  if (!snapshot.exists || isBlocked) {
+    throw new BadRequestError('선택한 캐릭터를 찾을 수 없습니다.');
   }
 
   const data = snapshot.data() as CharacterDocument;
-
-  let assistantId =
-    typeof data.assistantId === 'string' && data.assistantId.trim()
-      ? data.assistantId.trim()
-      : '';
-
   const name = sanitize(data.name) || 'Custom character';
-  const summary = sanitize(data.summary ?? undefined);
-  const greeting = sanitize(data.greeting ?? undefined);
-  const instructions = sanitize(data.instructions ?? undefined);
-  const example = sanitize(data.example ?? undefined);
+  const stored = sanitize(data.instructions);
+  const example = sanitize(data.example);
 
-  if (!assistantId) {
-    if (!instructions) {
-      throw new AppError('캐릭터 지침이 비어 있습니다. 먼저 캐릭터 설정을 저장해주세요.', {
-        statusCode: 422,
-        code: 'ASSISTANT_NOT_READY'
-      });
-    }
-
-    try {
-      assistantId = await createCharacterAssistant({
-        userId,
-        characterId,
+  const instructions = stored
+    ? example && !stored.includes(example)
+      ? `${stored}\n\nExample of this persona's writing style (match the tone, do not copy it):\n${example}`
+      : stored
+    : buildCharacterInstructions({
         name,
-        summary,
-        greeting,
-        instructions,
+        shortDescription: data.shortDescription ?? data.summary ?? null,
+        greeting: data.greeting ?? null,
+        longDescription: data.longDescription ?? null,
         example
       });
 
-      await characterRef.set(
-        {
-          assistantId,
-          updatedAt: Timestamp.now()
-        },
-        { merge: true }
-      );
-    } catch (assistantError) {
-      logError('chat.assistant_sync_failed', assistantError);
-
-      let message = '커스텀 캐릭터 assistant를 준비하지 못했습니다. 잠시 후 다시 시도해주세요.';
-      if (assistantError instanceof OpenAI.APIError) {
-        message = `Failed to sync assistant with OpenAI: ${assistantError.message}`;
-      } else if (assistantError instanceof Error) {
-        // Keep the original error message for other error types
-        message = assistantError.message;
-      }
-
-      throw new AppError(message, {
-        statusCode: 502,
-        code: 'ASSISTANT_SYNC_FAILED'
-      });
-    }
-  }
-
   return {
-    assistantId,
-    characterName: name,
-    greeting,
-    origin: 'custom'
+    instructions,
+    origin: 'custom' as const,
+    // Only other people's listed characters collect community usage stats.
+    countsUsage:
+      (data.visibility === 'public' || data.visibility === 'unlisted') &&
+      snapshot.get('creatorId') !== userId
   };
 }
 
-const parseMessageContent = (message: OpenAI.Beta.Threads.Messages.Message) =>
-  message.content
-    .filter((item): item is OpenAI.Beta.Threads.Messages.TextContentBlock => item.type === 'text')
-    .map(item => item.text.value)
-    .join('\n')
-    .trim();
+async function loadHistory(userId: string, threadId: string): Promise<ResponseMessage[]> {
+  const conversationRef = adminDb
+    .collection('users')
+    .doc(userId)
+    .collection('conversations')
+    .doc(threadId);
+
+  const conversation = await conversationRef.get();
+  if (!conversation.exists) {
+    // Thread ids are only valid for the user who owns the conversation.
+    throw new AppError('대화를 찾을 수 없습니다.', { statusCode: 404, code: 'THREAD_NOT_FOUND' });
+  }
+
+  const snapshot = await conversationRef
+    .collection('messages')
+    .orderBy('createdAt', 'desc')
+    .limit(HISTORY_LIMIT)
+    .get();
+
+  return snapshot.docs
+    .map(doc => {
+      const data = doc.data();
+      const createdAt = data.createdAt?.toDate?.() ?? null;
+      return {
+        id: doc.id,
+        role: data.role,
+        content: typeof data.content === 'string' ? data.content : '',
+        createdAt
+      } as ResponseMessage;
+    })
+    .filter(item => (item.role === 'user' || item.role === 'assistant') && item.content)
+    .reverse();
+}
+
+const newMessageId = (userId: string, threadId: string) =>
+  adminDb
+    .collection('users')
+    .doc(userId)
+    .collection('conversations')
+    .doc(threadId)
+    .collection('messages')
+    .doc().id;
+
+const wantsStream = (req: NextApiRequest) =>
+  typeof req.headers.accept === 'string' && req.headers.accept.includes('text/event-stream');
+
+const writeEvent = (res: NextApiResponse, event: string, payload: unknown) => {
+  res.write(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -210,167 +149,161 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let streaming = false;
+
   try {
     const { user } = await authenticateRequest(req);
+    await enforceRateLimit(user.uid);
 
-    const limiterKey = `${user.uid}:${getClientIp(req)}`;
-    await enforceRateLimit(limiterKey);
-
-    const { message, threadId, characterId, songDraft } = req.body as {
-      message?: string;
-      threadId?: string;
-      characterId?: string;
-      songDraft?: unknown;
+    const { message, threadId, characterId } = (req.body ?? {}) as {
+      message?: unknown;
+      threadId?: unknown;
+      characterId?: unknown;
     };
 
-    if (!message || !message.trim()) {
+    const text = typeof message === 'string' ? message.trim() : '';
+    if (!text) {
       throw new BadRequestError('Message is required.');
     }
+    if (text.length > MAX_MESSAGE_LENGTH) {
+      throw new BadRequestError(`메시지는 ${MAX_MESSAGE_LENGTH}자 이하로 입력해 주세요.`);
+    }
 
-    const assistantContext = await resolveAssistantContext(user.uid, characterId ?? null);
+    const resolvedCharacterId =
+      typeof characterId === 'string' && characterId.trim() ? characterId.trim() : null;
+    const requestedThreadId =
+      typeof threadId === 'string' && threadId.trim() ? threadId.trim() : null;
+
+    await assertWithinMonthlyQuota(user.uid);
+
+    const persona = await resolvePersonaInstructions(user.uid, resolvedCharacterId);
+    const history = requestedThreadId ? await loadHistory(user.uid, requestedThreadId) : [];
+    const currentThreadId =
+      requestedThreadId ??
+      adminDb.collection('users').doc(user.uid).collection('conversations').doc().id;
 
     logInfo('chat.request', {
       uid: user.uid,
-      threadId: threadId ?? null,
-      characterId: characterId ?? null,
-      assistantOrigin: assistantContext.origin
+      threadId: currentThreadId,
+      characterId: resolvedCharacterId,
+      personaOrigin: persona.origin,
+      historyLength: history.length
     });
 
-    let currentThreadId = threadId;
-
-    if (!currentThreadId) {
-      const thread = await openai.beta.threads.create();
-      currentThreadId = thread.id;
-    }
-
-    await openai.beta.threads.messages.create(currentThreadId, {
+    const userCreatedAt = new Date();
+    const userMessage: ResponseMessage = {
+      id: newMessageId(user.uid, currentThreadId),
       role: 'user',
-      content: message
-    });
+      content: text,
+      createdAt: userCreatedAt
+    };
+    const turns: ChatTurn[] = [...history, userMessage].map(item => ({
+      role: item.role,
+      content: item.content
+    }));
 
-    const run = await openai.beta.threads.runs.create(currentThreadId, {
-      assistant_id: assistantContext.assistantId
-    });
+    let replyText = '';
+    let tokenUsage: TokenUsage | null = null;
+    const captureUsage = (usage: TokenUsage) => {
+      tokenUsage = usage;
+    };
 
-    await pollRunCompletion(currentThreadId, run.id);
+    if (wantsStream(req)) {
+      streaming = true;
+      res.status(200);
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.flushHeaders?.();
 
-    const responseMessages = await openai.beta.threads.messages.list(currentThreadId, {
-      limit: 10
-    });
-
-    const orderedMessages = [...responseMessages.data].reverse().map(item => {
-      const createdAt =
-        typeof item.created_at === 'number' ? new Date(item.created_at * 1000) : null;
-
-      return {
-        id: item.id,
-        role: item.role,
-        content: parseMessageContent(item),
-        createdAt
-      };
-    });
-
-    const persistedMessages = orderedMessages
-      .filter(
-        (
-          messageItem
-        ): messageItem is {
-          id: string;
-          role: 'user' | 'assistant';
-          content: string;
-          createdAt: Date | null;
-        } =>
-          (messageItem.role === 'user' || messageItem.role === 'assistant') &&
-          Boolean(messageItem.content)
-      )
-      .map(messageItem => ({
-        id: messageItem.id,
-        role: messageItem.role,
-        content: messageItem.content,
-        createdAt: messageItem.createdAt,
-        characterId: characterId ?? null
-      }));
-
-    let normalizedSongDraft: {
-      id?: string;
-      title?: string | null;
-      lyrics?: string | null;
-      prompt?: string | null;
-      metadata?: Record<string, unknown> | null;
-      characterId?: string | null;
-    } | null = null;
-
-    if (songDraft && typeof songDraft === 'object') {
-      const draftRecord = songDraft as Record<string, unknown>;
-      normalizedSongDraft = {
-        id: typeof draftRecord.id === 'string' && draftRecord.id.trim() ? draftRecord.id : undefined,
-        title:
-          typeof draftRecord.title === 'string' && draftRecord.title.trim()
-            ? draftRecord.title.trim()
-            : null,
-        lyrics:
-          typeof draftRecord.lyrics === 'string' && draftRecord.lyrics.trim()
-            ? draftRecord.lyrics.trim()
-            : null,
-        prompt:
-          typeof draftRecord.prompt === 'string' && draftRecord.prompt.trim()
-            ? draftRecord.prompt.trim()
-            : null,
-        metadata:
-          draftRecord.metadata && typeof draftRecord.metadata === 'object'
-            ? (draftRecord.metadata as Record<string, unknown>)
-            : null,
-        characterId:
-          typeof draftRecord.characterId === 'string' && draftRecord.characterId.trim()
-            ? draftRecord.characterId.trim()
-            : characterId ?? null
-      };
+      for await (const delta of streamReply(persona.instructions, turns, captureUsage)) {
+        replyText += delta;
+        writeEvent(res, 'delta', { text: delta });
+      }
+      replyText = replyText.trim();
+    } else {
+      replyText = await generateReply(persona.instructions, turns, captureUsage);
     }
+
+    if (!replyText) {
+      throw new AppError('AI가 응답을 생성하지 못했습니다. 다시 시도해 주세요.', {
+        statusCode: 502,
+        code: 'EMPTY_REPLY'
+      });
+    }
+
+    const assistantMessage: ResponseMessage = {
+      id: newMessageId(user.uid, currentThreadId),
+      role: 'assistant',
+      content: replyText,
+      // Keep ordering stable when both messages land in the same millisecond.
+      createdAt: new Date(Math.max(Date.now(), userCreatedAt.getTime() + 1))
+    };
 
     await saveThreadSnapshot({
       user,
       threadId: currentThreadId,
-      messages: persistedMessages,
-      characterId: characterId ?? null,
-      songDraft: normalizedSongDraft ?? undefined
+      messages: [userMessage, assistantMessage].map(item => ({
+        ...item,
+        characterId: resolvedCharacterId
+      })),
+      characterId: resolvedCharacterId
     });
+
+    await recordChatUsage(user.uid, tokenUsage).catch(usageError =>
+      logError('chat.usage_record_failed', usageError)
+    );
+
+    if (!requestedThreadId && resolvedCharacterId && 'countsUsage' in persona && persona.countsUsage) {
+      await adminDb
+        .collection('characters')
+        .doc(resolvedCharacterId)
+        .update({ useCount: FieldValue.increment(1) })
+        .catch(() => undefined);
+    }
 
     logInfo('chat.success', {
       uid: user.uid,
       threadId: currentThreadId,
-      messageCount: persistedMessages.length,
-      assistantOrigin: assistantContext.origin
+      personaOrigin: persona.origin
     });
 
-    const lastAssistantMessage =
-      [...orderedMessages]
-        .reverse()
-        .find(entry => entry.role === 'assistant' && entry.content.length > 0) ?? null;
-
-    return res.status(200).json({
+    const payload = {
       threadId: currentThreadId,
-      messages: orderedMessages,
-      reply: lastAssistantMessage,
-      user
-    });
-  } catch (error) {
-    if (error instanceof AppError) {
-      logError('chat.app_error', error, {
-        statusCode: error.statusCode,
-        code: error.code
-      });
+      messages: [...history, userMessage, assistantMessage],
+      reply: assistantMessage
+    };
 
-      return res.status(error.statusCode).json({
-        error: error.message,
-        code: error.code
-      });
+    if (streaming) {
+      writeEvent(res, 'done', payload);
+      return res.end();
     }
 
-    logError('chat.unexpected_error', error);
+    return res.status(200).json(payload);
+  } catch (error) {
+    const appError =
+      error instanceof AppError
+        ? error
+        : new AppError('Unexpected error while contacting the assistant.', {
+            statusCode: 500,
+            code: 'INTERNAL_SERVER_ERROR'
+          });
 
-    return res.status(500).json({
-      error: 'Unexpected error while contacting the assistant.',
-      code: 'INTERNAL_SERVER_ERROR'
+    if (error instanceof AppError) {
+      logError('chat.app_error', error, { statusCode: error.statusCode, code: error.code });
+    } else {
+      logError('chat.unexpected_error', error);
+    }
+
+    if (streaming) {
+      writeEvent(res, 'error', { error: appError.message, code: appError.code });
+      return res.end();
+    }
+
+    return res.status(appError.statusCode).json({
+      error: appError.message,
+      code: appError.code
     });
   }
 }

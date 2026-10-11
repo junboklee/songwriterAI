@@ -35,8 +35,8 @@ export async function saveThreadSnapshot({
   characterId?: string | null;
   songDraft?: SongDraftInput | null;
 }) {
+  // The legacy users/{uid}/threads mirror is no longer written; conversations/messages is the source of truth.
   const userRef = adminDb.collection('users').doc(user.uid);
-  const threadRef = userRef.collection('threads').doc(threadId);
   const conversationRef = userRef.collection('conversations').doc(threadId);
   const nowDate = new Date();
   const nowTs = Timestamp.fromDate(nowDate);
@@ -90,19 +90,15 @@ export async function saveThreadSnapshot({
       : null;
 
   await adminDb.runTransaction(async tx => {
-    const readPromises: Promise<DocumentSnapshot<DocumentData>>[] = [
-      tx.get(threadRef),
-      tx.get(conversationRef)
-    ];
+    const readPromises: Promise<DocumentSnapshot<DocumentData>>[] = [tx.get(conversationRef)];
 
     if (songRef) {
       readPromises.push(tx.get(songRef));
     }
 
     const snapshots = await Promise.all(readPromises);
-    const threadSnap = snapshots[0];
-    const conversationSnap = snapshots[1];
-    const songSnap = songRef ? snapshots[2] : null;
+    const conversationSnap = snapshots[0];
+    const songSnap = songRef ? snapshots[1] : null;
 
     const messageRefs = sanitizedMessages.map(message =>
       conversationRef.collection('messages').doc(message.id)
@@ -115,22 +111,6 @@ export async function saveThreadSnapshot({
         ? lastMessage.createdAt
         : null;
     const lastMessageTs = lastMessageDate ? Timestamp.fromDate(lastMessageDate) : null;
-
-    const threadPayload: Record<string, unknown> = {
-      threadId,
-      messages: sanitizedMessages,
-      updatedAt: nowTs,
-      user: {
-        uid: user.uid,
-        email: user.email ?? null,
-        displayName: user.displayName ?? null
-      },
-      characterId: characterId ?? null
-    };
-
-    if (!threadSnap.exists) {
-      threadPayload.createdAt = nowTs;
-    }
 
     let messageCount =
       conversationSnap.exists && typeof conversationSnap.get('messageCount') === 'number'
@@ -191,7 +171,6 @@ export async function saveThreadSnapshot({
       conversationPayload.createdAt = nowTs;
     }
 
-    tx.set(threadRef, threadPayload, { merge: true });
     tx.set(conversationRef, conversationPayload, { merge: true });
 
     if (songRef && normalizedSongDraft) {

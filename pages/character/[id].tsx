@@ -11,10 +11,13 @@ import Link from 'next/link';
 
 import { AppShell } from '@/components/AppShell';
 import { AppNav } from '@/components/AppNav';
+import { AssistantMessageBody } from '@/components/AssistantMessageBody';
 import { MainSidebar } from '@/components/MainSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { getAssistantBubbleColor, isDayeonAssistant } from '@/lib/assistantBubbleColors';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { ChatRequestError, sendChatMessage, type ChatApiResult } from '@/lib/chatClient';
+import { toDisplayText } from '@/lib/lyricsFormat';
 
 type ChatMessage = {
   id: string;
@@ -106,6 +109,7 @@ export default function CharacterChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
@@ -377,43 +381,29 @@ export default function CharacterChatPage() {
 
     try {
       const idToken = await user.getIdToken();
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
+      let data: ChatApiResult;
+      try {
+        data = await sendChatMessage({
+          idToken,
           message: trimmed,
           threadId,
-          characterId
-        })
-      });
-
-      const raw = await response.text();
-
-      if (!response.ok) {
-        let errorMessage = 'Assistant request failed.';
-        try {
-          const errorPayload = JSON.parse(raw) as { error?: string };
-          if (response.status === 401) {
-            errorMessage = errorPayload?.error ?? TEXT.sessionExpired;
-          } else if (response.status === 429) {
-            errorMessage = errorPayload?.error ?? TEXT.rateLimited;
-          } else if (errorPayload?.error) {
-            errorMessage = errorPayload.error;
-          }
-        } catch {
-          // Fallback for non-JSON errors
+          characterId,
+          onDelta: setStreamingText
+        });
+      } catch (requestError) {
+        if (requestError instanceof ChatRequestError) {
+          const fallback =
+            requestError.status === 401
+              ? TEXT.sessionExpired
+              : requestError.status === 429
+              ? TEXT.rateLimited
+              : 'Assistant request failed.';
+          throw new Error(requestError.message || fallback);
         }
-        throw new Error(errorMessage);
+        throw requestError;
+      } finally {
+        setStreamingText(null);
       }
-
-      const data: {
-        threadId: string;
-        messages: ChatMessage[];
-        reply: ChatMessage | null;
-      } = raw ? JSON.parse(raw) : { threadId: '', messages: [], reply: null };
 
       setThreadId(data.threadId);
 
@@ -563,7 +553,11 @@ export default function CharacterChatPage() {
                     : undefined
                 }
               >
-                {message.content}
+                {message.role === 'assistant' ? (
+                  <AssistantMessageBody content={message.content} />
+                ) : (
+                  message.content
+                )}
               </div>
             </div>
           ))}
@@ -575,7 +569,11 @@ export default function CharacterChatPage() {
                 className="chat-message__bubble chat-message__bubble--assistant"
                 style={assistantBubbleStyle}
               >
-                The assistant is thinking...
+                {streamingText ? (
+                  <span style={{ whiteSpace: 'pre-wrap' }}>{toDisplayText(streamingText)}</span>
+                ) : (
+                  'The assistant is thinking...'
+                )}
               </div>
             </div>
           ) : null}

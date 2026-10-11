@@ -29,6 +29,7 @@ describe('buildAutoSaveLyricsPayload', () => {
       metadata: {
         source: 'auto-from-chat',
         characterName: 'Dayeon',
+        style: null,
         storedAt: timestamp.toISOString()
       }
     });
@@ -49,5 +50,16 @@ describe('buildAutoSaveLyricsPayload', () => {
     expect(payload?.title.length).toBeLessThanOrEqual(60);
     expect(payload?.lyrics.startsWith('아주 긴')).toBe(true);
     expect(payload?.metadata.storedAt).toBe(timestamp.toISOString());
+  });
+
+  it('skips section tags when deriving a title', () => {
+    const payload = buildAutoSaveLyricsPayload({
+      lyrics: '[Verse 1]\n새벽 두 시의 창가\n[Chorus]\n괜찮아',
+      style: ' lo-fi ballad ',
+      timestamp: new Date('2025-04-04T00:00:00Z')
+    });
+
+    expect(payload?.title).toBe('새벽 두 시의 창가');
+    expect(payload?.metadata.style).toBe('lo-fi ballad');
   });
 });

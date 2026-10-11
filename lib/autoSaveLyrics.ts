@@ -1,6 +1,7 @@
 export type AutoSaveLyricsOptions = {
   lyrics: string;
   title?: string | null;
+  style?: string | null;
   characterId?: string | null;
   threadId?: string | null;
   characterName?: string | null;
@@ -15,6 +16,7 @@ export type AutoSaveLyricsPayload = {
   metadata: {
     source: 'auto-from-chat';
     characterName: string | null;
+    style: string | null;
     storedAt: string;
   };
 };
@@ -25,7 +27,7 @@ const firstMeaningfulLine = (value: string) =>
   value
     .split(/\r?\n/)
     .map(line => line.trim())
-    .find(line => line.length > 0) ?? '';
+    .find(line => line.length > 0 && !/^\[[^\]]*\]$/.test(line)) ?? '';
 
 export function buildAutoSaveLyricsPayload(
   options: AutoSaveLyricsOptions
@@ -56,6 +58,7 @@ export function buildAutoSaveLyricsPayload(
     metadata: {
       source: 'auto-from-chat',
       characterName: fallbackName,
+      style: options.style?.trim() || null,
       storedAt: timestampLabel
     }
   };
