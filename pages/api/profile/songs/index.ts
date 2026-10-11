@@ -3,10 +3,15 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
-import { serializeTimestamp } from '@/lib/firestoreUtils';
+import {
+  appendSongVersion,
+  deleteSharedSongsByOwner,
+  deleteSongDeep,
+  findAutoSaveTarget,
+  serializeSong
+} from '@/lib/songVersions';
 
 const MAX_LIMIT = 50;
-const MAX_BATCH = 400;
 
 type SongInsertPayload = {
   title?: unknown;
@@ -67,35 +72,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? rawPayload.prompt.trim()
           : null;
 
+      const style =
+        typeof (metadata as Record<string, unknown>).style === 'string'
+          ? ((metadata as Record<string, unknown>).style as string)
+          : null;
+
+      // Repeated auto-saves of the same song in one conversation become new versions.
+      if ((metadata as Record<string, unknown>).source === 'auto-from-chat' && threadId) {
+        const existingRef = await findAutoSaveTarget(authUser.uid, threadId, title);
+        if (existingRef) {
+          await appendSongVersion(existingRef, {
+            title,
+            lyrics: rawLyrics,
+            style,
+            source: 'auto-from-chat'
+          });
+          const updated = await existingRef.get();
+          return res.status(200).json({
+            song: serializeSong(existingRef.id, updated.data() ?? {}),
+            revised: true
+          });
+        }
+      }
+
       const now = Timestamp.now();
       const songRef = userRef.collection('songs').doc();
+      const batch = adminDb.batch();
 
-      await songRef.set({
+      batch.set(songRef, {
         title,
         lyrics: rawLyrics,
         prompt,
         characterId,
         threadId,
         metadata,
+        versionCount: 1,
         createdAt: now,
         updatedAt: now
       });
+      batch.set(songRef.collection('versions').doc(), {
+        title,
+        lyrics: rawLyrics,
+        style,
+        source:
+          (metadata as Record<string, unknown>).source === 'auto-from-chat'
+            ? 'auto-from-chat'
+            : 'manual',
+        createdAt: now
+      });
+      await batch.commit();
 
       const stored = await songRef.get();
-      const data = stored.data() ?? {};
-
       return res.status(201).json({
-        song: {
-          id: songRef.id,
-          title: (data.title as string | undefined) ?? title,
-          lyrics: (data.lyrics as string | undefined) ?? rawLyrics,
-          prompt: (data.prompt as string | undefined) ?? prompt,
-          characterId: characterId,
-          threadId: threadId,
-          metadata,
-          createdAt: serializeTimestamp(data.createdAt),
-          updatedAt: serializeTimestamp(data.updatedAt)
-        }
+        song: serializeSong(songRef.id, stored.data() ?? {}),
+        revised: false
       });
     }
 
@@ -119,22 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
       const snapshot = await query.get();
       const docs = snapshot.docs;
-      const items = docs.slice(0, parsedLimit).map(doc => {
-        const data = doc.data();
-        const metadata =
-          data.metadata && typeof data.metadata === 'object' ? data.metadata : {};
-        return {
-          id: doc.id,
-          title: (data.title as string | undefined) ?? null,
-          lyrics: (data.lyrics as string | undefined) ?? '',
-          prompt: (data.prompt as string | undefined) ?? null,
-          characterId: (data.characterId as string | undefined) ?? null,
-          threadId: (data.threadId as string | undefined) ?? null,
-          metadata,
-          createdAt: serializeTimestamp(data.createdAt),
-          updatedAt: serializeTimestamp(data.updatedAt)
-        };
-      });
+      const items = docs.slice(0, parsedLimit).map(doc => serializeSong(doc.id, doc.data()));
 
       const hasMore = docs.length > parsedLimit;
       const nextCursorDoc = hasMore ? docs[parsedLimit] : null;
@@ -167,24 +182,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'ids array is required to delete selected songs.' });
       }
 
-      const collectRefs = async () => {
-        if (deleteAll) {
-          const snapshot = await userRef.collection('songs').get();
-          return snapshot.docs.map(doc => doc.ref);
-        }
-        return ids.map(id => userRef.collection('songs').doc(id));
-      };
-
-      const refs = await collectRefs();
-      if (refs.length === 0) {
-        return res.status(200).json({ deletedCount: 0 });
+      if (deleteAll) {
+        const count = (await userRef.collection('songs').count().get()).data().count;
+        // recursiveDelete also removes each song's versions subcollection.
+        await deleteSharedSongsByOwner(authUser.uid);
+        await adminDb.recursiveDelete(userRef.collection('songs'));
+        return res.status(200).json({ deletedCount: count });
       }
 
-      for (let i = 0; i < refs.length; i += MAX_BATCH) {
-        const batch = adminDb.batch();
-        refs.slice(i, i + MAX_BATCH).forEach(ref => batch.delete(ref));
-        await batch.commit();
-      }
+      const refs = ids.map(id => userRef.collection('songs').doc(id));
+      await Promise.all(refs.map(ref => deleteSongDeep(ref)));
 
       return res.status(200).json({ deletedCount: refs.length });
     }
@@ -196,7 +203,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.error('Songs API error:', error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unexpected server error.'
+      error: 'Unexpected server error.'
     });
   }
 }

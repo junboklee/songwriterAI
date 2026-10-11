@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AppNav } from '@/components/AppNav';
 import { AppShell } from '@/components/AppShell';
 import { MainSidebar } from '@/components/MainSidebar';
 import { RequireAuth } from '@/components/RequireAuth';
+import { SongEditor } from '@/components/SongEditor';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import type { SongEntry } from '@/types/suno';
@@ -25,6 +26,18 @@ export default function SunoLibraryPage() {
   const [newSongLyrics, setNewSongLyrics] = useState('');
   const [newSongStatus, setNewSongStatus] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [savingSong, setSavingSong] = useState(false);
+  const [editingSongId, setEditingSongId] = useState<string | null>(null);
+
+  const editingSong = songs.find(song => song.id === editingSongId) ?? null;
+  const getIdToken = useCallback(async () => {
+    if (!user) {
+      throw new Error(t('form.sessionExpired'));
+    }
+    return user.getIdToken();
+  }, [t, user]);
+  const handleSongSaved = useCallback((updated: SongEntry) => {
+    setSongs(prev => prev.map(song => (song.id === updated.id ? updated : song)));
+  }, []);
 
   const dateFormatter = useMemo(
     () =>
@@ -544,6 +557,13 @@ export default function SunoLibraryPage() {
                     <button
                       type="button"
                       className="btn btn--ghost suno-card__share"
+                      onClick={() => setEditingSongId(song.id)}
+                    >
+                      {t('card.edit', { replacements: { count: song.versionCount || 1 } })}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost suno-card__share"
                       onClick={() => {
                         void handleCopySong(song);
                       }}
@@ -571,6 +591,16 @@ export default function SunoLibraryPage() {
             </div>
           ) : null}
         </div>
+
+        {editingSong ? (
+          <SongEditor
+            key={editingSong.id}
+            song={editingSong}
+            getIdToken={getIdToken}
+            onClose={() => setEditingSongId(null)}
+            onSaved={handleSongSaved}
+          />
+        ) : null}
       </AppShell>
     </RequireAuth>
   );
