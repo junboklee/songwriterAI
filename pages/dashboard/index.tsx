@@ -234,6 +234,7 @@ export default function Dashboard() {
       showcaseSubtitle: tDashboard('showcaseSubtitle'),
       showcaseEmpty: tDashboard('showcaseEmpty'),
       showcaseLoadError: tDashboard('showcaseLoadError'),
+      showcaseViewAll: tDashboard('showcaseViewAll'),
       showcaseCta: tDashboard('showcaseCta'),
       customCharactersTitle: tDashboard('customCharactersTitle'),
       sortLabel: tDashboard('sortLabel'),
@@ -377,13 +378,8 @@ export default function Dashboard() {
         );
       case 'popularity':
       default:
-        return base.sort((a, b) => {
-          const categoryDiff = b.categories.length - a.categories.length;
-          if (categoryDiff !== 0) {
-            return categoryDiff;
-          }
-          return getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt);
-        });
+        // The explore API already returns characters ordered by likes and chats.
+        return base;
     }
   }, [characterSort, publicCharacters]);
   const filteredCharacters = useMemo(() => {
@@ -521,7 +517,7 @@ export default function Dashboard() {
           }
         }
 
-        const response = await fetch('/api/characters/explore?limit=12', {
+        const response = await fetch('/api/characters/explore?limit=12&sort=popular', {
           headers
         });
         const payload = await response.json().catch(() => null);
@@ -539,7 +535,8 @@ export default function Dashboard() {
           : [];
 
         if (!cancelled) {
-          setPublicCharacters(sortCharacters(items.map(adaptCharacter)));
+          // Keep the server's popularity order; the 'recent' option re-sorts on the client.
+          setPublicCharacters(items.map(adaptCharacter));
         }
       } catch (error) {
         if (!cancelled) {
@@ -1830,6 +1827,9 @@ const displayName =
                   <option value="recent">{dashboardText.sortRecent}</option>
                   <option value="gender">{dashboardText.sortGender}</option>
                 </select>
+                <Link href="/explore" className="btn btn--ghost">
+                  {dashboardText.showcaseViewAll}
+                </Link>
               </div>
             </div>
             <div className="dashboard-grid">
