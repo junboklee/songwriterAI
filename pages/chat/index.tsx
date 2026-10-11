@@ -12,12 +12,15 @@ import {
 } from 'react';
 
 import { AppNav } from '@/components/AppNav';
+import { AssistantMessageBody } from '@/components/AssistantMessageBody';
 import { AppShell } from '@/components/AppShell';
 import { MainSidebar } from '@/components/MainSidebar';
 import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { buildAutoSaveLyricsPayload } from '@/lib/autoSaveLyrics';
+import { ChatRequestError, sendChatMessage, type ChatApiResult } from '@/lib/chatClient';
+import { extractLyrics, toDisplayText } from '@/lib/lyricsFormat';
 import { getAssistantBubbleColor, isDayeonAssistant } from '@/lib/assistantBubbleColors';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { DEFAULT_CHARACTER_NAMES } from '@/lib/defaultCharacterNames';
@@ -293,6 +296,7 @@ const getTimestampValue = (value?: string | null) => {
 type PersistLyricsOptions = {
   lyrics: string;
   title?: string | null;
+  style?: string | null;
   threadId: string;
   characterId: string | null;
   characterName?: string | null;
@@ -310,6 +314,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
   const [autoSaveLyrics, setAutoSaveLyrics] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1552,54 +1557,29 @@ useEffect(() => {
       }
 
       const idToken = await user.getIdToken();
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
+      let data: ChatApiResult;
+      try {
+        data = await sendChatMessage({
+          idToken,
           message: trimmed,
           threadId,
-          characterId
-        })
-      });
-
-      const raw = await response.text();
-
-      if (!response.ok) {
-        let errorMessage = 'Assistant request failed.';
-
-        try {
-          const errorPayload = JSON.parse(raw) as { error?: string };
-
-          if (response.status === 401) {
-            errorMessage = errorPayload?.error ?? TEXT.sessionExpired;
-          } else if (response.status === 429) {
-            errorMessage = errorPayload?.error ?? TEXT.rateLimited;
-          } else if (errorPayload?.error) {
-            errorMessage = errorPayload.error;
-          }
-        } catch {
-          if (response.status === 401) {
-            errorMessage = TEXT.sessionExpired;
-          } else if (response.status === 429) {
-            errorMessage = TEXT.rateLimited;
-          }
+          characterId,
+          onDelta: setStreamingText
+        });
+      } catch (requestError) {
+        if (requestError instanceof ChatRequestError) {
+          const fallback =
+            requestError.status === 401
+              ? TEXT.sessionExpired
+              : requestError.status === 429
+              ? TEXT.rateLimited
+              : 'Assistant request failed.';
+          throw new Error(requestError.message || fallback);
         }
-
-        throw new Error(errorMessage);
+        throw requestError;
+      } finally {
+        setStreamingText(null);
       }
-
-      const data: {
-        threadId: string;
-        messages: Array<{
-          id: string;
-          role: 'user' | 'assistant';
-          content: string;
-        }>;
-        reply: ChatMessage | null;
-      } = raw ? JSON.parse(raw) : { threadId: '', messages: [], reply: null };
 
       setThreadId(data.threadId);
       if (data.threadId) {
@@ -1684,17 +1664,21 @@ useEffect(() => {
       const lastAssistantMessage =
         assistantMessages.find(message => message.content.trim().length > 0) ?? null;
 
+      const parsedLyrics = lastAssistantMessage ? extractLyrics(lastAssistantMessage.content) : null;
+
       if (
         autoSaveLyrics &&
         lastAssistantMessage &&
-        isLikelyLyrics(lastAssistantMessage.content) &&
+        (parsedLyrics || isLikelyLyrics(lastAssistantMessage.content)) &&
         data.threadId &&
         lastStoredMessageIdRef.current !== lastAssistantMessage.id
       ) {
         lastStoredMessageIdRef.current =
           lastAssistantMessage.id ?? `lyrics-${Date.now()}`;
         void persistLyrics({
-          lyrics: lastAssistantMessage.content,
+          lyrics: parsedLyrics?.body ?? lastAssistantMessage.content,
+          title: parsedLyrics?.title ?? null,
+          style: parsedLyrics?.style ?? null,
           threadId: data.threadId,
           characterId,
           characterName: character.name,
@@ -1849,12 +1833,32 @@ useEffect(() => {
                           : undefined
                       }
                     >
-                      {message.content}
+                      {message.role === 'assistant' ? (
+                        <AssistantMessageBody content={message.content} />
+                      ) : (
+                        message.content
+                      )}
                     </div>
                   </div>
                 ))}
 
-                {isLoading ? (
+                {isLoading && streamingText ? (
+                  <div className="chat-message">
+                    <Image
+                      src={character.avatar}
+                      alt={`${character.name} avatar`}
+                      width={32}
+                      height={32}
+                      style={{ borderRadius: 12, marginTop: 4 }}
+                    />
+                    <div
+                      className="chat-message__bubble chat-message__bubble--assistant"
+                      style={assistantBubbleStyle}
+                    >
+                      <span style={{ whiteSpace: 'pre-wrap' }}>{toDisplayText(streamingText)}</span>
+                    </div>
+                  </div>
+                ) : isLoading ? (
                   <div className="chat-message">
                     <Image
                       src={character.avatar}

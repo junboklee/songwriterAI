@@ -244,6 +244,10 @@ export const en = {
         label: 'Library',
         description: 'Saved lyrics and prompts'
       },
+      explore: {
+        label: 'Character market',
+        description: 'Browse public characters'
+      },
       dashboard: {
         label: 'Dashboard',
         description: 'See everything at a glance'
@@ -270,6 +274,71 @@ export const en = {
     originalTag: 'Original work',
     threadLabel: 'Thread {{id}}',
     untitled: 'Untitled'
+  },
+  explore: {
+    title: 'Character market',
+    subtitle: 'Find songwriting personas shared by other creators and start writing with them.',
+    searchPlaceholder: 'Search by name, description or tag',
+    allCategories: 'All categories',
+    sortRecent: 'Newest',
+    sortPopular: 'Popular',
+    loading: 'Loading characters...',
+    error: 'Could not load characters.',
+    empty: 'No characters match these filters.',
+    loadMore: 'Load more',
+    startChat: 'Start chat',
+    like: 'Like',
+    unlike: 'Unlike',
+    loginToLike: 'Log in to like characters.',
+    chats: '{{count}} chats',
+    report: 'Report',
+    reportTitle: 'Report character',
+    reportReason: 'Reason',
+    reportDetail: 'Details (optional)',
+    reportSubmit: 'Submit report',
+    reportCancel: 'Cancel',
+    reportDone: 'Thanks, we received your report and will review it.',
+    reportError: 'Could not submit the report.',
+    reasons: {
+      inappropriate: 'Inappropriate or offensive content',
+      copyright: 'Copyright infringement or impersonation',
+      spam: 'Spam or advertising',
+      other: 'Other'
+    }
+  },
+  songEditor: {
+    title: 'Edit lyrics',
+    close: 'Close',
+    titleLabel: 'Title',
+    styleLabel: 'Style (for music generation)',
+    stylePlaceholder: 'e.g. acoustic ballad, female vocal, 75bpm',
+    lyricsLabel: 'Lyrics',
+    analysisToggle: 'Syllable & rhyme view',
+    analysisHint: 'Numbers are syllables per line; matching dots mark lines ending on the same vowel.',
+    versions: 'Version history',
+    versionsLoading: 'Loading versions...',
+    versionsEmpty: 'No saved versions yet.',
+    compareHint: 'Select a version to compare it with the lyrics you are editing.',
+    restore: 'Restore this version',
+    restoreConfirm: 'Restore this version? The current text stays in the history.',
+    save: 'Save as new version',
+    saving: 'Saving...',
+    saved: 'Saved.',
+    copySuno: 'Copy for Suno',
+    shareTitle: 'Public link',
+    shareHint: 'Anyone with the link can read the latest lyrics without signing in. Not listed in search engines.',
+    shareCreate: 'Create public link',
+    shareCopy: 'Copy link',
+    shareRemove: 'Stop sharing',
+    copied: 'Copied',
+    error: 'Something went wrong. Please try again.',
+    unsaved: 'You have unsaved changes. Close anyway?',
+    source: {
+      initial: 'First save',
+      'auto-from-chat': 'Auto-saved from chat',
+      manual: 'Edited',
+      restore: 'Restored'
+    }
   },
   suno: {
     title: 'Library',
@@ -316,6 +385,7 @@ export const en = {
       noLyrics: '(No lyrics provided)',
       copy: 'Copy',
       copied: 'Copied',
+      edit: 'Edit · {{count}} versions',
       selectLabel: 'Select this song',
       characterBadge: 'Character {{id}}',
       thread: 'Thread {{id}}'
@@ -412,6 +482,7 @@ export const en = {
     showcaseSubtitle: 'Discover publicly shared personas and start chatting.',
     showcaseEmpty: 'No shared characters yet. Be the first to showcase yours!',
     showcaseLoadError: 'Failed to load shared custom characters.',
+    showcaseViewAll: 'View all in the market',
     showcaseCta: 'Create a character',
     customCharactersTitle: 'Custom Characters',
     sortLabel: 'Sort order',

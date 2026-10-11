@@ -1,32 +1,17 @@
-const threadCreateMock = jest.fn();
-const messageCreateMock = jest.fn();
-const messageListMock = jest.fn();
-const runCreateMock = jest.fn();
-const runRetrieveMock = jest.fn();
+// Root-level mock: Jest uses it automatically for every import of the `openai` package.
+const responsesCreateMock = jest.fn();
 
 const OpenAI = jest.fn().mockImplementation(() => ({
-  beta: {
-    threads: {
-      create: threadCreateMock,
-      messages: {
-        create: messageCreateMock,
-        list: messageListMock
-      },
-      runs: {
-        create: runCreateMock,
-        retrieve: runRetrieveMock
-      }
-    }
+  responses: {
+    create: responsesCreateMock
   }
 }));
 
-(OpenAI as unknown as { APIError: typeof Error }).APIError = class APIError extends Error {};
-(OpenAI as unknown as { __mocks: Record<string, jest.Mock> }).__mocks = {
-  threadCreateMock,
-  messageCreateMock,
-  messageListMock,
-  runCreateMock,
-  runRetrieveMock
-};
+class APIError extends Error {}
+
+Object.assign(OpenAI, {
+  APIError,
+  __mocks: { responsesCreateMock }
+});
 
 export default OpenAI;

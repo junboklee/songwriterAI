@@ -238,6 +238,10 @@
         label: '라이브러리',
         description: '저장된 가사와 프롬프트'
       },
+      explore: {
+        label: '캐릭터 마켓',
+        description: '공개 캐릭터 둘러보기'
+      },
       dashboard: {
         label: '대시보드',
         description: '전체 현황 살펴보기'
@@ -264,6 +268,71 @@
     originalTag: '원본 작업',
     threadLabel: 'Thread {{id}}',
     untitled: '제목 미정'
+  },
+  explore: {
+    title: '캐릭터 마켓',
+    subtitle: '다른 창작자가 공개한 작사 캐릭터를 찾아 바로 대화해 보세요.',
+    searchPlaceholder: '이름, 설명, 태그로 검색',
+    allCategories: '전체 카테고리',
+    sortRecent: '최신순',
+    sortPopular: '인기순',
+    loading: '캐릭터를 불러오는 중...',
+    error: '캐릭터를 불러오지 못했습니다.',
+    empty: '조건에 맞는 캐릭터가 없습니다.',
+    loadMore: '더 보기',
+    startChat: '대화 시작',
+    like: '좋아요',
+    unlike: '좋아요 취소',
+    loginToLike: '로그인 후 좋아요를 누를 수 있어요.',
+    chats: '대화 {{count}}회',
+    report: '신고',
+    reportTitle: '캐릭터 신고',
+    reportReason: '신고 사유',
+    reportDetail: '자세한 내용 (선택)',
+    reportSubmit: '신고하기',
+    reportCancel: '취소',
+    reportDone: '신고가 접수되었습니다. 검토 후 조치하겠습니다.',
+    reportError: '신고를 접수하지 못했습니다.',
+    reasons: {
+      inappropriate: '부적절하거나 불쾌한 내용',
+      copyright: '저작권 침해 또는 사칭',
+      spam: '스팸·광고',
+      other: '기타'
+    }
+  },
+  songEditor: {
+    title: '가사 편집',
+    close: '닫기',
+    titleLabel: '제목',
+    styleLabel: '스타일 (음악 생성용)',
+    stylePlaceholder: '예: 어쿠스틱 발라드, 여성 보컬, 75bpm',
+    lyricsLabel: '가사',
+    analysisToggle: '음절·라임 분석',
+    analysisHint: '숫자는 줄별 음절 수, 같은 색 점은 같은 모음으로 끝나는 줄(각운)입니다.',
+    versions: '버전 기록',
+    versionsLoading: '버전을 불러오는 중...',
+    versionsEmpty: '저장된 버전이 없습니다.',
+    compareHint: '버전을 선택하면 현재 편집 중인 가사와 비교합니다.',
+    restore: '이 버전으로 복원',
+    restoreConfirm: '이 버전으로 복원할까요? 현재 내용은 버전 기록에 남습니다.',
+    save: '새 버전으로 저장',
+    saving: '저장 중...',
+    saved: '저장했습니다.',
+    copySuno: 'Suno 형식 복사',
+    shareTitle: '공개 링크',
+    shareHint: '링크가 있는 사람은 로그인 없이 최신 가사를 볼 수 있습니다. 검색엔진에는 노출되지 않습니다.',
+    shareCreate: '공개 링크 만들기',
+    shareCopy: '링크 복사',
+    shareRemove: '공유 중지',
+    copied: '복사됨',
+    error: '처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    unsaved: '저장하지 않은 변경 사항이 있습니다. 닫을까요?',
+    source: {
+      initial: '최초 저장',
+      'auto-from-chat': '채팅 자동 저장',
+      manual: '직접 편집',
+      restore: '복원'
+    }
   },
   suno: {
     title: '라이브러리',
@@ -310,6 +379,7 @@
       noLyrics: '(가사가 비어 있어요)',
       copy: '복사하기',
       copied: '복사 완료',
+      edit: '편집 · 버전 {{count}}개',
       selectLabel: '이 곡 선택',
       characterBadge: '캐릭터 {{id}}',
       thread: 'thread: {{id}}'
@@ -406,6 +476,7 @@
     showcaseSubtitle: '전체 공개로 공유된 캐릭터를 만나고 대화를 시작해 보세요.',
     showcaseEmpty: '아직 공유된 커스텀 캐릭터가 없습니다. 가장 먼저 자랑해 보세요!',
     showcaseLoadError: '공유된 커스텀 캐릭터를 불러오지 못했습니다.',
+    showcaseViewAll: '마켓에서 전체 보기',
     showcaseCta: '캐릭터 생성하기',
     customCharactersTitle: '커스텀 캐릭터',
     sortLabel: '정렬 방식',

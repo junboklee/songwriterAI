@@ -1,9 +1,9 @@
 import { FieldPath } from 'firebase-admin/firestore';
 
 import { adminDb } from '@/lib/firebaseAdmin';
+import { deleteSongDeep } from '@/lib/songVersions';
 
 const MESSAGE_BATCH_SIZE = 200;
-const SONG_BATCH_SIZE = 100;
 const CONVERSATION_BATCH_SIZE = 50;
 
 async function deleteQueryBatch(
@@ -44,7 +44,8 @@ export async function deleteConversation({
   const threadRef = userRef.collection('threads').doc(threadId);
 
   await deleteQueryBatch(messagesRef, MESSAGE_BATCH_SIZE);
-  await deleteQueryBatch(songsQuery, SONG_BATCH_SIZE);
+  const songs = await songsQuery.get();
+  await Promise.all(songs.docs.map(doc => deleteSongDeep(doc.ref)));
 
   await conversationRef.delete().catch(() => undefined);
   await threadRef.delete().catch(() => undefined);

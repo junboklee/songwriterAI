@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { deleteAllConversations } from '@/lib/conversationCleanup';
-import { deleteCharacterAssistant } from '@/lib/characterAssistants';
+import { deleteUserAvatars } from '@/lib/avatarStorage';
+import { deleteSharedSongsByOwner } from '@/lib/songVersions';
 import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 
@@ -33,26 +34,8 @@ async function deleteUserCharacters(userId: string) {
   const charactersSnapshot = await userRef.collection('characters').get();
 
   for (const doc of charactersSnapshot.docs) {
-    const data = doc.data();
-    const assistantId =
-      typeof data.assistantId === 'string' && data.assistantId.trim()
-        ? data.assistantId.trim()
-        : null;
-
     await doc.ref.delete().catch(() => undefined);
     await adminDb.collection('characters').doc(doc.id).delete().catch(() => undefined);
-
-    if (assistantId) {
-      try {
-        await deleteCharacterAssistant(assistantId);
-      } catch (error) {
-        console.error('Failed to delete character assistant during account removal', {
-          userId,
-          characterId: doc.id,
-          error
-        });
-      }
-    }
   }
 }
 
@@ -67,10 +50,14 @@ async function deleteUserAccount(uid: string) {
 
   await deleteAllConversations(uid);
   await deleteUserCharacters(uid);
-  await deleteSubcollection(userRef.collection('songs'));
+  await deleteSharedSongsByOwner(uid);
+  await adminDb.recursiveDelete(userRef.collection('songs'));
   await deleteSubcollection(userRef.collection('threads'));
+  await adminDb.recursiveDelete(userRef.collection('usage'));
+  await deleteUserAvatars(uid);
 
-  await userRef.delete().catch(() => undefined);
+  // Removes the user document together with any remaining subcollections (likes, legacy threads, ...).
+  await adminDb.recursiveDelete(userRef);
 
   try {
     await adminAuth.deleteUser(uid);
@@ -98,8 +85,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     console.error('Failed to delete user account', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unexpected server error.'
-    });
+    return res.status(500).json({ error: 'Unexpected server error.' });
   }
 }

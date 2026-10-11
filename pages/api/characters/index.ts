@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
-import { Bucket } from '@google-cloud/storage';
 import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
-import { v4 as uuidv4 } from 'uuid';
 
 import { BadRequestError } from '@/lib/errors';
-import { adminDb, adminStorage } from '@/lib/firebaseAdmin';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
-import { createCharacterAssistant } from '@/lib/characterAssistants';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { assertValidAvatarFile } from '@/lib/avatarValidation';
+import { uploadAvatar } from '@/lib/avatarStorage';
+import { assertPublishable } from '@/lib/moderation';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
 
 // Disable the default body parser
@@ -75,22 +74,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (avatarFile) {
       assertValidAvatarFile(avatarFile);
-      const bucket: Bucket = adminStorage.bucket();
-      const originalName = avatarFile.originalFilename ?? 'avatar';
-      const fileName = `avatars/${user.uid}/${uuidv4()}-${originalName}`;
-      const filePath = avatarFile.filepath;
-
-      if (typeof filePath !== 'string' || !filePath) {
-        throw new BadRequestError('Invalid avatar file.');
-      }
-      
-      await bucket.upload(filePath, {
-        destination: fileName,
-        metadata: {
-          contentType: avatarFile.mimetype || undefined,
-        },
-      });
-      avatarUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
     }
 
     const finalVisibility =
@@ -120,31 +103,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       longDescription: trimmedLong
     });
 
+    if (finalVisibility !== 'private') {
+      await assertPublishable([trimmedName, trimmedShort, trimmedGreeting, trimmedLong]);
+    }
+
+    // Upload only after moderation so rejected characters leave no orphaned files.
+    if (avatarFile) {
+      avatarUrl = await uploadAvatar(user.uid, avatarFile);
+    }
+
     const now = Timestamp.now();
     const userRef = adminDb.collection('users').doc(user.uid);
     const userCharacterRef = userRef.collection('characters').doc();
     const publicCharacterRef = adminDb.collection('characters').doc(userCharacterRef.id);
-    const characterId = userCharacterRef.id;
-
-    let assistantId: string | null = null;
-    if (trimmedName.toLowerCase() === 'dayeon') {
-      assistantId = 'asst_ED99NuKgahDCWbPaId4kUwq1';
-    } else {
-      try {
-        assistantId = await createCharacterAssistant({
-          userId: user.uid,
-          characterId,
-          name: trimmedName,
-          summary: trimmedShort || null,
-          greeting: trimmedGreeting || null,
-          instructions,
-          example: null,
-        });
-      } catch (assistantError) {
-        console.error('Failed to create assistant for character', assistantError);
-      }
-    }
-
+    
     const characterData = {
       name: trimmedName,
       greeting: trimmedGreeting || null,
@@ -155,7 +127,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       gender: resolvedGender,
       categories,
       avatarUrl: avatarUrl ?? DEFAULT_CHARACTER_AVATAR,
-      assistantId,
       createdAt: now,
       updatedAt: now,
       creatorId: user.uid,
@@ -166,6 +137,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (finalVisibility !== 'private') {
       await publicCharacterRef.set(characterData);
     }
+
+    const characterId = userCharacterRef.id;
 
     return res.status(201).json({
       id: characterId,

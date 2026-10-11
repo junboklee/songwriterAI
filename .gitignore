@@ -38,3 +38,8 @@ vite-project/
 
 # Sensitive files
 character-ai-12ae8-firebase-adminsdk-fbsvc-27738cfbbf.json
+# Generated / stray artefacts (kept locally, not tracked)
+songwriterAI/
+lighthouse-report.json
+*.tsbuildinfo
+firebase_config_viewer_react_client_only.jsx

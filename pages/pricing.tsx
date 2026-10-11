@@ -1,24 +1,36 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
+// Only list what is actually implemented. Paid plans stay marked as upcoming until billing ships.
 const plans = [
   {
-    name: 'Free',
-    price: '₩0 /월',
-    highlights: ['월 50회 AI 요청', '즐겨찾기 캐릭터 2개', '기본 가사 버전 관리'],
-    cta: '무료로 시작'
+    name: 'Beta',
+    price: '₩0',
+    badge: '현재 이용 가능',
+    highlights: [
+      'AI 캐릭터와 대화하며 가사 작성',
+      '커스텀 캐릭터 제작 · 공개 공유',
+      '가사 자동 보관 · Suno 형식 복사',
+      '공정 이용을 위한 분당 요청 제한'
+    ],
+    cta: '무료로 시작',
+    href: '/auth/login'
   },
   {
     name: 'Studio',
-    price: '₩9,000 /월',
-    highlights: ['무제한 AI 요청', '커스텀 캐릭터 & 공유', '팀 협업 폴더', '우선 지원'],
-    cta: '14일 체험'
+    price: '출시 예정',
+    badge: '준비 중',
+    highlights: ['더 많은 AI 요청', '고급 모델 선택', '가사 버전 히스토리', '우선 응답'],
+    cta: null,
+    href: null
   },
   {
     name: 'Label',
     price: '문의',
-    highlights: ['다중 계정', '보안 / 감사 로그', '전담 매니저', '워크플로 API 연동'],
-    cta: '세일즈 문의'
+    badge: '준비 중',
+    highlights: ['다중 계정', '팀 작업 공간', '워크플로 API 연동'],
+    cta: null,
+    href: null
   }
 ];
 
@@ -29,26 +41,27 @@ export default function PricingPage() {
         <title>요금제 | SongwriterAI</title>
         <meta
           name="description"
-          content="무료·Studio·Label 요금제를 비교하고 팀에 맞는 송라이팅 코파일럿 플랜을 선택하세요."
+          content="NovaSingerAI는 베타 기간 동안 무료로 제공됩니다. 유료 플랜 출시 계획을 확인하세요."
         />
         <meta property="og:title" content="요금제 | SongwriterAI" />
         <meta
           property="og:description"
-          content="송라이팅 팀을 위한 SongwriterAI 요금제와 혜택을 확인해 보세요."
+          content="베타 무료 이용과 유료 플랜 출시 계획 안내."
         />
       </Head>
       <main className="page">
         <header>
           <h1>요금 안내</h1>
           <p>
-            개인 작업부터 팀 단위 협업까지 바로 사용할 수 있는 간단한 가격 정책입니다. 모든 유료 플랜은 14일 환불
-            보장을 제공합니다.
+            NovaSingerAI는 현재 베타 기간으로 모든 기능을 무료로 제공합니다. 유료 플랜은 준비 중이며, 출시 전에
+            요금과 환불 정책을 이 페이지에 먼저 안내합니다.
           </p>
         </header>
 
         <section className="plans">
           {plans.map(plan => (
             <article key={plan.name}>
+              <span className="badge">{plan.badge}</span>
               <h2>{plan.name}</h2>
               <p className="price">{plan.price}</p>
               <ul>
@@ -56,20 +69,27 @@ export default function PricingPage() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <Link href="/auth/login">{plan.cta}</Link>
+              {plan.href && plan.cta ? (
+                <Link href={plan.href}>{plan.cta}</Link>
+              ) : (
+                <span className="cta-disabled">출시 알림 예정</span>
+              )}
             </article>
           ))}
         </section>
 
         <section className="faq">
-          <h2>결제 관련 FAQ</h2>
+          <h2>자주 묻는 질문</h2>
           <article>
-            <h3>결제는 어떻게 진행되나요?</h3>
-            <p>신용/체크카드 또는 계좌이체를 Stripe Billing을 통해 안전하게 처리합니다.</p>
+            <h3>지금 결제가 필요한가요?</h3>
+            <p>아니요. 베타 기간에는 결제 수단 등록 없이 모든 기능을 무료로 사용할 수 있습니다.</p>
           </article>
           <article>
-            <h3>언제든 취소할 수 있나요?</h3>
-            <p>대시보드에서 언제든 플랜을 다운그레이드하거나 해지할 수 있으며, 미사용 기간은 일할 계산됩니다.</p>
+            <h3>유료 플랜은 언제 시작되나요?</h3>
+            <p>
+              출시 일정과 요금, 결제·환불 정책이 확정되면 이 페이지와 서비스 공지로 먼저 알려드립니다. 베타 사용자가
+              동의 없이 유료로 전환되는 일은 없습니다.
+            </p>
           </article>
         </section>
       </main>
@@ -103,6 +123,27 @@ export default function PricingPage() {
 
         h2 {
           margin-bottom: 0.5rem;
+        }
+
+        .badge {
+          align-self: flex-start;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 0.2rem 0.6rem;
+          border-radius: 999px;
+          background: rgba(124, 58, 237, 0.12);
+          color: #7c3aed;
+          margin-bottom: 0.75rem;
+        }
+
+        .cta-disabled {
+          text-align: center;
+          margin-top: 1.5rem;
+          padding: 0.75rem 1rem;
+          border-radius: 999px;
+          font-weight: 600;
+          border: 1px dashed #c4b5fd;
+          color: #7c3aed;
         }
 
         .price {

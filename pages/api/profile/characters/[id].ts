@@ -1,21 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Timestamp } from 'firebase-admin/firestore';
-import { Bucket } from '@google-cloud/storage';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
-import { v4 as uuidv4 } from 'uuid';
 
 import { BadRequestError } from '@/lib/errors';
-import { adminDb, adminStorage } from '@/lib/firebaseAdmin';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
-import {
-  createCharacterAssistant,
-  deleteCharacterAssistant,
-  updateCharacterAssistant
-} from '@/lib/characterAssistants';
 import { deleteConversationsByCharacter } from '@/lib/conversationCleanup';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
 import { assertValidAvatarFile } from '@/lib/avatarValidation';
+import { deleteAvatarByUrl, uploadAvatar } from '@/lib/avatarStorage';
+import { assertPublishable } from '@/lib/moderation';
 
 export const config = {
   api: {
@@ -54,7 +49,6 @@ type CharacterDocument = {
   instructions?: string;
   example?: string | null;
   visibility?: string | null;
-  assistantId?: string | null;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
   longDescription?: string | null;
@@ -76,7 +70,6 @@ const serializeCharacter = (id: string, data: CharacterDocument) => ({
   instructions: typeof data.instructions === 'string' ? data.instructions : null,
   example: typeof data.example === 'string' ? data.example : null,
   visibility: typeof data.visibility === 'string' ? data.visibility : null,
-  assistantId: typeof data.assistantId === 'string' ? data.assistantId : null,
   createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : null,
   updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : null,
   longDescription: typeof data.longDescription === 'string' ? data.longDescription : null,
@@ -129,10 +122,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const data = snapshot.data() as CharacterDocument;
-      const assistantId =
-        typeof data.assistantId === 'string' && data.assistantId.trim()
-          ? data.assistantId.trim()
-          : null;
 
       await adminDb.runTransaction(async tx => {
         tx.delete(characterRef);
@@ -166,13 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      if (assistantId) {
-        try {
-          await deleteCharacterAssistant(assistantId);
-        } catch (assistantError) {
-          console.error('Failed to delete assistant for character', assistantError);
-        }
-      }
+      await deleteAvatarByUrl(authUser.uid, data.avatarUrl);
 
       return res.status(204).end();
     }
@@ -253,22 +236,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (avatarFile) {
       assertValidAvatarFile(avatarFile);
-      const bucket: Bucket = adminStorage.bucket();
-      const originalName = avatarFile.originalFilename ?? 'avatar';
-      const fileName = `avatars/${authUser.uid}/${uuidv4()}-${originalName}`;
-      const filePath = avatarFile.filepath;
-
-      if (typeof filePath !== 'string' || !filePath) {
-        throw new BadRequestError('Invalid avatar file.');
-      }
-      
-      await bucket.upload(filePath, {
-        destination: fileName,
-        metadata: {
-          contentType: avatarFile.mimetype || undefined,
-        },
-      });
-      updates.avatarUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+      updates.avatarUrl = await uploadAvatar(authUser.uid, avatarFile);
     } else if (avatarRemovedField) { // If avatarRemoved field is present at all
       updates.avatarUrl = null;
     }
@@ -308,10 +276,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       name: cleanName,
       shortDescription: cleanShort,
       greeting: cleanGreeting,
-      longDescription: cleanLong
+      longDescription: cleanLong,
+      example: cleanExample
     });
 
     updates.instructions = instructions;
+
+    const nextVisibility = (updates.visibility as string | undefined) ?? current.visibility ?? 'private';
+    if (nextVisibility !== 'private') {
+      try {
+        await assertPublishable([cleanName, cleanShort, cleanGreeting, cleanLong, cleanExample]);
+      } catch (moderationError) {
+        // The new avatar was uploaded before the merged text was known; don't leave it behind.
+        if (avatarFile) {
+          await deleteAvatarByUrl(authUser.uid, updates.avatarUrl as string | null);
+        }
+        throw moderationError;
+      }
+    }
+    // Legacy field from the per-character OpenAI Assistants era.
+    updates.assistantId = FieldValue.delete();
     let resolvedAvatar: string | null = null; // Initialize to null
 
     if (updates.avatarUrl === null) { // If avatar was explicitly removed
@@ -325,63 +309,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     updates.avatarUrl = resolvedAvatar;
 
-    const descriptor = {
-      userId: authUser.uid,
-      characterId,
-      name: cleanName,
-      summary: cleanShort,
-      greeting: cleanGreeting,
-      instructions,
-      example: cleanExample // Updated example in descriptor
-    };
-
-    const existingAssistantId =
-      typeof current.assistantId === 'string' && current.assistantId.trim()
-        ? current.assistantId.trim()
-        : null;
-
-    let resolvedAssistantId = existingAssistantId;
-
-    // If the character is 'Dayeon', protect her assistant from being updated.
-    if (current.name?.toLowerCase() === 'dayeon') {
-      resolvedAssistantId = 'asst_ED99NuKgahDCWbPaId4kUwq1';
-      updates.assistantId = resolvedAssistantId;
-    } else {
-      // Determine if core character definition fields have changed, necessitating a new assistant
-      const characterDefinitionChanged =
-        cleanName !== (current.name?.trim() || '') ||
-        cleanShort !== (current.shortDescription?.trim() || null) ||
-        cleanGreeting !== (current.greeting?.trim() || null) ||
-        cleanLong !== (current.longDescription?.trim() || null) ||
-        cleanExample !== (current.example?.trim() || null);
-
-      try {
-        if (existingAssistantId && characterDefinitionChanged) {
-          // If definition changed, delete old assistant and create a new one
-          await deleteCharacterAssistant(existingAssistantId);
-          resolvedAssistantId = await createCharacterAssistant(descriptor);
-          updates.assistantId = resolvedAssistantId;
-        } else if (existingAssistantId) {
-          // If definition did not change, just update the existing assistant
-          await updateCharacterAssistant(existingAssistantId, descriptor);
-        } else {
-          // No existing assistant, create a new one
-          resolvedAssistantId = await createCharacterAssistant(descriptor);
-          updates.assistantId = resolvedAssistantId;
-        }
-      } catch (assistantError) {
-        console.error('Failed to sync assistant for character', assistantError);
-        return res.status(502).json({
-          error: 'OpenAI assistant를 업데이트하지 못했습니다. 잠시 후 다시 시도해주세요.'
-        });
-      }
-    }
-
     if (!current.creatorId) {
       updates.creatorId = authUser.uid;
     }
 
     await characterRef.update(updates);
+
+    if (current.avatarUrl && current.avatarUrl !== updates.avatarUrl) {
+      await deleteAvatarByUrl(authUser.uid, current.avatarUrl);
+    }
 
     const updatedSnap = await characterRef.get();
     const updatedData = updatedSnap.data() as CharacterDocument;
@@ -389,10 +325,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (updatedData.visibility === 'private') {
       await publicCharacterRef.delete().catch(() => undefined);
     } else {
-      await publicCharacterRef.set({
-        ...updatedData,
-        creatorId: updatedData.creatorId ?? authUser.uid
-      });
+      // merge keeps community fields (likeCount, useCount, reportCount, hidden) owned by the public doc.
+      await publicCharacterRef.set(
+        {
+          ...updatedData,
+          creatorId: updatedData.creatorId ?? authUser.uid,
+          assistantId: FieldValue.delete()
+        },
+        { merge: true }
+      );
     }
 
     return res.status(200).json({
@@ -408,8 +349,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     console.error('Character API error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unexpected server error.'
-    });
+    return res.status(500).json({ error: 'Unexpected server error.' });
   }
 }

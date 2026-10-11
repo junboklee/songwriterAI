@@ -1,8 +1,9 @@
-﻿# songwriterAI
+# songwriterAI
 
 ## Backend Overview
 - Next.js API routes backed by Firebase Admin for secure Firestore access.
-- OpenAI Assistants API handles lyric generation; chat responses are stored per user.
+- OpenAI Responses API handles lyric generation (`lib/llm.ts`). Conversation history lives in Firestore and is replayed on each request, so no state is kept on OpenAI.
+- Every character prompt is combined with the shared songwriting rules in `lib/songwritingPrompt.ts`, which ask the model to wrap lyrics in `<lyrics title="...">` / `<style>` markup (parsed by `lib/lyricsFormat.ts`).
 - Firestore stores user profiles, conversation threads + messages, and saved song drafts.
 
 ## Required Environment Variables
@@ -12,7 +13,13 @@ Add the following server-side keys to `.env.local` (or the deployment environmen
 FIREBASE_PROJECT_ID=your-firebase-project-id
 FIREBASE_CLIENT_EMAIL=service-account@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-OPENAI_ASSISTANT_ID=asst_xxx   # ensure the casing matches this key
+OPENAI_API_KEY=sk-...
+OPENAI_CHAT_MODEL=gpt-4o-mini                  # optional, defaults to gpt-4o-mini
+CHARACTER_PROMPT_DAYEON=...                     # optional override for the built-in Dayeon persona
+CHARACTER_PROMPT_DEFAULT=...                    # optional override for the default (no character) persona
+CHAT_MONTHLY_LIMIT_FREE=0                       # optional monthly AI request cap for the free plan (0/unset = unlimited)
+CHAT_MONTHLY_LIMIT_STUDIO=0                     # same for users whose users/{uid}.plan is 'studio'
+CHARACTER_REPORT_HIDE_THRESHOLD=5               # distinct reports before a public character is hidden for review
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXX        # optional GA4 tracking
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=xxxxx     # optional Search Console verification code
 NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX                 # optional Google Tag Manager container (or set NEXT_PUBLIC_GOOGLE_TAG_ID)
@@ -21,6 +28,22 @@ NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX                 # optional Google Tag Manager con
 > **Tip:** When copying the private key, replace literal newlines with `\n` so that the value stays on one line.
 
 The frontend continues to use the Firebase Web SDK; server routes verify Firebase ID tokens from either the `Authorization: Bearer <token>` header or the `__session` cookie.
+
+## Firebase rules
+`firestore.rules` denies all direct client access because every read/write goes through API routes using the Admin SDK. Deploy rules and the composite index for the explore page with:
+
+```
+firebase deploy --only firestore:rules,firestore:indexes,storage
+```
+
+## Migrating from the Assistants API
+Characters no longer create OpenAI Assistants. To keep the original Dayeon prompt, run (while the legacy API still responds):
+
+```
+OPENAI_API_KEY=sk-... node scripts/export-assistant-instructions.mjs asst_ED99NuKgahDCWbPaId4kUwq1
+```
+
+and store the output in the `CHARACTER_PROMPT_DAYEON` secret/env var.
 
 ## Firestore Data Model
 ```
@@ -38,9 +61,10 @@ users/{uid}
 All routes require a valid Firebase ID token.
 
 ### `POST /api/chat`
-- Body: `{ message: string, threadId?: string, characterId?: string, songDraft?: { id?, title?, lyrics, metadata?, characterId? } }`
-- Response: `{ threadId, messages, reply }`
-- After each call, the user profile, conversation, messages, and optional song draft persist to Firestore.
+- Body: `{ message: string, threadId?: string, characterId?: string }`
+- `threadId` must belong to the caller (404 `THREAD_NOT_FOUND` otherwise); omit it to start a new conversation.
+- Response: `{ threadId, messages, reply }`. With `Accept: text/event-stream` the reply is streamed as SSE `delta` events followed by one `done` event carrying the same payload (`lib/chatClient.ts` handles this).
+- Rate limited per user (`CHAT_RATE_LIMIT_MAX_REQUESTS` per `CHAT_RATE_LIMIT_WINDOW_MS`).
 
 ### `GET /api/profile`
 - Returns profile details plus aggregate stats (`conversationCount`, `songCount`).
@@ -59,7 +83,23 @@ All routes require a valid Firebase ID token.
 
 ### `GET /api/profile/songs`
 - Query params: `limit` (<=50), `cursor` (millis from previous `createdAt`).
-- Lists saved song drafts with metadata.
+- Lists saved song drafts with metadata, `versionCount` and `shareId`.
+
+### `POST /api/profile/songs`
+- Creates a song with its first version. Auto-saves from chat (`metadata.source: 'auto-from-chat'`) with the same `threadId` and title are appended as a new version of the existing song instead.
+
+### `GET | PATCH | DELETE /api/profile/songs/{songId}`
+- `GET` returns the song and up to 50 versions (`users/{uid}/songs/{songId}/versions`).
+- `PATCH { title?, lyrics?, style? }` saves a new version; `{ restoreVersionId }` restores one; `{ share: true|false }` creates or removes the public page `/s/{shareId}` (`sharedSongs/{shareId}`, kept in sync on every new version, `noindex`).
+- `DELETE` removes the song, its versions and its share page.
+
+### Character market
+- `GET /api/characters/explore?q=&category=&sort=recent|popular&cursor=` — public characters (prompts are never exposed). Popularity = likes × 3 + chats started.
+- `POST | DELETE /api/characters/{id}/like`, `POST /api/characters/{id}/report { reason, detail? }`.
+- Public/unlisted characters are screened with the OpenAI moderation API on create/update (`lib/moderation.ts`).
+
+### Usage
+- Every successful chat reply increments `users/{uid}/usage/{YYYY-MM}` (KST months) with request and token counts; `GET /api/profile` returns the current month's usage.
 
 ## Client Integration Notes
 - Obtain the Firebase ID token on the client via `getIdToken()` and attach it to API requests.
