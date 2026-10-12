@@ -408,7 +408,8 @@ export const en = {
       user: 'Typing'
     },
     inputPlaceholder: 'Share a thought or kick off a roleplay...',
-    send: 'Send'
+    send: 'Send',
+    quickReplies: 'Quick replies'
   },
 
   dashboard: {
