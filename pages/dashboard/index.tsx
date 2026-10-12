@@ -1,298 +1,42 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { signOut, updateProfile } from 'firebase/auth';
 import { RequireAuth } from '@/components/RequireAuth';
-import CharacterEditorPanel, { CharacterVisibility, CharacterGender } from '@/components/CharacterEditorPanel';
+import CharacterEditorPanel from '@/components/CharacterEditorPanel';
+import { DeleteAccountDialog, NicknameModal } from '@/components/dashboard/AccountDialogs';
+import {
+  MyCharactersSection,
+  RecentChatsSection,
+  ShowcaseSection,
+  SpotlightSection
+} from '@/components/dashboard/DashboardSections';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from '@/context/I18nContext';
-import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { useDashboardText } from '@/hooks/useDashboardText';
 import { buildConversationTitle } from '@/lib/conversationUtils';
+import {
+  GENDER_ORDER,
+  adaptCharacter,
+  adaptConversation,
+  buildSearchTarget,
+  featuredCharacters,
+  getTimestampValue,
+  sortCharacters,
+  type CharacterApiItem,
+  type CharacterCard,
+  type CharacterSortMode,
+  type ConversationApiItem,
+  type ConversationListItem,
+  type ProfileResponse,
+  type UserCharacter
+} from '@/lib/dashboard/model';
 import { DEFAULT_CHARACTER_NAMES } from '@/lib/defaultCharacterNames';
 import { auth } from '@/lib/firebase';
-
-type CharacterCard = {
-  id: string;
-  title: string;
-  creator: string;
-  description: string;
-  tag: string;
-  sample: string;
-  style: string;
-  chatId: string;
-};
-
-type UserCharacter = {
-  id: string;
-  name: string;
-  summary: string;
-  greeting: string;
-  longDescription: string;
-  instructions: string;
-  example: string;
-  visibility: CharacterVisibility;
-  avatarUrl: string | null;
-  categories: string[];
-  updatedAt: string | null;
-  gender: CharacterGender;
-};
-
-type CharacterApiItem = {
-  id: string;
-  name?: string | null;
-  summary?: string | null;
-  greeting?: string | null;
-  longDescription?: string | null;
-  instructions?: string | null;
-  example?: string | null;
-  visibility?: string | null;
-  avatarUrl?: string | null;
-  categories?: string[] | null;
-  updatedAt?: string | null;
-  gender?: string | null;
-};
-
-type CharacterSortMode = 'popularity' | 'recent' | 'gender';
-
-type ProfileResponse = {
-  profile: {
-    displayName: string | null;
-    email: string | null;
-    photoURL?: string | null;
-    recentCharacterIds: string[];
-    lastCharacterId: string | null;
-  };
-  stats: {
-    conversationCount: number;
-    songCount: number;
-  };
-};
-
-type ConversationApiItem = {
-  id: string;
-  threadId?: string | null;
-  title?: string | null;
-  lastMessagePreview?: string | null;
-  characterId?: string | null;
-  messageCount?: number | null;
-  updatedAt?: string | null;
-};
-
-type ConversationListItem = {
-  id: string;
-  threadId: string;
-  title: string | null;
-  lastMessagePreview: string;
-  characterId: string | null;
-  messageCount: number;
-  updatedAt: string | null;
-};
-
-const featuredCharacters: CharacterCard[] = [
-  {
-    id: '1',
-    title: 'Dayeon',
-    creator: '친절하고 정감 있는',
-    description:
-      '나는 김다연이야. 가수가 되는 게 꿈이라 매일 가사 쓰고 노래 연습에 푹 빠져 있어!',
-    tag: 'SingerSongwriter',
-    sample:
-      '오늘 가장 기억에 남는 순간이 뭐였는지 같이 이야기해 볼래요? 편하게 들려줘.',
-    style: 'scene-card--1',
-    chatId: '1'
-  }
-];
-
-const visibilityLabels: Record<CharacterVisibility, string> = {
-  private: '비공개',
-  unlisted: '링크 공개',
-  public: '전체 공개'
-};
-
-const isCharacterVisibility = (value: unknown): value is CharacterVisibility =>
-  value === 'private' || value === 'unlisted' || value === 'public';
-const isCharacterGender = (value: unknown): value is CharacterGender =>
-  value === 'male' || value === 'female' || value === 'none';
-
-const toTrimmedOrEmpty = (value?: string | null) =>
-  typeof value === 'string' ? value.trim() : '';
-
-const adaptCharacter = (item: CharacterApiItem): UserCharacter => ({
-  id: item.id,
-  name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : '이름 없는 캐릭터',
-  summary: toTrimmedOrEmpty(item.summary),
-  greeting: toTrimmedOrEmpty(item.greeting),
-  longDescription: toTrimmedOrEmpty(item.longDescription ?? item.instructions),
-  instructions: toTrimmedOrEmpty(item.instructions ?? item.longDescription),
-  example: toTrimmedOrEmpty(item.example),
-  visibility: isCharacterVisibility(item.visibility) ? item.visibility : 'private',
-  avatarUrl:
-    typeof item.avatarUrl === 'string' && item.avatarUrl.trim()
-      ? item.avatarUrl.trim()
-      : DEFAULT_CHARACTER_AVATAR,
-  categories: Array.isArray(item.categories)
-    ? item.categories.filter((category): category is string => typeof category === 'string')
-    : [],
-  updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : null,
-  gender: isCharacterGender(item.gender) ? item.gender : 'none'
-});
-
-const adaptConversation = (
-  item: ConversationApiItem,
-  noMessagesFallback: string
-): ConversationListItem => ({
-  id: item.id,
-  threadId: item.threadId && item.threadId.trim() ? item.threadId : item.id,
-  title: item.title ?? null,
-  lastMessagePreview: item.lastMessagePreview?.trim() || noMessagesFallback,
-  characterId: item.characterId ?? null,
-  messageCount: typeof item.messageCount === 'number' ? item.messageCount : 0,
-  updatedAt: item.updatedAt ?? null
-});
-
-const getTimestampValue = (value: string | null) => {
-  if (!value) {
-    return 0;
-  }
-
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const sortCharacters = (items: UserCharacter[]) =>
-  [...items].sort((a, b) => getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt));
-
-const truncateText = (value: string, maxLength = 140) =>
-  value.length > maxLength ? `${value.slice(0, maxLength).trimEnd()}...` : value;
-
-const formatUpdatedAt = (isoDate: string | null | undefined, fallback: string) => {
-  if (!isoDate) {
-    return fallback;
-  }
-
-  try {
-    return new Intl.DateTimeFormat('ko', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(new Date(isoDate));
-  } catch {
-    return fallback;
-  }
-};
-
-const formatConversationUpdatedAt = (isoDate?: string | null) => {
-  if (!isoDate) {
-    return '';
-  }
-
-  try {
-    return new Intl.DateTimeFormat('ko', {
-      month: 'numeric',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(isoDate));
-  } catch {
-    return '';
-  }
-};
-
-const GENDER_ORDER: Record<CharacterGender, number> = {
-  male: 0,
-  female: 1,
-  none: 2
-};
 
 export default function Dashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const { t: tDashboard } = useTranslation('dashboard');
-
-  const dashboardText = useMemo(
-    () => ({
-      charactersLoadError: tDashboard('charactersLoadError'),
-      charactersLoading: tDashboard('charactersLoading'),
-      charactersEmpty: tDashboard('charactersEmpty'),
-      deleteError: tDashboard('deleteError'),
-      updateError: tDashboard('updateError'),
-      updatedUnknown: tDashboard('updatedUnknown'),
-      summaryFallback: tDashboard('summaryFallback'),
-      instructionsFallback: tDashboard('instructionsFallback'),
-      sidebarProfileRole: tDashboard('sidebarProfileRole'),
-      defaultTag: tDashboard('defaultTag'),
-      profileLoadError: tDashboard('profileLoadError'),
-      profileLoading: tDashboard('profileLoading'),
-      recentChatsLoadError: tDashboard('recentChatsLoadError'),
-      recentChatsEmpty: tDashboard('recentChatsEmpty'),
-      overviewTitle: tDashboard('overviewTitle'),
-      conversationsLabel: tDashboard('conversationsLabel'),
-      songsLabel: tDashboard('songsLabel'),
-      lastUpdatedLabel: tDashboard('lastUpdatedLabel'),
-      showcaseTitle: tDashboard('showcaseTitle'),
-      showcaseSubtitle: tDashboard('showcaseSubtitle'),
-      showcaseEmpty: tDashboard('showcaseEmpty'),
-      showcaseLoadError: tDashboard('showcaseLoadError'),
-      showcaseViewAll: tDashboard('showcaseViewAll'),
-      showcaseCta: tDashboard('showcaseCta'),
-      customCharactersTitle: tDashboard('customCharactersTitle'),
-      sortLabel: tDashboard('sortLabel'),
-      sortPopularity: tDashboard('sortPopularity'),
-      sortRecent: tDashboard('sortRecent'),
-      sortGender: tDashboard('sortGender'),
-      recentChatsTitle: tDashboard('recentChatsTitle'),
-      sidebarRecentTitle: tDashboard('sidebarRecentTitle'),
-      sidebarEmptyRecent: tDashboard('sidebarEmptyRecent'),
-      continueChat: tDashboard('continueChat'),
-      startChat: tDashboard('startChat'),
-      edit: tDashboard('edit'),
-      delete: tDashboard('delete'),
-      deleting: tDashboard('deleting'),
-      visitCreate: tDashboard('visitCreate'),
-      navDashboard: tDashboard('navDashboard'),
-      navHistory: tDashboard('navHistory'),
-      navSuno: tDashboard('navSuno'),
-      searchPlaceholder: tDashboard('searchPlaceholder'),
-      searchNoResults: tDashboard('searchNoResults'),
-      copyLink: tDashboard('copyLink'),
-      copyLinkSuccess: tDashboard('copyLinkSuccess'),
-      visibilityLabel: tDashboard('visibilityLabel'),
-      welcome: (name?: string | null) =>
-        tDashboard('welcome', { replacements: { name: name ?? '' } }),
-      loadingIndicator: tDashboard('loadingIndicator'),
-      todaysSpotlight: tDashboard('todaysSpotlight'),
-      noMessagesYet: tDashboard('noMessagesYet'),
-      deleteRecentChat: tDashboard('deleteRecentChat'),
-      deletingRecentChat: tDashboard('deletingRecentChat'),
-      deleteRecentChatConfirm: tDashboard('deleteRecentChatConfirm'),
-      deleteRecentChatError: tDashboard('deleteRecentChatError'),
-      clearRecentChats: tDashboard('clearRecentChats'),
-      clearingRecentChats: tDashboard('clearingRecentChats'),
-      clearRecentChatsConfirm: tDashboard('clearRecentChatsConfirm'),
-      clearRecentChatsError: tDashboard('clearRecentChatsError'),
-      profileMenuNickname: tDashboard('profileMenuNickname'),
-      profileMenuDeleteAccount: tDashboard('profileMenuDeleteAccount'),
-      deleteAccountConfirm: tDashboard('deleteAccountConfirm'),
-      deleteAccountError: tDashboard('deleteAccountError'),
-      deleteAccountSuccess: tDashboard('deleteAccountSuccess'),
-      deleteAccountInProgress: tDashboard('deleteAccountInProgress'),
-      profileMenuSignOut: tDashboard('profileMenuSignOut'),
-      profileMenuLabel: tDashboard('profileMenuLabel'),
-      nicknameModalTitle: tDashboard('nicknameModalTitle'),
-      nicknameModalDescription: tDashboard('nicknameModalDescription'),
-      nicknameLabel: tDashboard('nicknameLabel'),
-      nicknamePlaceholder: tDashboard('nicknamePlaceholder'),
-      nicknameSave: tDashboard('nicknameSave'),
-      nicknameSaving: tDashboard('nicknameSaving'),
-      nicknameCancel: tDashboard('nicknameCancel'),
-      nicknameRequired: tDashboard('nicknameRequired'),
-      nicknameError: tDashboard('nicknameError'),
-      recentChatsCount: (count: number) =>
-        tDashboard('recentChatsCount', { replacements: { count } })
-    }),
-    [tDashboard]
-  );
+  const dashboardText = useDashboardText();
 
   const [customCharacters, setCustomCharacters] = useState<UserCharacter[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<UserCharacter | null>(null);
@@ -305,7 +49,6 @@ export default function Dashboard() {
   const [panelError, setPanelError] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [characterSort, setCharacterSort] = useState<CharacterSortMode>('popularity');
 
   const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
@@ -320,9 +63,7 @@ export default function Dashboard() {
   });
   const [deletingRecentIds, setDeletingRecentIds] = useState<Record<string, boolean>>({});
   const [isClearingRecentChats, setIsClearingRecentChats] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [nicknameValue, setNicknameValue] = useState('');
@@ -343,17 +84,6 @@ export default function Dashboard() {
     });
     return usage;
   }, [recentChats]);
-
-  const buildSearchTarget = (...values: Array<string | null | undefined | string[]>) =>
-    values
-      .map(value => {
-        if (Array.isArray(value)) {
-          return value.join(' ');
-        }
-        return value ?? '';
-      })
-      .join(' ')
-      .toLowerCase();
 
   const hasCustomCharacters = customCharacters.length > 0;
   const hasPublicCharacters = publicCharacters.length > 0;
@@ -873,28 +603,6 @@ export default function Dashboard() {
     normalizedSearch.length > 0 && hasCustomCharacters && filteredCharacters.length === 0;
   const displayedCharacters = sortedCustomCharacters;
 
-  useEffect(() => {
-  if (!isProfileMenuOpen) {
-    return undefined;
-  }
-
-  const handleClickOutside = (event: MouseEvent) => {
-    if (!profileMenuRef.current) {
-      return;
-    }
-
-    if (!profileMenuRef.current.contains(event.target as Node)) {
-      setIsProfileMenuOpen(false);
-    }
-  };
-
-  document.addEventListener('mousedown', handleClickOutside);
-
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, [isProfileMenuOpen]);
-
   const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
@@ -907,11 +615,11 @@ export default function Dashboard() {
     setCharacterSort(event.target.value as CharacterSortMode);
   };
 
-useEffect(() => {
-  setIsProfileMenuOpen(false);
-  setIsNicknameModalOpen(false);
-  setNicknameError(null);
-}, [router.asPath, user]);
+  // The profile menu closes itself on navigation (DashboardSidebar); the nickname dialog does here.
+  useEffect(() => {
+    setIsNicknameModalOpen(false);
+    setNicknameError(null);
+  }, [router.asPath, user]);
 
 const displayName =
   profileData?.profile.displayName?.trim() ||
@@ -1062,13 +770,13 @@ const displayName =
   }
 };
 
-  const handleNicknameModalClose = () => {
+  const handleNicknameModalClose = useCallback(() => {
     if (nicknameSaving) {
       return;
     }
     setIsNicknameModalOpen(false);
     setNicknameError(null);
-  };
+  }, [nicknameSaving]);
 
   const handleNicknameSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1154,17 +862,12 @@ const displayName =
     };
   }, [closeMobileNav]);
 
-  const handleProfileMenuToggle = () => {
-    setIsProfileMenuOpen(prev => !prev);
-  };
-
   const handleDeleteAccount = async () => {
     if (!user) {
       setLoadError(dashboardText.deleteAccountError);
       return;
     }
 
-    setIsProfileMenuOpen(false);
     setIsNicknameModalOpen(false);
     setIsDeleteConfirmOpen(false);
     setIsDeletingAccount(true);
@@ -1199,7 +902,6 @@ const displayName =
   };
 
   const handleOpenDeleteConfirm = () => {
-    setIsProfileMenuOpen(false);
     setIsNicknameModalOpen(false);
     setIsDeleteConfirmOpen(true);
   };
@@ -1212,14 +914,12 @@ const displayName =
   };
 
   const handleProfileNickname = () => {
-    setIsProfileMenuOpen(false);
     setNicknameError(null);
     setNicknameValue(displayName);
     setIsNicknameModalOpen(true);
   };
 
   const handleSignOutClick = async () => {
-    setIsProfileMenuOpen(false);
     setIsNicknameModalOpen(false);
     try {
       await signOut(auth);
@@ -1227,194 +927,6 @@ const displayName =
       console.error('Sign out failed', error);
     }
   };
-
-  const sidebarContent = (
-    <>
-      <div className="dashboard-sidebar__brand">Nova Singer AI</div>
-
-      <div className="dashboard-sidebar__create">
-        <Link href="/character/create" onClick={closeMobileNav}>
-          {dashboardText.visitCreate}
-          <span aria-hidden="true">&rarr;</span>
-        </Link>
-      </div>
-
-      <nav className="dashboard-sidebar__nav">
-        <Link
-          href="/dashboard"
-          className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
-          onClick={closeMobileNav}
-        >
-          <span>{dashboardText.navDashboard}</span>
-        </Link>
-        <Link href="/history" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-          <span>{dashboardText.navHistory}</span>
-        </Link>
-        <Link href="/suno" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-          <span>{dashboardText.navSuno}</span>
-        </Link>
-      </nav>
-
-      <div className="dashboard-sidebar__search">
-        <input
-          type="search"
-          placeholder={dashboardText.searchPlaceholder}
-          aria-label={dashboardText.searchPlaceholder}
-          value={searchQuery}
-          onChange={handleSearchInputChange}
-        />
-      </div>
-
-      <div className="dashboard-sidebar__recent">
-        <h3>{dashboardText.sidebarRecentTitle}</h3>
-        <div className="dashboard-sidebar__recent-list">
-          {isLoadingRecentChats ? (
-            <div className="dashboard-sidebar__recent-item">{dashboardText.loadingIndicator}</div>
-          ) : recentChatsError ? (
-            <div className="dashboard-sidebar__recent-item">{recentChatsError}</div>
-          ) : !hasRecentChats ? (
-            <div className="dashboard-sidebar__recent-item">{dashboardText.sidebarEmptyRecent}</div>
-          ) : noRecentSearchResults ? (
-            <div className="dashboard-sidebar__recent-item">{dashboardText.searchNoResults}</div>
-          ) : (
-            filteredRecentChats.map(chat => {
-              const updated = formatConversationUpdatedAt(chat.updatedAt);
-              const title = buildConversationTitle(chat, characterNames);
-              const disabling = Boolean(deletingRecentIds[chat.threadId]);
-              return (
-                <button
-                  key={chat.id}
-                  type="button"
-                  className="dashboard-sidebar__recent-item"
-                  onClick={() => {
-                    closeMobileNav();
-                    handleContinueChat(chat.threadId, chat.characterId);
-                  }}
-                  disabled={disabling}
-                >
-                  <span>{title}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
-                    {updated || dashboardText.noMessagesYet}
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      <div className="dashboard-sidebar__profile" ref={profileMenuRef} style={{ position: 'relative' }}>
-        <button
-          type="button"
-          onClick={handleProfileMenuToggle}
-          aria-haspopup="true"
-          aria-expanded={isProfileMenuOpen}
-          aria-label={dashboardText.profileMenuLabel}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 14,
-            width: '100%',
-            padding: '12px 16px',
-            borderRadius: 16,
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: isProfileMenuOpen ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)',
-            color: 'inherit',
-            cursor: 'pointer',
-            transition: 'background 0.2s ease'
-          }}
-        >
-          <div style={{ textAlign: 'left' }}>
-            <strong style={{ fontSize: '0.9rem' }}>{displayName}</strong>
-            <p
-              style={{
-                margin: '4px 0 0',
-                fontSize: '0.75rem',
-                color: 'rgba(255,255,255,0.6)'
-              }}
-            >
-              {profileEmail || dashboardText.sidebarProfileRole}
-            </p>
-          </div>
-          <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)' }}>
-            {isProfileMenuOpen ? '닫기' : '메뉴'}
-          </span>
-        </button>
-
-        {isProfileMenuOpen ? (
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              bottom: '115%',
-              display: 'grid',
-              gap: 8,
-              minWidth: 180,
-              padding: 12,
-              borderRadius: 12,
-              background: 'rgba(12,12,12,0.95)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(12px)',
-              zIndex: 20
-            }}
-          >
-            <button
-              type="button"
-              className="btn btn--ghost"
-              onClick={handleProfileNickname}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuNickname}
-            </button>
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => {
-                void handleSignOutClick();
-              }}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuSignOut}
-            </button>
-            <button
-              type="button"
-              className="btn btn--danger"
-              onClick={handleOpenDeleteConfirm}
-              disabled={isDeletingAccount}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuDeleteAccount}
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </>
-  );
-
-  useEffect(() => {
-    if (!isNicknameModalOpen) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !nicknameSaving) {
-        setIsNicknameModalOpen(false);
-        setNicknameError(null);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    const { style } = document.body;
-    const previousOverflow = style.overflow;
-    style.overflow = 'hidden';
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      style.overflow = previousOverflow;
-    };
-  }, [isNicknameModalOpen, nicknameSaving]);
 
   const handleEditCharacter = (characterId: string) => {
     const target = customCharacters.find(item => item.id === characterId);
@@ -1552,180 +1064,32 @@ const displayName =
         <span />
       </button>
       <div className="dashboard-page">
-        <aside
-          id="dashboard-sidebar"
-          className={`dashboard-sidebar${isMobileNavOpen ? ' dashboard-sidebar--open' : ''}`}
-        >
-          <div className="dashboard-sidebar__brand">Nova Singer AI</div>
-
-          <div className="dashboard-sidebar__create">
-            <Link href="/character/create" onClick={closeMobileNav}>
-              {dashboardText.visitCreate}
-              <span>＋</span>
-            </Link>
-          </div>
-
-          <nav className="dashboard-sidebar__nav">
-        <Link
-          href="/dashboard"
-          className="dashboard-sidebar__nav-item dashboard-sidebar__nav-item--active"
-          onClick={closeMobileNav}
-        >
-          <span>{dashboardText.navDashboard}</span>
-        </Link>
-        <Link href="/history" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-          <span>{dashboardText.navHistory}</span>
-        </Link>
-        <Link href="/suno" className="dashboard-sidebar__nav-item" onClick={closeMobileNav}>
-          <span>{dashboardText.navSuno}</span>
-            </Link>
-          </nav>
-
-          <div className="dashboard-sidebar__search">
-            <input
-              type="search"
-              placeholder={dashboardText.searchPlaceholder}
-              aria-label={dashboardText.searchPlaceholder}
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-            />
-          </div>
-
-          <div className="dashboard-sidebar__recent">
-            <h3>{dashboardText.sidebarRecentTitle}</h3>
-            <div className="dashboard-sidebar__recent-list">
-              {isLoadingRecentChats ? (
-                <div className="dashboard-sidebar__recent-item">{dashboardText.loadingIndicator}</div>
-              ) : recentChatsError ? (
-                <div className="dashboard-sidebar__recent-item">{recentChatsError}</div>
-              ) : !hasRecentChats ? (
-                <div className="dashboard-sidebar__recent-item">{dashboardText.sidebarEmptyRecent}</div>
-              ) : noRecentSearchResults ? (
-                <div className="dashboard-sidebar__recent-item">{dashboardText.searchNoResults}</div>
-              ) : (
-                filteredRecentChats.map(chat => {
-                  const updated = formatConversationUpdatedAt(chat.updatedAt);
-                  const title = buildConversationTitle(chat, characterNames);
-                  const disabling = Boolean(deletingRecentIds[chat.threadId]);
-                  return (
-                    <button
-                      key={chat.id}
-                      type="button"
-                      className="dashboard-sidebar__recent-item"
-                      onClick={() => {
-                        closeMobileNav();
-                        handleContinueChat(chat.threadId, chat.characterId);
-                      }}
-                      disabled={disabling}
-                    >
-                      <span>{title}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
-                        {updated || dashboardText.noMessagesYet}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          <div
-          className="dashboard-sidebar__profile"
-          ref={profileMenuRef}
-          style={{ position: 'relative' }}
-        >
-          <button
-            type="button"
-            onClick={handleProfileMenuToggle}
-            aria-haspopup="true"
-            aria-expanded={isProfileMenuOpen}
-            aria-label={dashboardText.profileMenuLabel}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 14,
-              width: '100%',
-              padding: '12px 16px',
-              borderRadius: 16,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: isProfileMenuOpen ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)',
-              color: 'inherit',
-              cursor: 'pointer',
-              transition: 'background 0.2s ease'
-            }}
-          >
-            <div style={{ textAlign: 'left' }}>
-              <strong style={{ fontSize: '0.9rem' }}>{displayName}</strong>
-              <p
-                style={{
-                  margin: '4px 0 0',
-                  fontSize: '0.75rem',
-                  color: 'rgba(255,255,255,0.6)'
-                }}
-              >
-                {profileEmail || dashboardText.sidebarProfileRole}
-              </p>
-            </div>
-            <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)' }}>
-              {isProfileMenuOpen ? '▲' : '▼'}
-            </span>
-          </button>
-
-          {isProfileMenuOpen ? (
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                bottom: '115%',
-                display: 'grid',
-                gap: 8,
-                minWidth: 180,
-                padding: 12,
-                borderRadius: 12,
-                background: 'rgba(12,12,12,0.95)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
-                backdropFilter: 'blur(12px)',
-                zIndex: 20
-              }}
-            >
-              <button
-                type="button"
-                className="btn btn--ghost"
-                onClick={handleProfileNickname}
-                style={{ justifyContent: 'flex-start' }}
-              >
-                {dashboardText.profileMenuNickname}
-              </button>
-              <button
-                type="button"
-              className="btn btn--primary"
-              onClick={() => {
-                void handleSignOutClick();
-              }}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuSignOut}
-            </button>
-            <button
-              type="button"
-              className="btn btn--danger"
-              onClick={handleOpenDeleteConfirm}
-              disabled={isDeletingAccount}
-              style={{ justifyContent: 'center' }}
-            >
-              {dashboardText.profileMenuDeleteAccount}
-            </button>
-          </div>
-        ) : null}
-      </div>
-        </aside>
-        <button
-          type="button"
-          className={`dashboard-sidebar__backdrop${isMobileNavOpen ? ' dashboard-sidebar__backdrop--visible' : ''}`}
-          aria-label="사이드바 닫기"
-          onClick={closeMobileNav}
+        <DashboardSidebar
+          text={dashboardText}
+          isOpen={isMobileNavOpen}
+          onClose={closeMobileNav}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchInputChange}
+          recentChats={{
+            loading: isLoadingRecentChats,
+            error: recentChatsError,
+            hasAny: hasRecentChats,
+            noSearchResults: noRecentSearchResults,
+            items: filteredRecentChats,
+            deletingIds: deletingRecentIds
+          }}
+          characterNames={characterNames}
+          onContinueChat={handleContinueChat}
+          profile={{
+            displayName,
+            email: profileEmail,
+            isDeletingAccount,
+            onNickname: handleProfileNickname,
+            onSignOut: () => {
+              void handleSignOutClick();
+            },
+            onDeleteAccount: handleOpenDeleteConfirm
+          }}
         />
         <main className="dashboard-main">
           <header className="dashboard-main__header">
@@ -1744,338 +1108,52 @@ const displayName =
             </form>
           </header>
 
-          <section className="dashboard-section">
-            <div className="dashboard-section__header">
-              <h2>{dashboardText.todaysSpotlight}</h2>
-            </div>
-            <div className="dashboard-grid">
-              {filteredSpotlight.length === 0 ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">
-                    {normalizedSearch ? dashboardText.searchNoResults : dashboardText.charactersEmpty}
-                  </p>
-                </div>
-              ) : (
-                filteredSpotlight.map(scene => (
-                  <div key={scene.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <Link
-                      href={{ pathname: '/chat', query: { characterId: scene.chatId } }}
-                      className={`scene-card ${scene.style}`}
-                    >
-                      <div className="scene-card__content">
-                        <div className="scene-card__tag">{scene.tag}</div>
-                        <h3 className="scene-card__title">{scene.title}</h3>
-                        <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)' }}>
-                          {scene.creator}
-                        </span>
-                        <p
-                          style={{
-                            margin: '6px 0 0',
-                            fontSize: '0.8rem',
-                            color: 'rgba(255,255,255,0.75)'
-                          }}
-                        >
-                          {scene.description}
-                        </p>
-                      </div>
-                    </Link>
-                    {scene.title === 'Dayeon' && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-around',
-                          alignItems: 'center',
-                          padding: '10px 0',
-                          gap: '12px',
-                          width: '100%',
-                          maxWidth: '280px', // Assuming card width is around this
-                          margin: '0 auto'
-                        }}
-                      >
-                                                  <a href="https://www.youtube.com/@yeonverse-m1k" target="_blank" rel="noopener noreferrer">
-                                                    <Image src="/bottons/youtube-play.png" alt="YouTube" width={32} height={32} />
-                                                  </a>                        <a href="https://instagram.com/yeonversestudio" target="_blank" rel="noopener noreferrer">
-                          <Image src="/bottons/insta_01.png" alt="Instagram" width={32} height={32} />
-                        </a>
-                                                  <a href="https://tiktok.com/@yeonverse_studio" target="_blank" rel="noopener noreferrer">
-                                                    <Image src="/bottons/tt_04.png" alt="TikTok" width={32} height={32} />
-                                                  </a>                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
+          <SpotlightSection text={dashboardText} scenes={filteredSpotlight} isSearching={Boolean(normalizedSearch)} />
 
-          <section className="dashboard-section">
-            <div className="dashboard-section__header">
-              <div>
-                <h2>{dashboardText.showcaseTitle}</h2>
-                <p className="dashboard-section__subtitle">{dashboardText.showcaseSubtitle}</p>
-              </div>
-              <div className="dashboard-section__controls">
-                <label htmlFor="character-sort" className="sr-only">
-                  {dashboardText.sortLabel}
-                </label>
-                <select
-                  id="character-sort"
-                  className="dashboard-section__select"
-                  value={characterSort}
-                  onChange={handleSortChange}
-                >
-                  <option value="popularity">{dashboardText.sortPopularity}</option>
-                  <option value="recent">{dashboardText.sortRecent}</option>
-                  <option value="gender">{dashboardText.sortGender}</option>
-                </select>
-                <Link href="/explore" className="btn btn--ghost">
-                  {dashboardText.showcaseViewAll}
-                </Link>
-              </div>
-            </div>
-            <div className="dashboard-grid">
-              {isLoadingPublicCharacters ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.charactersLoading}</p>
-                </div>
-              ) : publicCharactersError ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{publicCharactersError}</p>
-                </div>
-              ) : !hasPublicCharacters ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.showcaseEmpty}</p>
-                </div>
-              ) : (
-                sortedPublicCharacters.map(character => {
-                  const summaryText = character.summary
-                    ? truncateText(character.summary, 110)
-                    : dashboardText.summaryFallback;
-                  const detailSource =
-                    character.longDescription ||
-                    character.greeting ||
-                    character.instructions ||
-                    null;
-                  const detailText = detailSource
-                    ? truncateText(detailSource, 140)
-                    : dashboardText.instructionsFallback;
+          <ShowcaseSection
+            text={dashboardText}
+            characters={sortedPublicCharacters}
+            loading={isLoadingPublicCharacters}
+            error={publicCharactersError}
+            sort={characterSort}
+            onSortChange={handleSortChange}
+            onStartChat={handleStartChat}
+          />
 
-                  return (
-                    <div key={character.id} className="dashboard-card">
-                      {character.avatarUrl ? (
-                        <Image
-                          src={character.avatarUrl}
-                          alt={`${character.name} avatar`}
-                          width={60}
-                          height={60}
-                          style={{ borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' }}
-                        />
-                      ) : null}
-                      <h3 className="dashboard-card__title">{character.name}</h3>
-                      <p className="dashboard-card__meta">{summaryText}</p>
-                      <p className="dashboard-card__meta">{detailText}</p>
-                      <div className="dashboard-card__actions">
-                        <button
-                          type="button"
-                          className="dashboard-card__button dashboard-card__button--primary"
-                          onClick={() => handleStartChat(character.id)}
-                        >
-                          {dashboardText.startChat}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </section>
+          <RecentChatsSection
+            text={dashboardText}
+            chats={filteredRecentChats}
+            characterNames={characterNames}
+            loading={isLoadingRecentChats}
+            error={recentChatsError}
+            hasAny={hasRecentChats}
+            noSearchResults={noRecentSearchResults}
+            deletingIds={deletingRecentIds}
+            isClearing={isClearingRecentChats}
+            onClearAll={() => {
+              void handleClearRecentChats();
+            }}
+            onContinue={handleContinueChat}
+            onDelete={chat => {
+              void handleDeleteRecentChat(chat);
+            }}
+          />
 
-          <section className="dashboard-section">
-            <div className="dashboard-section__header">
-              <h2>{dashboardText.recentChatsTitle}</h2>
-      {hasRecentChats ? (
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={() => {
-            void handleClearRecentChats();
-          }}
-          disabled={
-            isClearingRecentChats ||
-            isLoadingRecentChats ||
-            Object.keys(deletingRecentIds).length > 0
-          }
-        >
-          {isClearingRecentChats ? dashboardText.clearingRecentChats : dashboardText.clearRecentChats}
-        </button>
-      ) : null}
-    </div>
-            <div className="dashboard-grid">
-              {isLoadingRecentChats ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.loadingIndicator}</p>
-                </div>
-              ) : recentChatsError ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{recentChatsError}</p>
-                </div>
-              ) : !hasRecentChats ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.recentChatsEmpty}</p>
-                </div>
-              ) : noRecentSearchResults ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.searchNoResults}</p>
-                </div>
-              ) : (
-                filteredRecentChats.map(chat => {
-                  const updated = formatConversationUpdatedAt(chat.updatedAt);
-                  const title = buildConversationTitle(chat, characterNames);
-                  const isDeleting = Boolean(deletingRecentIds[chat.threadId]);
-                  return (
-                    <div key={chat.id} className="dashboard-card">
-                      <h3 className="dashboard-card__title">{title}</h3>
-                      <p className="dashboard-card__meta">{chat.lastMessagePreview}</p>
-                      <div className="dashboard-card__stats">
-                        <span>{dashboardText.recentChatsCount(chat.messageCount)}</span>
-                        <span>{updated || dashboardText.updatedUnknown}</span>
-                      </div>
-                      <div className="dashboard-card__actions">
-                        <button
-                          type="button"
-                          className="dashboard-card__button dashboard-card__button--primary"
-                          onClick={() => handleContinueChat(chat.threadId, chat.characterId)}
-                          disabled={isDeleting}
-                        >
-                          {dashboardText.continueChat}
-                        </button>
-                        <button
-                          type="button"
-                          className="dashboard-card__button dashboard-card__button--danger"
-                          onClick={() => {
-                            void handleDeleteRecentChat(chat);
-                          }}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? dashboardText.deletingRecentChat : dashboardText.deleteRecentChat}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </section>
-
-          <section className="dashboard-section">
-            <div className="dashboard-section__header">
-              <h2>{dashboardText.customCharactersTitle}</h2>
-              <span className="section-link" />
-            </div>
-            <div className="dashboard-grid">
-              {isLoadingCharacters ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.charactersLoading}</p>
-                </div>
-              ) : loadError ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{loadError}</p>
-                </div>
-              ) : !hasCustomCharacters ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.charactersEmpty}</p>
-                </div>
-              ) : noCustomSearchResults ? (
-                <div className="dashboard-card">
-                  <p className="dashboard-card__meta">{dashboardText.searchNoResults}</p>
-                </div>
-              ) : (
-                displayedCharacters.map(character => {
-                  const summaryText = character.summary
-                    ? truncateText(character.summary, 110)
-                    : dashboardText.summaryFallback;
-                  const instructionsPreview = character.instructions
-                    ? truncateText(character.instructions, 140)
-                    : dashboardText.instructionsFallback;
-                  const isDeleting = pendingDeleteId === character.id;
-
-                  return (
-                    <div key={character.id} className="dashboard-card">
-                      {character.avatarUrl && (
-                        <Image
-                          src={character.avatarUrl}
-                          alt={`${character.name} avatar`}
-                          width={60}
-                          height={60}
-                          style={{ borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' }}
-                        />
-                      )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                        <h3 className="dashboard-card__title">{character.name}</h3>
-                        {character.visibility === 'unlisted' && (
-                          <button
-                            onClick={() => {
-                              const url = `${window.location.origin}/chat?characterId=${character.id}`;
-                              navigator.clipboard.writeText(url);
-                              setCopiedId(character.id);
-                              setTimeout(() => setCopiedId(null), 2000);
-                            }}
-                            className="btn btn--ghost"
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '0.75rem',
-                              borderRadius: '8px',
-                              minWidth: '60px'
-                            }}
-                          >
-                            {copiedId === character.id
-                              ? dashboardText.copyLinkSuccess
-                              : `🔗 ${dashboardText.copyLink}`}
-                          </button>
-                        )}
-                      </div>
-                      <p className="dashboard-card__meta">{summaryText}</p>
-                      <div className="dashboard-card__stats">
-                        <span>
-                          {dashboardText.visibilityLabel}: {visibilityLabels[character.visibility]}
-                        </span>
-                        <span>
-                          {dashboardText.lastUpdatedLabel}: {formatUpdatedAt(character.updatedAt, dashboardText.updatedUnknown)}
-                        </span>
-                      </div>
-                      <div className="dashboard-card__actions">
-                        <button
-                          type="button"
-                          className="dashboard-card__button dashboard-card__button--primary"
-                          onClick={() => handleStartChat(character.id)}
-                          disabled={panelSubmitting || isDeleting}
-                        >
-                          {dashboardText.startChat}
-                        </button>
-                        <button
-                          type="button"
-                          className="dashboard-card__button"
-                          onClick={() => handleEditCharacter(character.id)}
-                          disabled={panelSubmitting || isDeleting}
-                        >
-                          {dashboardText.edit}
-                        </button>
-                        <button
-                          type="button"
-                          className="dashboard-card__button dashboard-card__button--danger"
-                          onClick={() => {
-                            void handleDeleteCharacter(character.id);
-                          }}
-                          disabled={isDeleting || panelSubmitting}
-                        >
-                          {isDeleting ? dashboardText.deleting : dashboardText.delete}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </section>
+          <MyCharactersSection
+            text={dashboardText}
+            characters={displayedCharacters}
+            loading={isLoadingCharacters}
+            error={loadError}
+            hasAny={hasCustomCharacters}
+            noSearchResults={noCustomSearchResults}
+            pendingDeleteId={pendingDeleteId}
+            panelSubmitting={panelSubmitting}
+            onStartChat={handleStartChat}
+            onEdit={handleEditCharacter}
+            onDelete={characterId => {
+              void handleDeleteCharacter(characterId);
+            }}
+          />
         </main>
       </div>
       {selectedCharacter ? (
@@ -2098,169 +1176,25 @@ const displayName =
         />
       ) : null}
       {isNicknameModalOpen ? (
-        <div
-          role="presentation"
-          onClick={handleNicknameModalClose}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.55)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 20,
-            zIndex: 120
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nickname-modal-title"
-            onClick={event => event.stopPropagation()}
-            style={{
-              width: 'min(420px, 92vw)',
-              background: 'rgba(20,20,20,0.96)',
-              borderRadius: 18,
-              padding: 28,
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 24px 48px rgba(0,0,0,0.45)',
-              display: 'grid',
-              gap: 18
-            }}
-          >
-            <div>
-              <h2 id="nickname-modal-title" style={{ margin: 0, fontSize: '1.4rem' }}>
-                {dashboardText.nicknameModalTitle}
-              </h2>
-              <p
-                style={{
-                  margin: '8px 0 0',
-                  fontSize: '0.9rem',
-                  color: 'rgba(255,255,255,0.65)',
-                  lineHeight: 1.6
-                }}
-              >
-                {dashboardText.nicknameModalDescription}
-              </p>
-            </div>
-
-            <form onSubmit={handleNicknameSubmit} style={{ display: 'grid', gap: 16 }}>
-              <label style={{ display: 'grid', gap: 8 }}>
-                <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>
-                  {dashboardText.nicknameLabel}
-                </span>
-                <input
-                  type="text"
-                  value={nicknameValue}
-                  onChange={event => setNicknameValue(event.target.value)}
-                  placeholder={dashboardText.nicknamePlaceholder}
-                  disabled={nicknameSaving}
-                  autoFocus
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: 12,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    background: 'rgba(255,255,255,0.05)',
-                    color: '#fff',
-                    fontSize: '0.95rem'
-                  }}
-                />
-              </label>
-
-              {nicknameError ? (
-                <p style={{ margin: 0, color: '#fca5a5', fontSize: '0.85rem' }}>{nicknameError}</p>
-              ) : null}
-
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={handleNicknameModalClose}
-                  disabled={nicknameSaving}
-                >
-                  {dashboardText.nicknameCancel}
-                </button>
-                <button type="submit" className="btn btn--primary" disabled={nicknameSaving}>
-                  {nicknameSaving ? dashboardText.nicknameSaving : dashboardText.nicknameSave}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <NicknameModal
+          text={dashboardText}
+          value={nicknameValue}
+          error={nicknameError}
+          saving={nicknameSaving}
+          onChange={setNicknameValue}
+          onClose={handleNicknameModalClose}
+          onSubmit={handleNicknameSubmit}
+        />
       ) : null}
       {isDeleteConfirmOpen ? (
-        <div
-          role="presentation"
-          onClick={handleCancelDeleteConfirm}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 20,
-            zIndex: 130
+        <DeleteAccountDialog
+          text={dashboardText}
+          deleting={isDeletingAccount}
+          onCancel={handleCancelDeleteConfirm}
+          onConfirm={() => {
+            void handleDeleteAccount();
           }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-confirm-title"
-            onClick={event => event.stopPropagation()}
-            style={{
-              width: 'min(420px, 92vw)',
-              background: 'rgba(20,20,20,0.96)',
-              borderRadius: 18,
-              padding: 28,
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 24px 48px rgba(0,0,0,0.45)',
-              display: 'grid',
-              gap: 18
-            }}
-          >
-            <div>
-              <h2 id="delete-confirm-title" style={{ margin: 0, fontSize: '1.35rem', color: '#f87171' }}>
-                {dashboardText.profileMenuDeleteAccount}
-              </h2>
-              <p
-                style={{
-                  margin: '8px 0 0',
-                  fontSize: '0.9rem',
-                  color: 'rgba(255,255,255,0.75)',
-                  lineHeight: 1.6
-                }}
-              >
-                {dashboardText.deleteAccountConfirm}
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="btn btn--ghost"
-                onClick={handleCancelDeleteConfirm}
-                disabled={isDeletingAccount}
-              >
-                {dashboardText.nicknameCancel}
-              </button>
-              <button
-                type="button"
-                className="btn btn--danger"
-                onClick={() => {
-                  void handleDeleteAccount();
-                }}
-                disabled={isDeletingAccount}
-              >
-                {isDeletingAccount
-                  ? dashboardText.deleteAccountInProgress
-                  : dashboardText.profileMenuDeleteAccount}
-              </button>
-            </div>
-          </div>
-        </div>
+        />
       ) : null}
     </RequireAuth>
   );
