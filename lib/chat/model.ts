@@ -83,9 +83,9 @@ export const CHARACTER_PROFILES: Record<string, CharacterProfile> = {
     name: 'Dayeon',
     tag: 'Empathy',
     avatar: '/avatars/dayeon.png',
-    greeting: 'Shall we start a new conversation together?',
-    description: 'Empathetic storyteller for winding down after long days.',
-    availability: 'Usually active at night'
+    greeting: '왔구나! 오늘 하루는 어땠어? 이야기 들려주면 노래로 만들어 볼게 🎵',
+    description: '가수를 꿈꾸며 매일 가사를 쓰는 싱어송라이터. 긴 하루 끝, 마음을 노래로 바꿔 줄게.',
+    availability: '주로 밤에 활동해요'
   }
 };
 
