@@ -402,7 +402,8 @@
       user: '입력 중'
     },
     inputPlaceholder: '생각을 공유하거나 롤플레이를 시작해 보세요...',
-    send: '보내기'
+    send: '보내기',
+    quickReplies: '빠른 응답'
   },
 
   dashboard: {
