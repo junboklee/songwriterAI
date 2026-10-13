@@ -28,4 +28,4 @@ env:
     secret: openai-api-key
   # Comma-separated, email-verified accounts allowed to use /admin/reports. Empty = admin pages disabled.
   - variable: ADMIN_EMAILS
-    value: ''
+    value: 'ljbn333@gmail.com'

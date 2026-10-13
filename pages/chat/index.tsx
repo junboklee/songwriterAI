@@ -17,6 +17,7 @@ import { RequireAuth } from '@/components/RequireAuth';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatVideoPanel } from '@/components/chat/ChatVideoPanel';
+import { SongBriefWizard } from '@/components/chat/SongBriefWizard';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { useChatCharacters } from '@/hooks/useChatCharacters';
@@ -58,6 +59,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
+  const [showBrief, setShowBrief] = useState(false);
   const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
   const [autoSaveLyrics, setAutoSaveLyrics] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -752,6 +754,20 @@ export default function ChatPage() {
                 />
 
                 <form ref={formRef} onSubmit={handleSubmit} className="chat-footer">
+                  {showBrief ? (
+                    <SongBriefWizard
+                      onClose={() => setShowBrief(false)}
+                      onSubmit={prompt => {
+                        setInput(prompt);
+                        setShowBrief(false);
+                        chatInputRef.current?.focus();
+                      }}
+                    />
+                  ) : (
+                    <button type="button" className="chip song-brief__open" onClick={() => setShowBrief(true)}>
+                      🎼 곡 만들기 마법사
+                    </button>
+                  )}
                   <details className="chip-accordion">
                     <summary>{tChat('quickReplies')}</summary>
                     <div className="chip-list chip-list--scroll">
