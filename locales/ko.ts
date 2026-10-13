@@ -12,15 +12,14 @@
   },
   authLayout: {
     defaultHeroLabel: '사람 같은 AI와 함께 새로운 대화를 시작해 보세요.',
-    termsText: '계속 진행하면 개인정보 처리방침과 이용 약관에 동의하는 것입니다.',
+    termsPrefix: '계속 진행하면 ',
+    termsAnd: '과 ',
+    termsSuffix: '에 동의하는 것으로 간주됩니다. 만 14세 이상만 가입할 수 있습니다.',
     footer: {
-      company: '회사 소개',
-      careers: '채용',
-      security: '보안 센터',
-      blog: '블로그',
-      cookies: '쿠키 정책',
-      privacy: '개인정보 처리방침',
-      terms: '이용 약관'
+      home: '홈',
+      pricing: '요금 안내',
+      privacy: '개인정보처리방침',
+      terms: '이용약관'
     }
   },
   auth: {

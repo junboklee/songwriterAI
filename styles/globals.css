@@ -4267,3 +4267,9 @@ textarea {
   overflow-wrap: anywhere;
   color: #a78bfa;
 }
+
+.auth-card__terms a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

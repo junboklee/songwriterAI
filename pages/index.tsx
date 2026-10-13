@@ -151,6 +151,14 @@ export default function Home() {
             </Link>
           </section>
         </main>
+        <footer className="landing-footer">
+          <Link href="/pricing">요금 안내</Link>
+          <Link href="/terms">이용약관</Link>
+          <Link href="/privacy">
+            <strong>개인정보처리방침</strong>
+          </Link>
+          <span>© NovaSingerAI</span>
+        </footer>
       </div>
 
       <style jsx>{`
@@ -331,6 +339,21 @@ export default function Home() {
         .faq-body {
           padding: 0 1.2rem 1rem;
           color: #d1d5db;
+        }
+
+        .landing-footer {
+          max-width: 960px;
+          margin: 0 auto;
+          padding: 0 1.5rem 3rem;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1.25rem;
+          font-size: 0.85rem;
+          color: #94a3b8;
+        }
+
+        .landing-footer :global(a) {
+          color: inherit;
         }
 
         .bottom-cta {
