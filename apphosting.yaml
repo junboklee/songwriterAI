@@ -26,5 +26,6 @@ env:
     secret: firebase-admin-private-key
   - variable: OPENAI_API_KEY
     secret: openai-api-key
-
-
+  # Comma-separated, email-verified accounts allowed to use /admin/reports. Empty = admin pages disabled.
+  - variable: ADMIN_EMAILS
+    value: ''
