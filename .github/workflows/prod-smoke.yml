@@ -1,0 +1,68 @@
+name: Production smoke test
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 09:00 KST every day
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: prod-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SMOKE_BASE_URL: https://novasingerai.com
+      SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+      SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+    steps:
+      - name: Skip when the smoke account is not configured
+        if: env.SMOKE_EMAIL == '' || env.SMOKE_PASSWORD == ''
+        run: echo "::notice::SMOKE_EMAIL / SMOKE_PASSWORD secrets are not set; skipping."
+
+      - name: Checkout
+        if: env.SMOKE_EMAIL != '' && env.SMOKE_PASSWORD != ''
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: env.SMOKE_EMAIL != '' && env.SMOKE_PASSWORD != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        if: env.SMOKE_EMAIL != '' && env.SMOKE_PASSWORD != ''
+        run: npm ci
+
+      # App Hosting deploys main on its own; after a push, wait until a new build is being served.
+      - name: Wait for the new deploy
+        if: github.event_name == 'push' && env.SMOKE_EMAIL != '' && env.SMOKE_PASSWORD != ''
+        run: |
+          build_id() { curl -s --max-time 20 "$SMOKE_BASE_URL/pricing" | grep -o '"buildId":"[^"]*"' | head -1; }
+          start="$(build_id)"
+          echo "Serving $start"
+          for i in $(seq 1 30); do
+            sleep 30
+            now="$(build_id)"
+            if [ -n "$now" ] && [ "$now" != "$start" ]; then
+              echo "New build live: $now"
+              exit 0
+            fi
+          done
+          echo "::warning::No new build detected within 15 minutes; testing the current one."
+
+      - name: API smoke test
+        if: env.SMOKE_EMAIL != '' && env.SMOKE_PASSWORD != ''
+        run: npm run smoke:api
+
+      - name: Browser smoke test
+        if: env.SMOKE_EMAIL != '' && env.SMOKE_PASSWORD != ''
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run smoke:ui
