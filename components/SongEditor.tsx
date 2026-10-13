@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { LyricsRewritePanel, toLineSelection, type LineSelection } from '@/components/LyricsRewritePanel';
 import { useTranslation } from '@/context/I18nContext';
+import { applyRewrite } from '@/lib/lyricsRewrite';
 import { analyzeLyrics, diffLines } from '@/lib/lyricsTools';
 import { toMusicToolFormat } from '@/lib/lyricsFormat';
 import type { SongEntry, SongVersion } from '@/types/suno';
@@ -23,6 +25,7 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
   const [title, setTitle] = useState(song.title ?? '');
   const [style, setStyle] = useState(readStyle(song));
   const [lyrics, setLyrics] = useState(song.lyrics ?? '');
+  const [lineSelection, setLineSelection] = useState<LineSelection | null>(null);
   const [baseline, setBaseline] = useState({ title: song.title ?? '', style: readStyle(song), lyrics: song.lyrics ?? '' });
   const [versions, setVersions] = useState<SongVersion[] | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -212,9 +215,32 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                 className="suno-form__textarea"
                 rows={12}
                 value={lyrics}
-                onChange={event => setLyrics(event.target.value)}
+                onChange={event => {
+                  setLyrics(event.target.value);
+                  setLineSelection(null);
+                }}
+                onSelect={event => {
+                  const target = event.currentTarget;
+                  setLineSelection(toLineSelection(target.value, target.selectionStart, target.selectionEnd));
+                }}
               />
             </label>
+            {lineSelection ? (
+              <LyricsRewritePanel
+                key={`${lineSelection.start}-${lineSelection.end}`}
+                lyrics={lyrics}
+                selection={lineSelection}
+                style={style}
+                getIdToken={getIdToken}
+                onApply={replacement => {
+                  setLyrics(applyRewrite(lyrics, lineSelection.start, lineSelection.end, replacement));
+                  setLineSelection(null);
+                }}
+                onClose={() => setLineSelection(null)}
+              />
+            ) : (
+              <p className="song-editor__hint">{t('rewriteSelectHint')}</p>
+            )}
 
             <label className="song-editor__toggle">
               <input

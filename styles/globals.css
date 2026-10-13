@@ -4267,3 +4267,130 @@ textarea {
   overflow-wrap: anywhere;
   color: #a78bfa;
 }
+
+/* Partial rewrite panel (components/LyricsRewritePanel.tsx) */
+.lyrics-rewrite {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  border-radius: 12px;
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.lyrics-rewrite__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+}
+
+.lyrics-rewrite__close {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.lyrics-rewrite__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lyrics-rewrite__chips button {
+  border: 1px solid var(--divider);
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.lyrics-rewrite__form {
+  display: flex;
+  gap: 8px;
+}
+
+.lyrics-rewrite__form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.lyrics-rewrite__error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+/* Song brief wizard (components/chat/SongBriefWizard.tsx) */
+.song-brief__open {
+  margin-bottom: 10px;
+}
+
+.song-brief {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  border-radius: 16px;
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.song-brief__header,
+.song-brief__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.song-brief__close {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.song-brief__group {
+  display: grid;
+  gap: 6px;
+}
+
+.song-brief__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.song-brief__label,
+.song-brief__hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.song-brief__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.song-brief__chip {
+  border: 1px solid var(--divider);
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.song-brief__chip.is-active {
+  border-color: #a78bfa;
+  background: rgba(167, 139, 250, 0.22);
+}

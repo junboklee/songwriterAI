@@ -55,6 +55,27 @@ export async function generateReply(
   return response.output_text.trim();
 }
 
+// One-shot completion with caller-supplied instructions (no chat persona or <lyrics> format rules).
+export async function completeText(
+  instructions: string,
+  input: string,
+  onUsage?: UsageCallback,
+  maxOutputTokens = 800
+) {
+  const response = await getClient().responses.create({
+    model: CHAT_MODEL,
+    instructions,
+    input: [{ role: 'user', content: input }],
+    max_output_tokens: maxOutputTokens,
+    store: false
+  });
+  const usage = toTokenUsage(response.usage);
+  if (usage) {
+    onUsage?.(usage);
+  }
+  return response.output_text.trim();
+}
+
 export async function* streamReply(
   personaInstructions: string,
   turns: ChatTurn[],
