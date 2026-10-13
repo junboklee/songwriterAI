@@ -9,7 +9,9 @@ import {
   MAX_REWRITE_SELECTION,
   REWRITE_INSTRUCTIONS,
   buildRewriteInput,
-  parseRewrite
+  parseRewrite,
+  restoreSectionTags,
+  splitSectionTags
 } from '@/lib/lyricsRewrite';
 import { enforceRateLimit } from '@/lib/rateLimiter';
 import { requireUser } from '@/lib/serverAuth';
@@ -46,17 +48,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new BadRequestError('선택한 부분이나 요청 내용이 너무 깁니다.');
     }
 
+    const { lines: selectedLines, contentText, contentCount } = splitSectionTags(selection);
+    if (contentCount === 0) {
+      throw new BadRequestError('가사 줄을 선택해 주세요. 섹션 태그만으로는 다시 쓸 수 없습니다.');
+    }
+
     await assertWithinMonthlyQuota(user.uid);
 
     let usage: TokenUsage | null = null;
     const output = await completeText(
       REWRITE_INSTRUCTIONS,
-      buildRewriteInput({ lyrics, selection, instruction, style }),
+      buildRewriteInput({ lyrics, selection: contentText, instruction, style }),
       captured => {
         usage = captured;
       }
     );
-    const replacement = parseRewrite(output);
+    const rewritten = parseRewrite(output);
+    const replacement = rewritten ? restoreSectionTags(selectedLines, rewritten) : '';
 
     await recordChatUsage(user.uid, usage).catch(usageError => logError('rewrite.usage_record_failed', usageError));
 

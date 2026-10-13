@@ -48,6 +48,26 @@ describe('POST /api/lyrics/rewrite', () => {
     expect(recordChatUsage).toHaveBeenCalledWith('user-1', { inputTokens: 50, outputTokens: 10 });
   });
 
+  it('never sends section tags to the model and restores them in the result', async () => {
+    completeTextMock.mockResolvedValueOnce('<rewrite>희망이 있다고 말해줘</rewrite>');
+    const res = createResponse();
+    const chorus = '[Chorus]\n괜찮다고 말해줘';
+    await handler(request({ lyrics: chorus, selection: chorus, instruction: '더 희망차게' }), res);
+
+    const modelInput = completeTextMock.mock.calls[0][1];
+    const selectedPart = modelInput.split('Selected lines to rewrite:')[1];
+    expect(selectedPart).not.toContain('[Chorus]');
+    expect(res.body).toEqual({ replacement: '[Chorus]\n희망이 있다고 말해줘' });
+  });
+
+  it('rejects a selection made only of section tags', async () => {
+    const res = createResponse();
+    await handler(request({ lyrics: '[Chorus]\nx', selection: '[Chorus]', instruction: '더 슬프게' }), res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(completeTextMock).not.toHaveBeenCalled();
+  });
+
   it('validates required fields before calling the model', async () => {
     const res = createResponse();
     await handler(request({ lyrics: 'x', selection: '', instruction: '더 슬프게' }), res);

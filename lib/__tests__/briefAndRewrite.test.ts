@@ -1,6 +1,12 @@
 import { toLineSelection } from '@/components/LyricsRewritePanel';
 import { EMPTY_BRIEF, buildBriefPrompt } from '@/lib/chat/brief';
-import { applyRewrite, buildRewriteInput, parseRewrite } from '@/lib/lyricsRewrite';
+import {
+  applyRewrite,
+  buildRewriteInput,
+  parseRewrite,
+  restoreSectionTags,
+  splitSectionTags
+} from '@/lib/lyricsRewrite';
 
 describe('buildBriefPrompt', () => {
   it('lists only the chosen options plus length and language', () => {
@@ -53,5 +59,34 @@ describe('rewrite helpers', () => {
     expect(input).toContain('Full song for context');
     expect(input).toContain('Musical style: ballad');
     expect(input).toContain('Request: 더 슬프게');
+  });
+});
+
+describe('rewrite output cleanup (cases seen in production)', () => {
+  it('turns <br> into line breaks and drops trailing spaces', () => {
+    expect(parseRewrite('<rewrite>너의 이름을 속삭여<br>차가운 침묵만 흐르고</rewrite>')).toBe(
+      '너의 이름을 속삭여\n차가운 침묵만 흐르고'
+    );
+    expect(parseRewrite('<rewrite>너의 꿈을 그려봐 \n고요한 침묵 속에 </rewrite>')).toBe('너의 꿈을 그려봐\n고요한 침묵 속에');
+  });
+});
+
+describe('section tags around a rewrite', () => {
+  it('sends only lyric lines to the model', () => {
+    expect(splitSectionTags('[Chorus]\n괜찮다고 말해줘')).toEqual({
+      lines: ['[Chorus]', '괜찮다고 말해줘'],
+      contentText: '괜찮다고 말해줘',
+      contentCount: 1
+    });
+  });
+
+  it('puts tags back in their original positions', () => {
+    const original = ['밤이 깊어', '[Chorus]', '괜찮다고 말해줘'];
+    expect(restoreSectionTags(original, '새벽이 와\n희망이 있다고 말해줘')).toBe('새벽이 와\n[Chorus]\n희망이 있다고 말해줘');
+  });
+
+  it('ignores tags the model invents and keeps extra lines after the last lyric', () => {
+    const original = ['[Chorus]', '괜찮다고 말해줘'];
+    expect(restoreSectionTags(original, '[Verse 9]\n희망이 있어\n한 줄 더')).toBe('[Chorus]\n희망이 있어\n한 줄 더');
   });
 });
