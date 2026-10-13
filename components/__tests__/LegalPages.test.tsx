@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
+import { hasUnfilledLegalInfo } from '@/lib/legal';
 import PrivacyPage from '@/pages/privacy';
 import TermsPage from '@/pages/terms';
 
@@ -18,5 +19,11 @@ describe('legal pages', () => {
     const { container } = render(<TermsPage />);
     expect(screen.getByRole('heading', { level: 1, name: '이용약관' })).toBeTruthy();
     expect(container.querySelector('#ai')?.textContent).toContain('AI 생성물');
+  });
+});
+
+describe('operator details', () => {
+  it('has no unfilled placeholders before publishing', () => {
+    expect(hasUnfilledLegalInfo()).toBe(false);
   });
 });
