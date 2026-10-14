@@ -71,10 +71,13 @@ try {
   const page = await fetch(`${BASE_URL}/s/${shareId}`);
   const html = await page.text();
   check('share: public page renders (noindex, no CDN cache)', page.ok && html.includes('noindex') && /no-store/.test(page.headers.get('cache-control') ?? ''));
+  const card = await fetch(`${BASE_URL}/api/og/song/${shareId}`);
+  check('share: preview image renders', card.ok && (card.headers.get('content-type') ?? '').includes('image/png'));
   await fetch(songUrl, { method: 'PATCH', headers: json, body: JSON.stringify({ lyrics: '[Chorus]\n스모크 수정 후렴' }) });
   check('share: edits appear immediately', (await (await fetch(`${BASE_URL}/s/${shareId}`)).text()).includes('스모크 수정 후렴'));
   await fetch(songUrl, { method: 'PATCH', headers: json, body: JSON.stringify({ share: false }) });
   check('share: unsharing removes the page', (await fetch(`${BASE_URL}/s/${shareId}`)).status === 404);
+  check('share: unsharing removes the preview image', (await fetch(`${BASE_URL}/api/og/song/${shareId}`)).status === 404);
 
   // Public catalogue never leaks prompts; usage is recorded.
   const explore = await fetch(`${BASE_URL}/api/characters/explore?sort=popular&limit=5`);
