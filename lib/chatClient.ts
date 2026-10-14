@@ -8,6 +8,7 @@ export type ChatApiResult = {
   threadId: string;
   messages: ChatApiMessage[];
   reply: ChatApiMessage | null;
+  usage?: { used: number; limit: number | null };
 };
 
 export class ChatRequestError extends Error {

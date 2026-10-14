@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new BadRequestError('가사 줄을 선택해 주세요. 섹션 태그만으로는 다시 쓸 수 없습니다.');
     }
 
-    await assertWithinMonthlyQuota(user.uid);
+    const quota = await assertWithinMonthlyQuota(user.uid);
 
     let usage: TokenUsage | null = null;
     const output = await completeText(
@@ -72,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new AppError('다시 쓴 결과를 만들지 못했습니다. 다시 시도해 주세요.', { statusCode: 502, code: 'EMPTY_REPLY' });
     }
 
-    return res.status(200).json({ replacement });
+    return res.status(200).json({ replacement, usage: quota });
   } catch (error) {
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ error: error.message, code: error.code });

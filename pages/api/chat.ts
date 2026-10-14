@@ -174,7 +174,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const requestedThreadId =
       typeof threadId === 'string' && threadId.trim() ? threadId.trim() : null;
 
-    await assertWithinMonthlyQuota(user.uid);
+    const quota = await assertWithinMonthlyQuota(user.uid);
 
     const persona = await resolvePersonaInstructions(user.uid, resolvedCharacterId);
     const history = requestedThreadId ? await loadHistory(user.uid, requestedThreadId) : [];
@@ -272,7 +272,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const payload = {
       threadId: currentThreadId,
       messages: [...history, userMessage, assistantMessage],
-      reply: assistantMessage
+      reply: assistantMessage,
+      usage: quota
     };
 
     if (streaming) {
