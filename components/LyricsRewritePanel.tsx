@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useTranslation } from '@/context/I18nContext';
 import { diffLines } from '@/lib/lyricsTools';
+import { trackEvent } from '@/lib/analytics';
 
 export type LineSelection = {
   start: number;
@@ -66,6 +67,7 @@ export function LyricsRewritePanel({
         throw new Error(typeof payload.error === 'string' ? payload.error : t('error'));
       }
       setInstruction(trimmed);
+      trackEvent('lyrics_rewritten', { line_count: lineCount, preset: QUICK_REQUESTS.some(key => t(key) === trimmed) });
       setResult(payload.replacement);
     } catch (runError) {
       setError(runError instanceof Error ? runError.message : t('error'));

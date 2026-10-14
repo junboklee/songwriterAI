@@ -2,17 +2,8 @@ import type { GetServerSideProps } from 'next';
 
 const SITE_URL = 'https://novasingerai.com';
 
-const routes = [
-  '/',
-  '/character/create',
-  '/chat',
-  '/dashboard',
-  '/features',
-  '/history',
-  '/pricing',
-  '/settings',
-  '/suno'
-];
+// Public, indexable pages only. Logged-in areas are disallowed in robots.txt and /s/* share pages are noindex.
+const routes = ['/', '/explore', '/pricing', '/terms', '/privacy'];
 
 const buildSitemap = () => {
   const lastmod = new Date().toISOString();

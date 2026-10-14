@@ -34,6 +34,7 @@ import {
   type ChatMessage,
   type ConversationSummary
 } from '@/lib/chat/model';
+import { trackEvent } from '@/lib/analytics';
 
 const AUTO_SAVE_STORAGE_KEY = 'songwriter:autoSaveLyrics';
 
@@ -115,7 +116,7 @@ export default function ChatPage() {
     }
 
     try {
-      await fetch('/api/profile/songs', {
+      const response = await fetch('/api/profile/songs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,6 +124,10 @@ export default function ChatPage() {
         },
         body: JSON.stringify(payload)
       });
+      if (response.ok) {
+        const saved = (await response.json().catch(() => ({}))) as { revised?: boolean };
+        trackEvent('song_saved', { source: 'auto', revised: Boolean(saved.revised) });
+      }
     } catch (storeError) {
       console.error('Failed to store lyrics automatically', storeError);
     }
@@ -522,6 +527,7 @@ export default function ChatPage() {
         setStreamingText(null);
       }
 
+      trackEvent('chat_message_sent', { character_type: characterId === '1' ? 'builtin' : 'custom' });
       setThreadId(data.threadId);
       if (data.threadId) {
         lastLoadedThreadRef.current = data.threadId;
@@ -606,6 +612,9 @@ export default function ChatPage() {
         assistantMessages.find(message => message.content.trim().length > 0) ?? null;
 
       const parsedLyrics = lastAssistantMessage ? extractLyrics(lastAssistantMessage.content) : null;
+      if (parsedLyrics) {
+        trackEvent('lyrics_generated', { has_style: Boolean(parsedLyrics.style) });
+      }
 
       if (
         autoSaveLyrics &&
@@ -809,6 +818,12 @@ export default function ChatPage() {
                       <input type="checkbox" checked={autoSaveLyrics} onChange={handleToggleAutoSave} />
                       <span>가사 자동 저장</span>
                     </label>
+                    <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      AI가 만든 답변은 부정확하거나 기존 곡과 비슷할 수 있어요.{' '}
+                      <Link href="/terms#ai" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                        자세히
+                      </Link>
+                    </p>
                   </div>
                   {error ? (
                     <p style={{ marginTop: 10, fontSize: '0.78rem', color: 'var(--danger)' }}>{error}</p>

@@ -8,6 +8,7 @@ export type AuthenticatedUser = {
   displayName?: string;
   name?: string;
   picture?: string;
+  emailVerified?: boolean;
 };
 
 async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser> {
@@ -33,7 +34,8 @@ async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser
       email: decoded.email ?? userRecord?.email ?? undefined,
       displayName: decoded.name ?? userRecord?.displayName ?? undefined,
       name: decoded.name ?? userRecord?.displayName ?? undefined,
-      picture: decoded.picture ?? userRecord?.photoURL ?? undefined
+      picture: decoded.picture ?? userRecord?.photoURL ?? undefined,
+      emailVerified: decoded.email_verified === true
     };
   } catch {
     throw new UnauthorizedError('Firebase ID token is invalid.');

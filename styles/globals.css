@@ -4268,6 +4268,12 @@ textarea {
   color: #a78bfa;
 }
 
+.auth-card__terms a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Partial rewrite panel (components/LyricsRewritePanel.tsx) */
 .lyrics-rewrite {
   display: grid;

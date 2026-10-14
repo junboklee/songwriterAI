@@ -12,13 +12,12 @@ export const en = {
   },
   authLayout: {
     defaultHeroLabel: 'Start a new conversation with a lifelike AI companion.',
-    termsText: 'By continuing you agree to our Privacy Policy and Terms of Use.',
+    termsPrefix: 'By continuing you agree to the ',
+    termsAnd: ' and the ',
+    termsSuffix: '. You must be 14 or older to sign up.',
     footer: {
-      company: 'About',
-      careers: 'Careers',
-      security: 'Security Center',
-      blog: 'Blog',
-      cookies: 'Cookie Policy',
+      home: 'Home',
+      pricing: 'Pricing',
       privacy: 'Privacy Policy',
       terms: 'Terms of Use'
     }

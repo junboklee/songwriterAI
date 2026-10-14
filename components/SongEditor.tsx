@@ -7,6 +7,7 @@ import { applyRewrite } from '@/lib/lyricsRewrite';
 import { analyzeLyrics, diffLines } from '@/lib/lyricsTools';
 import { toMusicToolFormat } from '@/lib/lyricsFormat';
 import type { SongEntry, SongVersion } from '@/types/suno';
+import { trackEvent } from '@/lib/analytics';
 
 type SongEditorProps = {
   song: SongEntry;
@@ -136,10 +137,14 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
     }
   };
 
-  const handleSave = () => runMutation({ title, style, lyrics });
+  const handleSave = () => {
+    trackEvent('song_saved', { source: 'editor', revised: true });
+    return runMutation({ title, style, lyrics });
+  };
 
   const handleRestore = (versionId: string) => {
     if (window.confirm(t('restoreConfirm'))) {
+      trackEvent('song_version_restored');
       void runMutation({ restoreVersionId: versionId });
     }
   };
@@ -305,7 +310,10 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                   type="button"
                   className="btn btn--ghost"
                   disabled={busy || dirty}
-                  onClick={() => void runMutation({ share: true })}
+                  onClick={() => {
+                    trackEvent('song_shared');
+                    void runMutation({ share: true });
+                  }}
                 >
                   {t('shareCreate')}
                 </button>

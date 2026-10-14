@@ -22,13 +22,10 @@ type AuthLayoutProps = {
 };
 
 const FOOTER_LINKS: Array<{ labelKey: string; href: string }> = [
-  { labelKey: 'company', href: '/' },
-  { labelKey: 'careers', href: '/' },
-  { labelKey: 'security', href: '/' },
-  { labelKey: 'blog', href: '/' },
-  { labelKey: 'cookies', href: '/' },
-  { labelKey: 'privacy', href: '/' },
-  { labelKey: 'terms', href: '/' }
+  { labelKey: 'home', href: '/' },
+  { labelKey: 'pricing', href: '/pricing' },
+  { labelKey: 'privacy', href: '/privacy' },
+  { labelKey: 'terms', href: '/terms' }
 ];
 
 export function AuthLayout({
@@ -45,10 +42,8 @@ export function AuthLayout({
   const { t: tCommon } = useTranslation('common');
 
   const resolvedHeroLabel = heroLabel ?? t('defaultHeroLabel');
-  const termsText = t('termsText');
-
-  const firstFooter = FOOTER_LINKS.slice(0, 4);
-  const secondFooter = FOOTER_LINKS.slice(4);
+  const firstFooter = FOOTER_LINKS.slice(0, 2);
+  const secondFooter = FOOTER_LINKS.slice(2);
 
   return (
     <div className="auth-page">
@@ -83,7 +78,13 @@ export function AuthLayout({
           <h1>{title}</h1>
           {subtitle ? <p>{subtitle}</p> : null}
           {children}
-          <p className="auth-card__terms">{termsText}</p>
+          <p className="auth-card__terms">
+            {t('termsPrefix')}
+            <Link href="/terms">{t('footer.terms')}</Link>
+            {t('termsAnd')}
+            <Link href="/privacy">{t('footer.privacy')}</Link>
+            {t('termsSuffix')}
+          </p>
         </section>
         <section className="auth-hero">
           <div className="auth-hero__media">

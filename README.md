@@ -45,6 +45,19 @@ OPENAI_API_KEY=sk-... node scripts/export-assistant-instructions.mjs asst_ED99Nu
 
 and store the output in the `CHARACTER_PROMPT_DAYEON` secret/env var.
 
+## Admin: report review
+`/admin/reports` lists open character reports and characters hidden by the report threshold, with actions hide / restore / dismiss / unpublish (`POST /api/admin/characters/{id}`). Access is limited to accounts whose **verified** email is listed in `ADMIN_EMAILS` (comma-separated, see `apphosting.yaml`); with no value the admin API answers 403.
+
+## Production smoke tests
+`scripts/smoke/api.mjs` and `scripts/smoke/ui.mjs` exercise the deployed site end to end (streaming chat, versions, share pages, dashboard, chat UI) as a dedicated ordinary account, then delete the data they created. No server secrets are needed.
+
+```
+SMOKE_EMAIL=... SMOKE_PASSWORD=... npm run smoke:api
+SMOKE_EMAIL=... SMOKE_PASSWORD=... npm run smoke:ui   # needs Chrome (CHROME_PATH)
+```
+
+`.github/workflows/prod-smoke.yml` runs both daily at 09:00 KST, after each push to `main` (once the new App Hosting build is live) and on demand. Set the repository secrets `SMOKE_EMAIL` / `SMOKE_PASSWORD`; without them the job is skipped.
+
 ## Firestore Data Model
 ```
 users/{uid}

@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 import type { PublicCharacter } from '@/lib/exploreQuery';
+import { trackEvent } from '@/lib/analytics';
 
 type ExploreCharacter = PublicCharacter & { likedByMe: boolean };
 
@@ -130,6 +131,9 @@ export default function ExplorePage() {
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error();
       apply(payload.liked, payload.likeCount);
+      if (payload.liked) {
+        trackEvent('character_liked');
+      }
     } catch {
       apply(character.likedByMe, character.likeCount);
       setNotice(t('error'));
@@ -316,6 +320,7 @@ function ReportDialog({
       if (!response.ok) {
         throw new Error(typeof payload?.error === 'string' ? payload.error : t('reportError'));
       }
+      trackEvent('character_reported', { reason });
       onClose(t('reportDone'));
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : t('reportError'));
