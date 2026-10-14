@@ -78,7 +78,10 @@ export default function SharedSongPage({ shareId, title, lyrics, style }: Shared
         <meta property="og:title" content={`${displayTitle} — NovaSingerAI`} />
         <meta property="og:description" content={preview} />
         <meta property="og:url" content={pageUrl} />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:image" content={`${SITE_URL}/api/og/song/${shareId}`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
       <main className="shared-song">
