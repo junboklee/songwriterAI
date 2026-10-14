@@ -10,7 +10,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { AuthLayout } from '@/components/AuthLayout';
 import { useTranslation } from '@/context/I18nContext';
 import { appleProvider, auth, provider } from '@/lib/firebase';
-import { trackAuth } from '@/lib/analytics';
+import { trackAuth } from '@/lib/analyticsAuth';
 
 const mapFirebaseError = (
   error: unknown,

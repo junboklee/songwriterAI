@@ -1,4 +1,5 @@
-import { trackAuth, trackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/analytics';
+import { trackAuth } from '@/lib/analyticsAuth';
 
 jest.mock('firebase/auth', () => ({
   getAdditionalUserInfo: (credential: { isNew?: boolean }) =>

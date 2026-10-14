@@ -1,5 +1,3 @@
-import { getAdditionalUserInfo, type UserCredential } from 'firebase/auth';
-
 // GA4 events for the creation funnel (sign up -> chat -> lyrics -> save -> share).
 // Never send personal data or user content here: ids of type, counts and labels only.
 
@@ -34,12 +32,4 @@ export function trackEvent(name: AnalyticsEvent, params: EventParams = {}) {
   } catch {
     // Analytics must never break the product.
   }
-}
-
-// Popup sign-in (Google/Apple) creates the account on first use, so the same button can be
-// a sign-up or a login; Firebase tells us which.
-export function trackAuth(credential: UserCredential | null, method: 'email' | 'google' | 'apple', fallback: 'sign_up' | 'login') {
-  const isNewUser = credential ? getAdditionalUserInfo(credential)?.isNewUser : undefined;
-  const event = isNewUser === undefined ? fallback : isNewUser ? 'sign_up' : 'login';
-  trackEvent(event, { method });
 }
