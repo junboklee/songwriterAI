@@ -9,6 +9,7 @@ import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { trackEvent } from '@/lib/analytics';
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
@@ -149,6 +150,7 @@ export default function CharacterCreate() {
         throw new Error(message);
       }
 
+      trackEvent('character_created', { visibility: String(formData.get('visibility') ?? 'private') });
       setSuccessMessage(t('saveSuccess'));
       router.push('/dashboard');
     } catch (err) {

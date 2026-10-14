@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthLayout } from '@/components/AuthLayout';
 import { useTranslation } from '@/context/I18nContext';
 import { appleProvider, auth, provider } from '@/lib/firebase';
+import { trackAuth } from '@/lib/analytics';
 
 const mapFirebaseError = (
   error: unknown,
@@ -61,7 +62,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      trackAuth(await signInWithEmailAndPassword(auth, email, password), 'email', 'login');
       pushAfterAuth();
     } catch (err) {
       setError(mapFirebaseError(err, 'email', t));
@@ -75,7 +76,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await signInWithPopup(auth, provider);
+      trackAuth(await signInWithPopup(auth, provider), 'google', 'login');
       pushAfterAuth();
     } catch (err) {
       setError(mapFirebaseError(err, 'google', t));
@@ -89,7 +90,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await signInWithPopup(auth, appleProvider);
+      trackAuth(await signInWithPopup(auth, appleProvider), 'apple', 'login');
       pushAfterAuth();
     } catch (err) {
       setError(mapFirebaseError(err, 'apple', t));

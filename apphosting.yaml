@@ -18,6 +18,14 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: 'G-6LKKE1TE6E'
 
+  # Analytics and search-engine ownership (public values that end up in page HTML)
+  - variable: NEXT_PUBLIC_GA_MEASUREMENT_ID
+    value: 'G-6LKKE1TE6E'
+  - variable: NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    value: 'xj272WhtPSXKO3nCOtlgB0lLKZHnwN8xLc4wBDQX8H8'
+  - variable: NEXT_PUBLIC_NAVER_SITE_VERIFICATION
+    value: 'df9da447e53d2d57c84de7189ba4079ad97cdf80'
+
   - variable: FIREBASE_PROJECT_ID
     value: 'character-ai-12ae8'
   - variable: FIREBASE_CLIENT_EMAIL

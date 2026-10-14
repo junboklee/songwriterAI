@@ -9,6 +9,7 @@ import { SongEditor } from '@/components/SongEditor';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import type { SongEntry } from '@/types/suno';
+import { trackEvent } from '@/lib/analytics';
 
 export default function SunoLibraryPage() {
   const { user } = useAuth();
@@ -240,6 +241,7 @@ export default function SunoLibraryPage() {
       setNewSongTitle('');
       setNewSongPrompt('');
       setNewSongLyrics('');
+      trackEvent('song_saved', { source: 'manual', revised: false });
       setNewSongStatus({ kind: 'success', message: t('form.success') });
     } catch (saveError) {
       setNewSongStatus({

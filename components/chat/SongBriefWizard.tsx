@@ -10,6 +10,7 @@ import {
   buildBriefPrompt,
   type SongBrief
 } from '@/lib/chat/brief';
+import { trackEvent } from '@/lib/analytics';
 
 type SongBriefWizardProps = {
   onSubmit: (prompt: string) => void;
@@ -124,7 +125,16 @@ export function SongBriefWizard({ onSubmit, onClose }: SongBriefWizardProps) {
           type="button"
           className="btn btn--primary"
           disabled={!canSubmit}
-          onClick={() => onSubmit(buildBriefPrompt(brief))}
+          onClick={() => {
+            trackEvent('brief_wizard_used', {
+              genre: brief.genre,
+              mood: brief.mood,
+              tempo: brief.tempo,
+              length: brief.length,
+              language: brief.language
+            });
+            onSubmit(buildBriefPrompt(brief));
+          }}
         >
           요청 만들기
         </button>

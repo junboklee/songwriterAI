@@ -10,6 +10,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { AuthLayout } from '@/components/AuthLayout';
 import { useTranslation } from '@/context/I18nContext';
 import { appleProvider, auth, provider } from '@/lib/firebase';
+import { trackAuth } from '@/lib/analytics';
 
 const mapFirebaseError = (
   error: unknown,
@@ -71,6 +72,7 @@ export default function Register() {
         await updateProfile(credential.user, { displayName });
       }
 
+      trackAuth(credential, 'email', 'sign_up');
       pushAfterAuth();
     } catch (err) {
       setError(mapFirebaseError(err, 'email', t));
@@ -84,7 +86,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      await signInWithPopup(auth, provider);
+      trackAuth(await signInWithPopup(auth, provider), 'google', 'sign_up');
       pushAfterAuth();
     } catch (err) {
       setError(mapFirebaseError(err, 'google', t));
@@ -99,6 +101,7 @@ export default function Register() {
 
     try {
       const credential = await signInWithPopup(auth, appleProvider);
+      trackAuth(credential, 'apple', 'sign_up');
 
       if (displayName) {
         await updateProfile(credential.user, { displayName });
