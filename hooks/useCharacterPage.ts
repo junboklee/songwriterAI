@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 
-import { normaliseMessages, type ChatMessage } from '@/lib/chat/model';
+import { CHARACTER_PROFILES, normaliseMessages, type ChatMessage } from '@/lib/chat/model';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 
 export type CharacterPageProfile = {
@@ -111,6 +111,18 @@ export function useCharacterProfile(
           }
         }
 
+        // Built-in characters (e.g. Dayeon) live in code, not in the public collection.
+        const builtIn = CHARACTER_PROFILES[characterId];
+        if (!raw && builtIn) {
+          raw = {
+            id: builtIn.id,
+            name: builtIn.name,
+            summary: builtIn.description,
+            greeting: builtIn.greeting,
+            avatarUrl: builtIn.avatar,
+            visibility: 'public'
+          };
+        }
         raw ??= await fetchCharacter(`/api/characters/${characterId}`);
         const normalized = adaptCharacter(raw, characterId);
 
