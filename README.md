@@ -14,7 +14,7 @@ FIREBASE_PROJECT_ID=your-firebase-project-id
 FIREBASE_CLIENT_EMAIL=service-account@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 OPENAI_API_KEY=sk-...
-OPENAI_CHAT_MODEL=gpt-4o-mini                  # optional, defaults to gpt-4o-mini
+OPENAI_CHAT_MODEL=gpt-5.4-mini                 # optional, defaults to gpt-5.4-mini (GPT-5 family runs with low reasoning effort)
 CHARACTER_PROMPT_DAYEON=...                     # optional override for the built-in Dayeon persona
 CHARACTER_PROMPT_DEFAULT=...                    # optional override for the default (no character) persona
 CHAT_MONTHLY_LIMIT_FREE=0                       # optional monthly AI request cap for the free plan (0/unset = unlimited)

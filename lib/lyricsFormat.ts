@@ -17,7 +17,12 @@ export function extractLyrics(text: string): ParsedLyrics | null {
     return null;
   }
 
-  const body = last[2].trim();
+  // Models sometimes end lines with spaces (Markdown line breaks); keep the saved lyrics clean.
+  const body = last[2]
+    .split('\n')
+    .map(line => line.replace(/\s+$/, ''))
+    .join('\n')
+    .trim();
   if (!body) {
     return null;
   }

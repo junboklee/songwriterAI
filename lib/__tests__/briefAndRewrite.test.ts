@@ -90,3 +90,13 @@ describe('section tags around a rewrite', () => {
     expect(restoreSectionTags(original, '[Verse 9]\n희망이 있어\n한 줄 더')).toBe('[Chorus]\n희망이 있어\n한 줄 더');
   });
 });
+
+describe('model options', () => {
+  it('gives reasoning models low effort and room for reasoning tokens', () => {
+    const { modelOptions, isReasoningModel } = jest.requireActual('@/lib/llm');
+    expect(isReasoningModel('gpt-5.4-mini')).toBe(true);
+    expect(isReasoningModel('gpt-4o-mini')).toBe(false);
+    expect(modelOptions('gpt-5.4-mini', 2000)).toEqual({ max_output_tokens: 4000, reasoning: { effort: 'low' } });
+    expect(modelOptions('gpt-4o-mini', 2000)).toEqual({ max_output_tokens: 2000 });
+  });
+});
