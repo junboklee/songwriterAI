@@ -68,6 +68,13 @@ try {
   await page.reload({ waitUntil: 'networkidle2' });
   await page.waitForFunction(() => document.querySelectorAll('.chat-message').length >= 2, { timeout: 30000 });
   check('conversation restored after reload', true);
+
+  await page.goto(`${BASE_URL}/history`, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('.history-card__summary', { timeout: 30000 });
+  await page.click('.history-card__summary');
+  await page.waitForSelector('.history-card__message', { timeout: 30000 });
+  const historyText = await page.$eval('.history-card__details', el => el.textContent ?? '');
+  check('history shows the conversation without raw markup', historyText.length > 0 && !/<\/?(lyrics|style)/.test(historyText));
 } catch (error) {
   check('ui smoke run', false, error.message);
 } finally {
