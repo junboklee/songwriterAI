@@ -37,6 +37,8 @@ import {
 import { trackEvent } from '@/lib/analytics';
 
 const AUTO_SAVE_STORAGE_KEY = 'songwriter:autoSaveLyrics';
+// Show the remaining monthly AI requests once this few are left.
+const LOW_QUOTA_THRESHOLD = 30;
 
 type PersistLyricsOptions = {
   lyrics: string;
@@ -61,6 +63,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const [showBrief, setShowBrief] = useState(false);
+  const [quota, setQuota] = useState<{ used: number; limit: number | null } | null>(null);
   const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
   const [autoSaveLyrics, setAutoSaveLyrics] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -528,6 +531,9 @@ export default function ChatPage() {
       }
 
       trackEvent('chat_message_sent', { character_type: characterId === '1' ? 'builtin' : 'custom' });
+      if (data.usage) {
+        setQuota(data.usage);
+      }
       setThreadId(data.threadId);
       if (data.threadId) {
         lastLoadedThreadRef.current = data.threadId;
@@ -825,6 +831,11 @@ export default function ChatPage() {
                       </Link>
                     </p>
                   </div>
+                  {quota?.limit && quota.limit - quota.used <= LOW_QUOTA_THRESHOLD ? (
+                    <p style={{ marginTop: 10, fontSize: '0.78rem', color: '#fbbf24' }}>
+                      이번 달 남은 AI 요청: {Math.max(0, quota.limit - quota.used)}회 (매월 1일 초기화)
+                    </p>
+                  ) : null}
                   {error ? (
                     <p style={{ marginTop: 10, fontSize: '0.78rem', color: 'var(--danger)' }}>{error}</p>
                   ) : null}

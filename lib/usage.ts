@@ -59,7 +59,14 @@ export async function getMonthlyUsage(userId: string) {
   };
 }
 
-export async function assertWithinMonthlyQuota(userId: string) {
+export type QuotaStatus = {
+  used: number;
+  limit: number | null;
+};
+
+// Throws when the monthly cap is reached; otherwise returns usage *including* the request about
+// to be made, so responses can tell the user how many requests are left.
+export async function assertWithinMonthlyQuota(userId: string): Promise<QuotaStatus> {
   const usage = await getMonthlyUsage(userId);
   if (usage.limit !== null && usage.chatRequests >= usage.limit) {
     throw new AppError(
@@ -67,6 +74,7 @@ export async function assertWithinMonthlyQuota(userId: string) {
       { statusCode: 429, code: 'MONTHLY_QUOTA_EXCEEDED' }
     );
   }
+  return { used: usage.chatRequests + 1, limit: usage.limit };
 }
 
 export async function recordChatUsage(userId: string, tokens: TokenUsage | null) {

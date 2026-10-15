@@ -34,6 +34,9 @@ env:
     secret: firebase-admin-private-key
   - variable: OPENAI_API_KEY
     secret: openai-api-key
+  # Monthly AI request cap per free user (chat + partial rewrite). 0 or unset = unlimited.
+  - variable: CHAT_MONTHLY_LIMIT_FREE
+    value: '300'
   # Comma-separated, email-verified accounts allowed to use /admin/reports. Empty = admin pages disabled.
   - variable: ADMIN_EMAILS
     value: 'ljbn333@gmail.com'
