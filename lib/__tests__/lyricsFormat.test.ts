@@ -70,3 +70,9 @@ describe('toPublicCharacter', () => {
     expect(result.name).toBe('Muse');
   });
 });
+
+describe('extractLyrics whitespace', () => {
+  it('drops trailing spaces the model leaves for Markdown line breaks', () => {
+    expect(extractLyrics('<lyrics title="t">\n[Verse 1]  \n첫 줄   \n둘째 줄  \n</lyrics>')?.body).toBe('[Verse 1]\n첫 줄\n둘째 줄');
+  });
+});

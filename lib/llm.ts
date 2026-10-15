@@ -11,8 +11,18 @@ export type ChatTurn = {
 type UsageCallback = (usage: TokenUsage) => void;
 
 const CHAT_MODEL =
-  process.env.OPENAI_CHAT_MODEL ?? process.env.OPENAI_ASSISTANT_MODEL ?? 'gpt-4o-mini';
-const MAX_OUTPUT_TOKENS = 2000;
+  process.env.OPENAI_CHAT_MODEL ?? process.env.OPENAI_ASSISTANT_MODEL ?? 'gpt-5.4-mini';
+
+// GPT-5 / o-series models reason before answering. Reasoning tokens count towards
+// max_output_tokens, so they get a larger budget and a low effort (songwriting needs little
+// planning, and low effort keeps latency close to the older non-reasoning models).
+export const isReasoningModel = (model: string) => /^(gpt-5|o\d)/.test(model);
+
+export function modelOptions(model: string, maxVisibleTokens: number) {
+  return isReasoningModel(model)
+    ? { max_output_tokens: maxVisibleTokens * 2, reasoning: { effort: 'low' as const } }
+    : { max_output_tokens: maxVisibleTokens };
+}
 
 let client: OpenAI | null = null;
 
@@ -35,7 +45,7 @@ const buildRequest = (personaInstructions: string, turns: ChatTurn[]) => ({
   model: CHAT_MODEL,
   instructions: buildSystemPrompt(personaInstructions),
   input: turns.map(turn => ({ role: turn.role, content: turn.content })),
-  max_output_tokens: MAX_OUTPUT_TOKENS,
+  ...modelOptions(CHAT_MODEL, 2000),
   store: false
 });
 
@@ -66,7 +76,7 @@ export async function completeText(
     model: CHAT_MODEL,
     instructions,
     input: [{ role: 'user', content: input }],
-    max_output_tokens: maxOutputTokens,
+    ...modelOptions(CHAT_MODEL, maxOutputTokens),
     store: false
   });
   const usage = toTokenUsage(response.usage);

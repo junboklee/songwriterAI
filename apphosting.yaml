@@ -32,6 +32,9 @@ env:
     secret: firebase-admin-client-email
   - variable: FIREBASE_PRIVATE_KEY
     secret: firebase-admin-private-key
+  # Chat / rewrite model (GPT-5 family runs with low reasoning effort, see lib/llm.ts)
+  - variable: OPENAI_CHAT_MODEL
+    value: 'gpt-5.4-mini'
   - variable: OPENAI_API_KEY
     secret: openai-api-key
   # Monthly AI request cap per free user (chat + partial rewrite). 0 or unset = unlimited.
