@@ -72,6 +72,10 @@ export const TEXT = {
   emptyPreview: '최근 메시지가 없습니다.',
   sessionExpired: '세션이 만료되었습니다. 다시 로그인해 주세요.',
   rateLimited: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
+  requestFailed: '답변을 받지 못했어요. 잠시 후 다시 시도해 주세요.',
+  emptyReply: '답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요.',
+  unexpectedError: '알 수 없는 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+  threadLoadError: '대화를 불러오지 못했습니다.',
   loadingRecent: '여러 대화를 불러오고 있습니다.',
   summaryFallback: '사용자가 만든 맞춤형 캐릭터입니다.',
   defaultTag: '커스텀 캐릭터'

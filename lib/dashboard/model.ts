@@ -1,5 +1,6 @@
 import type { CharacterGender, CharacterVisibility } from '@/components/CharacterEditorPanel';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { toDisplayText } from '@/lib/lyricsFormat';
 
 // Types and pure helpers for the dashboard page and its sections.
 
@@ -136,7 +137,7 @@ export const adaptConversation = (
   id: item.id,
   threadId: item.threadId && item.threadId.trim() ? item.threadId : item.id,
   title: item.title ?? null,
-  lastMessagePreview: item.lastMessagePreview?.trim() || noMessagesFallback,
+  lastMessagePreview: toDisplayText(item.lastMessagePreview ?? '') || noMessagesFallback,
   characterId: item.characterId ?? null,
   messageCount: typeof item.messageCount === 'number' ? item.messageCount : 0,
   updatedAt: item.updatedAt ?? null

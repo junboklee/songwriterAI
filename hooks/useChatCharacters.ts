@@ -290,7 +290,6 @@ export function useChatCharacters(user: User | null, characterId: string) {
     character,
     getCharacterName,
     fetchCustomCharacters,
-    resolveCharacterMeta,
-    setCharacterNames
+    resolveCharacterMeta
   };
 }
