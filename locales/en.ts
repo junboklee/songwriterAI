@@ -393,14 +393,15 @@ export const en = {
       untitled: 'Untitled',
       prompt: 'Prompt',
       lyrics: 'Lyrics',
-      metadata: 'Metadata',
+      style: 'Style',
       noLyrics: '(No lyrics provided)',
       copy: 'Copy',
       copied: 'Copied',
+      copyFailed: 'Copy failed',
       edit: 'Edit · {{count}} versions',
       selectLabel: 'Select this song',
-      characterBadge: 'Character {{id}}',
-      thread: 'Thread {{id}}'
+      fromChat: 'Saved from chat',
+      openChat: 'Open chat'
     },
     share: {
       title: 'Share card',
