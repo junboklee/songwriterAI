@@ -44,6 +44,11 @@ export function toDisplayText(text: string) {
     )
     .replace(/\s*<\/lyrics>/gi, '\n')
     .replace(/<style>([\s\S]*?)<\/style>/gi, (_, style: string) => `🎚 스타일: ${style.trim()}`)
+    // Unclosed style block: still streaming, or cut off in a stored preview.
+    .replace(/<style>([\s\S]*)$/i, (_, style: string) => {
+      const value = style.replace(/<\/?s?t?y?l?e?$/i, '').trim();
+      return value ? `🎚 스타일: ${value}` : '';
+    })
     .replace(/<\/?(?:l|ly|lyr|lyri|lyric|lyrics|s|st|sty|styl|style)?(?:\s[^>]*)?$/i, '')
     .trim();
 }

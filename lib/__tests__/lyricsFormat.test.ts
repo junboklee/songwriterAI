@@ -43,6 +43,13 @@ describe('toDisplayText', () => {
   it('hides a half-streamed opening tag', () => {
     expect(toDisplayText('좋아요 <lyrics title="새')).toBe('좋아요');
   });
+
+  it('labels a style block that is still streaming or was cut off in a preview', () => {
+    const cut = '<lyrics title="비 오는 밤">\n[Verse 1]\n빗소리\n</lyrics>\n<style>ballad, calm, mid-tempo, soft voc';
+    expect(toDisplayText(cut)).toBe('🎵 비 오는 밤\n\n[Verse 1]\n빗소리\n\n🎚 스타일: ballad, calm, mid-tempo, soft voc');
+    expect(toDisplayText('가사\n<style>pop</sty')).toBe('가사\n🎚 스타일: pop');
+    expect(toDisplayText('가사\n<style>')).toBe('가사');
+  });
 });
 
 describe('toMusicToolFormat', () => {

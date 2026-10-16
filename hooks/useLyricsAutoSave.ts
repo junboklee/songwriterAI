@@ -70,7 +70,9 @@ export function useLyricsAutoSave(threadId: string | null, characterId: string) 
       fetch('/api/profile/songs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${reply.idToken}` },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        // Finish the save even if the user reloads or leaves right after the reply.
+        keepalive: true
       })
         .then(async response => {
           if (response.ok) {
