@@ -387,14 +387,15 @@
       untitled: '제목 미정',
       prompt: '프롬프트',
       lyrics: '가사',
-      metadata: '메타데이터',
+      style: '스타일',
       noLyrics: '(가사가 비어 있어요)',
       copy: '복사하기',
       copied: '복사 완료',
+      copyFailed: '복사하지 못했어요',
       edit: '편집 · 버전 {{count}}개',
       selectLabel: '이 곡 선택',
-      characterBadge: '캐릭터 {{id}}',
-      thread: 'thread: {{id}}'
+      fromChat: '채팅에서 자동 저장',
+      openChat: '대화 보기'
     },
     share: {
       title: '카드 공유',
