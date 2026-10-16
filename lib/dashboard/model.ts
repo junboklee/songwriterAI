@@ -196,6 +196,24 @@ export const GENDER_ORDER: Record<CharacterGender, number> = {
   none: 2
 };
 
+// Sorts for the sort selector. 'popularity' uses the given comparator, or keeps the input order.
+export const sortByMode = (
+  items: UserCharacter[],
+  mode: CharacterSortMode,
+  byPopularity?: (a: UserCharacter, b: UserCharacter) => number
+) => {
+  const base = [...items];
+  switch (mode) {
+    case 'gender':
+      return base.sort((a, b) => GENDER_ORDER[a.gender] - GENDER_ORDER[b.gender] || a.name.localeCompare(b.name));
+    case 'recent':
+      return base.sort((a, b) => getTimestampValue(b.updatedAt) - getTimestampValue(a.updatedAt));
+    case 'popularity':
+    default:
+      return byPopularity ? base.sort(byPopularity) : base;
+  }
+};
+
 
 export const buildSearchTarget = (...values: Array<string | null | undefined | string[]>) =>
   values
