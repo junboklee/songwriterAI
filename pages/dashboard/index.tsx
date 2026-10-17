@@ -499,6 +499,7 @@ export default function Dashboard() {
       </div>
       {selectedCharacter ? (
         <CharacterEditorPanel
+          key={selectedCharacter.id}
           character={{
             id: selectedCharacter.id,
             name: selectedCharacter.name,

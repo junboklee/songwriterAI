@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
-import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
 
-import { BadRequestError } from '@/lib/errors';
+import { findCharacterLimitError, parseCategories } from '@/lib/characterFields';
+import { getAvatarFile, getSingleValue, parseCharacterForm } from '@/lib/characterForm';
+import { AppError, BadRequestError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
@@ -10,6 +11,7 @@ import { assertValidAvatarFile } from '@/lib/avatarValidation';
 import { uploadAvatar } from '@/lib/avatarStorage';
 import { assertPublishable } from '@/lib/moderation';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
+import { enforceRateLimit } from '@/lib/rateLimiter';
 
 // Disable the default body parser
 export const config = {
@@ -21,30 +23,6 @@ export const config = {
 const VISIBILITY_OPTIONS = new Set(['private', 'unlisted', 'public']);
 const GENDER_OPTIONS = new Set(['male', 'female', 'none']);
 
-// Helper to parse the form
-const parseForm = (req: NextApiRequest): Promise<{ fields: Fields; files: Files }> => {
-  const form = formidable({});
-  return new Promise((resolve, reject) => {
-    form.parse(
-      req,
-      (err: Error | null, fields: Fields, files: Files) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ fields, files });
-      }
-    );
-  });
-};
-
-const getSingleValue = (value: string | string[] | undefined): string | undefined => {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value;
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -53,7 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const user = await requireUser(req);
-    const { fields, files } = await parseForm(req);
+    await enforceRateLimit(`characters:${user.uid}`);
+    const { fields, files } = await parseCharacterForm(req);
 
     const name = getSingleValue(fields.name);
     const greeting = getSingleValue(fields.greeting);
@@ -67,10 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new BadRequestError('캐릭터 이름을 입력해 주세요.');
     }
     let avatarUrl: string | null = null;
-    const rawAvatarFile = files.avatar;
-    const avatarFile = (Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile) as
-      | FormidableFile
-      | undefined;
+    const avatarFile = getAvatarFile(files);
 
     if (avatarFile) {
       assertValidAvatarFile(avatarFile);
@@ -80,22 +56,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       typeof visibility === 'string' && VISIBILITY_OPTIONS.has(visibility) ? visibility : 'private';
     const resolvedGender =
       typeof genderField === 'string' && GENDER_OPTIONS.has(genderField) ? genderField : 'none';
-    let categories: string[] = [];
-    if (categoriesRaw) {
-      try {
-        const parsed = JSON.parse(categoriesRaw);
-        if (Array.isArray(parsed)) {
-          categories = parsed.filter((item): item is string => typeof item === 'string');
-        }
-      } catch {
-        categories = [];
-      }
-    }
+    const categories = parseCategories(categoriesRaw) ?? [];
 
     const trimmedName = name.trim();
     const trimmedGreeting = greeting?.trim() ?? '';
     const trimmedShort = shortDescription?.trim() ?? '';
     const trimmedLong = longDescription?.trim() ?? '';
+    const limitError = findCharacterLimitError(
+      { name: trimmedName, greeting: trimmedGreeting, shortDescription: trimmedShort, longDescription: trimmedLong },
+      categories
+    );
+    if (limitError) {
+      throw new BadRequestError(limitError);
+    }
     const instructions = buildCharacterInstructions({
       name: trimmedName,
       shortDescription: trimmedShort,
@@ -153,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (error instanceof UnauthorizedError) {
       return res.status(401).json({ error: error.message });
     }
-    if (error instanceof BadRequestError) {
+    if (error instanceof AppError && error.statusCode < 500) {
       return res.status(error.statusCode).json({ error: error.message, code: error.code });
     }
     console.error('Character create API error:', error);

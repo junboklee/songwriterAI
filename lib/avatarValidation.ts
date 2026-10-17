@@ -1,8 +1,8 @@
 import type { File as FormidableFile } from 'formidable';
 
+import { AVATAR_MAX_BYTES as MAX_AVATAR_SIZE } from '@/lib/characterFields';
 import { BadRequestError } from '@/lib/errors';
 
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
 
 export function assertValidAvatarFile(file: FormidableFile) {

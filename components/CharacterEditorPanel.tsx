@@ -1,27 +1,13 @@
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useMemo, useState } from 'react';
 
+import { CategoryPicker } from '@/components/character/CategoryPicker';
 import { useTranslation } from '@/context/I18nContext';
-import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { useAvatarPicker } from '@/hooks/useAvatarPicker';
+import { CHARACTER_LIMITS } from '@/lib/characterFields';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
-
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 export type CharacterVisibility = 'private' | 'unlisted' | 'public';
 export type CharacterGender = 'male' | 'female' | 'none';
-
-const categoryOptions = [
-  'Helpers',
-  'Game Characters',
-  'Games',
-  'Anime',
-  'VTuber',
-  'Books',
-  'Movies & TV',
-  'Animals',
-  'Philosophy',
-  'Politics'
-];
 
 type FormState = {
   name: string;
@@ -54,6 +40,9 @@ type CharacterEditorPanelProps = {
 const VISIBILITY_VALUES: CharacterVisibility[] = ['private', 'unlisted', 'public'];
 const GENDER_VALUES: CharacterGender[] = ['male', 'female', 'none'];
 
+// The form keeps its own copy of the character; render it with key={character.id} so a different
+// character starts fresh while parent re-renders (e.g. while saving) never wipe what was typed.
+
 export default function CharacterEditorPanel({
   character,
   onClose,
@@ -73,31 +62,10 @@ export default function CharacterEditorPanel({
     categories: character.categories ?? [],
     gender: character.gender ?? 'none'
   });
-  const [categoryInput, setCategoryInput] = useState('');
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    character.avatarUrl ?? DEFAULT_CHARACTER_AVATAR
-  );
-  const [avatarRemoved, setAvatarRemoved] = useState(false);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setFormState({
-      name: character.name,
-      summary: character.summary,
-      greeting: character.greeting,
-      longDescription: character.longDescription,
-      visibility: character.visibility,
-      categories: character.categories ?? [],
-      gender: character.gender ?? 'none'
-    });
-    setAvatarPreview(character.avatarUrl ?? DEFAULT_CHARACTER_AVATAR);
-    setAvatarFile(null);
-    setCategoryInput('');
-    setAvatarError(null);
-    setAvatarRemoved(false);
-  }, [character]);
+  const avatar = useAvatarPicker(character.avatarUrl, {
+    invalidType: t('errors.avatarType'),
+    tooLarge: t('errors.avatarSize')
+  });
 
   const handleChange =
     <Key extends keyof FormState>(key: Key) =>
@@ -112,63 +80,6 @@ export default function CharacterEditorPanel({
       }));
     };
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      setAvatarError(null);
-      return;
-    }
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setAvatarError(t('errors.avatarType'));
-      setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-      return;
-    }
-
-    if (file.size > MAX_AVATAR_SIZE) {
-      setAvatarError(t('errors.avatarSize'));
-      setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-      return;
-    }
-
-    setAvatarError(null);
-    setAvatarFile(file);
-    setAvatarRemoved(false);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleAddCategory = (value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return;
-    }
-
-    setFormState(prev => {
-      if (prev.categories.includes(trimmed)) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        categories: [...prev.categories, trimmed]
-      };
-    });
-  };
-
-  const handleRemoveCategory = (value: string) => {
-    setFormState(prev => ({
-      ...prev,
-      categories: prev.categories.filter(category => category !== value)
-    }));
-  };
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -181,7 +92,6 @@ export default function CharacterEditorPanel({
     const trimmedGreeting = formState.greeting.trim();
     const trimmedLong = formState.longDescription.trim();
 
-    setAvatarError(null);
     const instructions = buildCharacterInstructions({
       name: trimmedName,
       shortDescription: trimmedSummary,
@@ -200,9 +110,9 @@ export default function CharacterEditorPanel({
     formData.append('gender', formState.gender);
     formData.append('categories', JSON.stringify(formState.categories));
 
-    if (avatarFile) {
-      formData.append('avatar', avatarFile);
-    } else if (avatarRemoved) {
+    if (avatar.file) {
+      formData.append('avatar', avatar.file);
+    } else if (avatar.removed) {
       formData.append('avatarRemoved', 'true');
     }
 
@@ -249,6 +159,7 @@ export default function CharacterEditorPanel({
               value={formState.name}
               onChange={handleChange('name')}
               placeholder={t('placeholders.name')}
+              maxLength={CHARACTER_LIMITS.name}
               disabled={isSubmitting}
               required
             />
@@ -283,7 +194,7 @@ export default function CharacterEditorPanel({
               value={formState.summary}
               onChange={handleChange('summary')}
               placeholder={t('placeholders.summary')}
-              maxLength={280}
+              maxLength={CHARACTER_LIMITS.shortDescription}
               disabled={isSubmitting}
             />
           </div>
@@ -298,7 +209,7 @@ export default function CharacterEditorPanel({
               value={formState.greeting}
               onChange={handleChange('greeting')}
               placeholder={t('placeholders.greeting')}
-              maxLength={300}
+              maxLength={CHARACTER_LIMITS.greeting}
               disabled={isSubmitting}
             />
           </div>
@@ -313,8 +224,7 @@ export default function CharacterEditorPanel({
               value={formState.longDescription}
               onChange={handleChange('longDescription')}
               placeholder={t('placeholders.longDescription')}
-              minLength={10}
-              required
+              maxLength={CHARACTER_LIMITS.longDescription}
               disabled={isSubmitting}
             />
             <p className="dashboard-panel__hint">{t('hints.longDescription')}</p>
@@ -351,7 +261,7 @@ export default function CharacterEditorPanel({
                 {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={avatarPreview ?? DEFAULT_CHARACTER_AVATAR}
+                    src={avatar.preview}
                     alt={formState.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
@@ -359,17 +269,17 @@ export default function CharacterEditorPanel({
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <input
-                  ref={avatarInputRef}
+                  ref={avatar.inputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp"
                   style={{ display: 'none' }}
-                  onChange={handleAvatarChange}
+                  onChange={avatar.onChange}
                   disabled={isSubmitting}
                 />
                 <button
                   type="button"
                   className="dashboard-card__button dashboard-card__button--primary"
-                  onClick={() => avatarInputRef.current?.click()}
+                  onClick={avatar.open}
                   disabled={isSubmitting}
                 >
                   {t('form.avatarUpload')}
@@ -377,75 +287,29 @@ export default function CharacterEditorPanel({
                 <button
                   type="button"
                   className="dashboard-card__button"
-                  onClick={() => {
-                    if (avatarInputRef.current) {
-                      avatarInputRef.current.value = '';
-                    }
-                    setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-                    setAvatarFile(null);
-                    setAvatarError(null);
-                    setAvatarRemoved(true);
-                  }}
+                  onClick={avatar.reset}
                   disabled={isSubmitting}
                 >
                   {t('form.avatarReset')}
                 </button>
               </div>
-              {avatarError ? (
+              {avatar.error ? (
                 <p className="dashboard-panel__error" style={{ marginTop: 8 }}>
-                  {avatarError}
+                  {avatar.error}
                 </p>
               ) : null}
             </div>
           </div>
 
-          <div className="cai-form-section">
-            <label htmlFor="categories">{t('labels.categories')}</label>
-            <div className="cai-selected-tags">
-              {formState.categories.map(category => (
-                <div key={category} className="cai-selected-tag">
-                  {category}
-                  <button
-                    type="button"
-                    aria-label={t('categoryTagRemove')}
-                    onClick={() => handleRemoveCategory(category)}
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
-            </div>
-            <input
-              id="categories"
-              type="text"
-              value={categoryInput}
-              onChange={event => setCategoryInput(event.target.value)}
-              onKeyDown={event => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  handleAddCategory(categoryInput);
-                  setCategoryInput('');
-                }
-              }}
-              placeholder={t('placeholders.categoryInput')}
-              disabled={isSubmitting}
-            />
-            <div className="cai-category-tags">
-              {categoryOptions.map(option => (
-                <button
-                  key={option}
-                  type="button"
-                  className={`cai-category-tag ${
-                    formState.categories.includes(option) ? 'active' : ''
-                  }`}
-                  onClick={() => handleAddCategory(option)}
-                  disabled={isSubmitting}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
+          <CategoryPicker
+            inputId="categories"
+            label={t('labels.categories')}
+            placeholder={t('placeholders.categoryInput')}
+            removeLabel={t('categoryTagRemove')}
+            value={formState.categories}
+            onChange={categories => setFormState(prev => ({ ...prev, categories }))}
+            disabled={isSubmitting}
+          />
 
           <div className="dashboard-panel__field">
             <label htmlFor="character-visibility" className="dashboard-panel__label">

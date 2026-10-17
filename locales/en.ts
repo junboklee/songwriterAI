@@ -177,6 +177,7 @@ export const en = {
       longDescriptionPlaceholder:
         'Describe the background, tone, and responsibilities.',
       categoryPlaceholder: 'Press Enter to add a tag...',
+      categoryRemove: 'Remove tag',
       submit: 'Create character',
       submitting: 'Creating...',
       greetingCount: '{{count}} / 2048',

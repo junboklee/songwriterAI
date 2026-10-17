@@ -4,7 +4,8 @@ import handler from '@/pages/api/characters';
 import { requireUser } from '@/lib/serverAuth';
 import { uploadAvatar } from '@/lib/avatarStorage';
 import { assertPublishable } from '@/lib/moderation';
-import { BadRequestError } from '@/lib/errors';
+import { BadRequestError, RateLimitError } from '@/lib/errors';
+import { enforceRateLimit } from '@/lib/rateLimiter';
 
 const mockFields: Record<string, string[]> = {};
 const mockFiles: Record<string, unknown[]> = {};
@@ -22,6 +23,7 @@ jest.mock('@/lib/serverAuth', () => ({
 }));
 jest.mock('@/lib/avatarStorage', () => ({ uploadAvatar: jest.fn() }));
 jest.mock('@/lib/moderation', () => ({ assertPublishable: jest.fn() }));
+jest.mock('@/lib/rateLimiter', () => ({ enforceRateLimit: jest.fn() }));
 jest.mock('@/lib/firebaseAdmin', () => {
   const doc = () => ({ id: 'char-1', set: jest.fn(), collection: () => ({ doc }) });
   return { adminDb: { collection: () => ({ doc }) } };
@@ -45,6 +47,7 @@ describe('POST /api/characters', () => {
     jest.clearAllMocks();
     (requireUser as jest.Mock).mockResolvedValue({ uid: 'user-1' });
     (uploadAvatar as jest.Mock).mockResolvedValue('https://example.com/avatar.png');
+    Object.keys(mockFields).forEach(key => delete mockFields[key]);
     Object.assign(mockFields, { name: ['Muse'], visibility: ['public'] });
     Object.assign(mockFiles, { avatar: [avatar] });
   });
@@ -66,5 +69,40 @@ describe('POST /api/characters', () => {
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(uploadAvatar).toHaveBeenCalledWith('user-1', avatar);
+  });
+
+  it('rejects descriptions over the limit before moderation or upload', async () => {
+    mockFields.longDescription = ['가'.repeat(4001)];
+    const res = createResponse();
+
+    await handler({ method: 'POST', headers: {} } as unknown as NextApiRequest, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.body).toMatchObject({ error: '상세 설정은(는) 4,000자 이하로 입력해 주세요.' });
+    expect(assertPublishable).not.toHaveBeenCalled();
+    expect(uploadAvatar).not.toHaveBeenCalled();
+  });
+
+  it('rejects too many categories and cleans the rest', async () => {
+    mockFields.categories = [JSON.stringify(Array.from({ length: 9 }, (_, index) => `tag${index}`))];
+    const res = createResponse();
+    await handler({ method: 'POST', headers: {} } as unknown as NextApiRequest, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+
+    mockFields.categories = [JSON.stringify([' 발라드 ', '발라드', '', 3])];
+    const ok = createResponse();
+    await handler({ method: 'POST', headers: {} } as unknown as NextApiRequest, ok);
+    expect(ok.status).toHaveBeenCalledWith(201);
+    expect((ok.body as { character: { categories: string[] } }).character.categories).toEqual(['발라드']);
+  });
+
+  it('returns 429 when the user creates characters too quickly', async () => {
+    (enforceRateLimit as jest.Mock).mockRejectedValueOnce(new RateLimitError('too many'));
+    const res = createResponse();
+
+    await handler({ method: 'POST', headers: {} } as unknown as NextApiRequest, res);
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(uploadAvatar).not.toHaveBeenCalled();
   });
 });

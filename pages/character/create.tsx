@@ -1,34 +1,21 @@
 import Link from 'next/link';
-import { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { AppNav } from '@/components/AppNav';
 import { AppShell } from '@/components/AppShell';
 import { MainSidebar } from '@/components/MainSidebar';
 import { RequireAuth } from '@/components/RequireAuth';
+import { CategoryPicker } from '@/components/character/CategoryPicker';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
-import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
+import { useAvatarPicker } from '@/hooks/useAvatarPicker';
+import { authedJson, errorMessage } from '@/lib/authedFetch';
+import { CHARACTER_LIMITS, findCharacterLimitError } from '@/lib/characterFields';
 import { trackEvent } from '@/lib/analytics';
-
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 type VisibilityOption = 'private' | 'unlisted' | 'public';
 type GenderOption = 'male' | 'female' | 'none';
-
-const categoryOptions = [
-  'Helpers',
-  'Game Characters',
-  'Games',
-  'Anime',
-  'VTuber',
-  'Books',
-  'Movies & TV',
-  'Animals',
-  'Philosophy',
-  'Politics'
-];
 
 const visibilityDescriptors: Array<{
   value: VisibilityOption;
@@ -61,46 +48,15 @@ export default function CharacterCreate() {
   const [shortDescription, setShortDescription] = useState('');
   const [longDescription, setLongDescription] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
-  const [categoryInput, setCategoryInput] = useState('');
   const [visibility, setVisibility] = useState<VisibilityOption>('private');
   const [gender, setGender] = useState<GenderOption>('none');
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(DEFAULT_CHARACTER_AVATAR);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      setAvatarFile(null);
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-      return;
-    }
-
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setError(t('errors.avatarType'));
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-      setAvatarFile(null);
-      return;
-    }
-
-    if (file.size > MAX_AVATAR_SIZE) {
-      setError(t('errors.avatarSize'));
-      setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-      setAvatarFile(null);
-      return;
-    }
-
-    setError(null);
-    setAvatarFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
+  const avatar = useAvatarPicker(null, {
+    invalidType: t('errors.avatarType'),
+    tooLarge: t('errors.avatarSize')
+  });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -117,10 +73,18 @@ export default function CharacterCreate() {
       return;
     }
 
+    const limitError = findCharacterLimitError(
+      { name: name.trim(), greeting: greeting.trim(), shortDescription: shortDescription.trim(), longDescription: longDescription.trim() },
+      categories
+    );
+    if (limitError) {
+      setError(limitError);
+      return;
+    }
+
     setSaving(true);
 
     try {
-      const idToken = await user.getIdToken();
       const formData = new FormData();
       formData.append('name', name.trim());
       formData.append('greeting', greeting);
@@ -130,31 +94,17 @@ export default function CharacterCreate() {
       formData.append('categories', JSON.stringify(categories));
       formData.append('gender', gender);
 
-      if (avatarFile) {
-        formData.append('avatar', avatarFile);
+      if (avatar.file) {
+        formData.append('avatar', avatar.file);
       }
 
-      const response = await fetch('/api/characters', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${idToken}`
-        },
-        body: formData
-      });
+      await authedJson(user, '/api/characters', t('error'), { method: 'POST', body: formData });
 
-      const payload = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const message =
-          (payload && typeof payload.error === 'string' && payload.error) || t('error');
-        throw new Error(message);
-      }
-
-      trackEvent('character_created', { visibility: String(formData.get('visibility') ?? 'private') });
+      trackEvent('character_created', { visibility });
       setSuccessMessage(t('saveSuccess'));
-      router.push('/dashboard');
+      void router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('error'));
+      setError(errorMessage(err, t('error')));
     } finally {
       setSaving(false);
     }
@@ -276,6 +226,7 @@ export default function CharacterCreate() {
                           value={name}
                           onChange={event => setName(event.target.value)}
                           placeholder={t('form.namePlaceholder')}
+                          maxLength={CHARACTER_LIMITS.name}
                           required
                         />
                       </div>
@@ -300,6 +251,7 @@ export default function CharacterCreate() {
                           value={greeting}
                           onChange={event => setGreeting(event.target.value)}
                           placeholder={t('form.greetingPlaceholder')}
+                          maxLength={CHARACTER_LIMITS.greeting}
                         />
                         <p className="cai-char-count">{greetingCountLabel}</p>
                       </div>
@@ -312,6 +264,7 @@ export default function CharacterCreate() {
                           value={shortDescription}
                           onChange={event => setShortDescription(event.target.value)}
                           placeholder={t('form.shortDescriptionPlaceholder')}
+                          maxLength={CHARACTER_LIMITS.shortDescription}
                         />
                       </div>
                     </div>
@@ -331,6 +284,7 @@ export default function CharacterCreate() {
                         value={longDescription}
                         onChange={event => setLongDescription(event.target.value)}
                         placeholder={t('form.longDescriptionPlaceholder')}
+                        maxLength={CHARACTER_LIMITS.longDescription}
                       />
                       <p className="cai-char-count">{longDescriptionCount}</p>
                     </div>
@@ -348,24 +302,24 @@ export default function CharacterCreate() {
                         {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={avatarPreview ?? DEFAULT_CHARACTER_AVATAR}
+                            src={avatar.preview}
                             alt={name || 'avatar preview'}
                           />
                         }
                       </div>
                       <div className="cai-avatar-actions">
                         <input
-                          ref={avatarInputRef}
+                          ref={avatar.inputRef}
                           type="file"
-                          accept="image/*"
+                          accept="image/png,image/jpeg,image/webp"
                           style={{ display: 'none' }}
-                          onChange={handleAvatarChange}
+                          onChange={avatar.onChange}
                           disabled={saving}
                         />
                         <button
                           type="button"
                           className="cai-btn cai-btn-primary"
-                          onClick={() => avatarInputRef.current?.click()}
+                          onClick={avatar.open}
                           disabled={saving}
                         >
                           {t('form.avatarUpload')}
@@ -373,70 +327,24 @@ export default function CharacterCreate() {
                         <button
                           type="button"
                           className="cai-btn cai-btn-ghost"
-                          onClick={() => {
-                            setAvatarPreview(DEFAULT_CHARACTER_AVATAR);
-                            setAvatarFile(null);
-                          }}
+                          onClick={avatar.reset}
                           disabled={saving}
                         >
                           {t('form.avatarReset')}
                         </button>
                       </div>
                     </div>
+                    {avatar.error ? <p className="cai-form-error">{avatar.error}</p> : null}
 
-                    <div className="cai-form-section cai-form-section--left">
-                      <label htmlFor="categories">{t('form.categories')}</label>
-                      <div className="cai-selected-tags">
-                        {categories.map(category => (
-                          <div key={category} className="cai-selected-tag">
-                            {category}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setCategories(previous => previous.filter(item => item !== category))
-                              }
-                            >
-                              &times;
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <input
-                        id="categories"
-                        type="text"
-                        value={categoryInput}
-                        onChange={event => setCategoryInput(event.target.value)}
-                        onKeyDown={event => {
-                          if (event.key === 'Enter' && categoryInput.trim()) {
-                            event.preventDefault();
-                            const nextCategory = categoryInput.trim();
-                            if (!categories.includes(nextCategory)) {
-                              setCategories(prev => [...prev, nextCategory]);
-                            }
-                            setCategoryInput('');
-                          }
-                        }}
-                        placeholder={t('form.categoryPlaceholder')}
-                      />
-                      <div className="cai-category-tags">
-                        {categoryOptions.map(option => (
-                          <button
-                            key={option}
-                            type="button"
-                            className={`cai-category-tag ${
-                              categories.includes(option) ? 'active' : ''
-                            }`}
-                            onClick={() => {
-                              if (!categories.includes(option)) {
-                                setCategories(prev => [...prev, option]);
-                              }
-                            }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <CategoryPicker
+                      inputId="categories"
+                      label={t('form.categories')}
+                      placeholder={t('form.categoryPlaceholder')}
+                      removeLabel={t('form.categoryRemove')}
+                      value={categories}
+                      onChange={setCategories}
+                      disabled={saving}
+                    />
                   </div>
                 </section>
 
@@ -471,6 +379,16 @@ export default function CharacterCreate() {
                   </div>
                 </section>
 
+                {error ? (
+                  <p className="cai-form-error" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+                {successMessage ? (
+                  <p className="cai-form-success" role="status">
+                    {successMessage}
+                  </p>
+                ) : null}
                 <div className="cai-form-actions">
                   <Link href="/dashboard" className="cai-btn cai-btn-ghost">
                     {t('sidebarCancel')}
@@ -510,8 +428,6 @@ export default function CharacterCreate() {
               </aside>
             </section>
 
-            {error ? <p className="cai-form-error">{error}</p> : null}
-            {successMessage ? <p className="cai-form-success">{successMessage}</p> : null}
           </main>
         </div>
       </AppShell>
