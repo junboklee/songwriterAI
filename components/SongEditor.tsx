@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { LyricsRewritePanel, toLineSelection, type LineSelection } from '@/components/LyricsRewritePanel';
+import { SingabilityPanel } from '@/components/SingabilityPanel';
 import { useTranslation } from '@/context/I18nContext';
 import { applyRewrite } from '@/lib/lyricsRewrite';
 import { analyzeLyrics, diffLines } from '@/lib/lyricsTools';
-import { toMusicToolFormat } from '@/lib/lyricsFormat';
+import { copyText } from '@/lib/clipboard';
+import { lineRange } from '@/lib/singability';
 import type { SongEntry, SongVersion } from '@/types/suno';
 import { trackEvent } from '@/lib/analytics';
 
@@ -27,13 +29,14 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
   const [style, setStyle] = useState(readStyle(song));
   const [lyrics, setLyrics] = useState(song.lyrics ?? '');
   const [lineSelection, setLineSelection] = useState<LineSelection | null>(null);
+  const [rewriteRequest, setRewriteRequest] = useState('');
   const [baseline, setBaseline] = useState({ title: song.title ?? '', style: readStyle(song), lyrics: song.lyrics ?? '' });
   const [versions, setVersions] = useState<SongVersion[] | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(true);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'lyrics' | 'style' | null>(null);
   const [shareId, setShareId] = useState<string | null>(song.shareId ?? null);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -165,16 +168,20 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
     }
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(
-        toMusicToolFormat({ title: title || null, body: lyrics.trim(), style: style.trim() || null })
-      );
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
+  // Suno's custom mode has separate Lyrics and Style fields, so each is copied on its own.
+  const handleCopy = async (part: 'lyrics' | 'style') => {
+    if (await copyText(part === 'lyrics' ? lyrics.trim() : style.trim())) {
+      trackEvent('lyrics_copied', { part, target: 'suno' });
+      setCopied(part);
+      window.setTimeout(() => setCopied(current => (current === part ? null : current)), 2000);
+    } else {
       setStatus({ kind: 'error', message: t('error') });
     }
+  };
+
+  const selectLine = (selection: LineSelection | null, request = '') => {
+    setLineSelection(selection);
+    setRewriteRequest(request);
   };
 
   const analysis = useMemo(() => analyzeLyrics(lyrics), [lyrics]);
@@ -222,30 +229,43 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                 value={lyrics}
                 onChange={event => {
                   setLyrics(event.target.value);
-                  setLineSelection(null);
+                  selectLine(null);
                 }}
                 onSelect={event => {
                   const target = event.currentTarget;
-                  setLineSelection(toLineSelection(target.value, target.selectionStart, target.selectionEnd));
+                  const selection = toLineSelection(target.value, target.selectionStart, target.selectionEnd);
+                  // A click without a selection keeps a rewrite opened from the singability check.
+                  if (selection) {
+                    selectLine(selection);
+                  }
                 }}
               />
             </label>
             {lineSelection ? (
               <LyricsRewritePanel
-                key={`${lineSelection.start}-${lineSelection.end}`}
+                key={`${lineSelection.start}-${lineSelection.end}-${rewriteRequest}`}
                 lyrics={lyrics}
                 selection={lineSelection}
                 style={style}
+                initialInstruction={rewriteRequest}
                 getIdToken={getIdToken}
                 onApply={replacement => {
                   setLyrics(applyRewrite(lyrics, lineSelection.start, lineSelection.end, replacement));
-                  setLineSelection(null);
+                  selectLine(null);
                 }}
-                onClose={() => setLineSelection(null)}
+                onClose={() => selectLine(null)}
               />
             ) : (
               <p className="song-editor__hint">{t('rewriteSelectHint')}</p>
             )}
+
+            <SingabilityPanel
+              lyrics={lyrics}
+              onFix={(line, request) => {
+                trackEvent('singability_fix_opened');
+                selectLine(lineRange(lyrics, line), request);
+              }}
+            />
 
             <label className="song-editor__toggle">
               <input
@@ -371,8 +391,11 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
             {status?.message ?? ''}
           </span>
           <div className="song-editor__actions">
-            <button type="button" className="btn btn--ghost" onClick={() => void handleCopy()} disabled={!lyrics.trim()}>
-              {copied ? t('copied') : t('copySuno')}
+            <button type="button" className="btn btn--ghost" onClick={() => void handleCopy('lyrics')} disabled={!lyrics.trim()}>
+              {copied === 'lyrics' ? t('copied') : t('copyLyrics')}
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={() => void handleCopy('style')} disabled={!style.trim()}>
+              {copied === 'style' ? t('copied') : t('copyStyle')}
             </button>
             <button
               type="button"

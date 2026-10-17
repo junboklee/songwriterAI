@@ -10,6 +10,8 @@ export type AnalyticsEvent =
   | 'song_version_restored'
   | 'song_shared'
   | 'lyrics_rewritten'
+  | 'lyrics_copied'
+  | 'singability_fix_opened'
   | 'brief_wizard_used'
   | 'character_created'
   | 'character_liked'
