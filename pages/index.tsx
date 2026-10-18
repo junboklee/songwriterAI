@@ -157,6 +157,7 @@ export default function Home() {
           <Link href="/privacy">
             <strong>개인정보처리방침</strong>
           </Link>
+          <Link href="/safety">안전 정책</Link>
           <span>© NovaSingerAI</span>
         </footer>
       </div>

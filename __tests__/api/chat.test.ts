@@ -251,4 +251,10 @@ describe('/api/chat handler', () => {
 
     expect(generateReplyMock.mock.calls[0][0]).not.toContain('# Reminder for this turn');
   });
+
+  it('adds the crisis reminder when the user may be in crisis', async () => {
+    await handler(createRequest({ message: '요즘 그냥 죽고 싶어' }), createResponse());
+
+    expect(generateReplyMock.mock.calls[0][0]).toContain('# Safety reminder for this turn');
+  });
 });

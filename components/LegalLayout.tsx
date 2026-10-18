@@ -9,7 +9,7 @@ type LegalLayoutProps = {
   children: ReactNode;
 };
 
-// Shared shell for /terms and /privacy: readable single column, links between the documents.
+// Shared shell for /terms, /privacy and /safety: readable single column, links between the documents.
 export function LegalLayout({ title, effectiveDate, description, children }: LegalLayoutProps) {
   return (
     <>
@@ -21,7 +21,8 @@ export function LegalLayout({ title, effectiveDate, description, children }: Leg
         <nav className="legal-page__nav">
           <Link href="/">← NovaSingerAI</Link>
           <span>
-            <Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보처리방침</Link>
+            <Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보처리방침</Link> ·{' '}
+            <Link href="/safety">안전 정책</Link>
           </span>
         </nav>
         <h1>{title}</h1>

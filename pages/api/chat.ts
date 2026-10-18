@@ -11,6 +11,7 @@ import { buildCharacterInstructions } from '@/lib/characterPrompt';
 import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
 import { generateReply, streamReply, type ChatTurn } from '@/lib/llm';
 import { withLyricsGuard } from '@/lib/lyricsGuard';
+import { CRISIS_REMINDER, looksLikeCrisis } from '@/lib/safety';
 import { assertWithinMonthlyQuota, recordChatUsage, type TokenUsage } from '@/lib/usage';
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -184,6 +185,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       adminDb.collection('users').doc(user.uid).collection('conversations').doc().id;
 
     const guarded = withLyricsGuard(persona.instructions, text);
+    const crisisSignal = looksLikeCrisis(text);
+    const instructions = crisisSignal ? `${guarded.instructions}\n\n${CRISIS_REMINDER}` : guarded.instructions;
 
     logInfo('chat.request', {
       uid: user.uid,
@@ -192,7 +195,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       personaOrigin: persona.origin,
       historyLength: history.length,
       // Looks like a request for an existing song's lyrics (message text itself is not logged).
-      existingLyricsRequest: guarded.flagged
+      existingLyricsRequest: guarded.flagged,
+      // Counted to watch how often people reach out in crisis; the text itself is never logged.
+      crisisSignal
     });
 
     const userCreatedAt = new Date();
@@ -222,13 +227,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader('X-Accel-Buffering', 'no');
       res.flushHeaders?.();
 
-      for await (const delta of streamReply(guarded.instructions, turns, captureUsage)) {
+      for await (const delta of streamReply(instructions, turns, captureUsage)) {
         replyText += delta;
         writeEvent(res, 'delta', { text: delta });
       }
       replyText = replyText.trim();
     } else {
-      replyText = await generateReply(guarded.instructions, turns, captureUsage);
+      replyText = await generateReply(instructions, turns, captureUsage);
     }
 
     if (!replyText) {

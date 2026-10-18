@@ -25,11 +25,11 @@ describe('isAiAssisted', () => {
 });
 
 describe('AI disclosure in the UI', () => {
-  it('tells users before sign-up that the service uses generative AI, with the terms', () => {
+  it('tells users before sign-up that the service uses generative AI', () => {
     render(<AuthNotice />);
     expect(screen.getByText(/OpenAI의 생성형 AI 모델로/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '이용약관' })).toHaveAttribute('href', '/terms');
-    expect(screen.getByRole('link', { name: '개인정보 처리방침' })).toHaveAttribute('href', '/privacy');
+    // The terms links live in AuthLayout; the notice must not repeat them.
+    expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('labels lyrics in a chat reply as AI-generated', () => {
