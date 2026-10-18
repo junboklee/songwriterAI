@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AuthLayout } from '@/components/AuthLayout';
+import { AuthNotice } from '@/components/AuthNotice';
 import { useTranslation } from '@/context/I18nContext';
 import { appleProvider, auth, provider } from '@/lib/firebase';
 import { trackAuth } from '@/lib/analyticsAuth';
@@ -189,6 +190,8 @@ export default function Login() {
             {isLoading ? t('emailLoading') : t('emailContinue')}
           </button>
         </form>
+
+        <AuthNotice />
       </div>
     </AuthLayout>
   );

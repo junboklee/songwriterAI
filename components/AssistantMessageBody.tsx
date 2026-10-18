@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { AI_LYRICS_LABEL } from '@/lib/aiDisclosure';
 import { extractLyrics, toDisplayText, toMusicToolFormat } from '@/lib/lyricsFormat';
 
 type Props = {
@@ -28,6 +29,7 @@ export function AssistantMessageBody({ content }: Props) {
   return (
     <>
       <span style={{ whiteSpace: 'pre-wrap' }}>{toDisplayText(content)}</span>
+      {lyrics ? <span className="ai-label">{AI_LYRICS_LABEL}</span> : null}
       {lyrics ? (
         <button
           type="button"

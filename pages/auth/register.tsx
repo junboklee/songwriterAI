@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { FormEvent, useMemo, useState } from 'react';
 
 import { AuthLayout } from '@/components/AuthLayout';
+import { AuthNotice } from '@/components/AuthNotice';
 import { useTranslation } from '@/context/I18nContext';
 import { appleProvider, auth, provider } from '@/lib/firebase';
 import { trackAuth } from '@/lib/analyticsAuth';
@@ -222,6 +223,8 @@ export default function Register() {
             {isLoading ? t('emailLoading') : t('emailContinue')}
           </button>
         </form>
+
+        <AuthNotice />
       </div>
     </AuthLayout>
   );

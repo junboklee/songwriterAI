@@ -30,6 +30,8 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
   const [lyrics, setLyrics] = useState(song.lyrics ?? '');
   const [lineSelection, setLineSelection] = useState<LineSelection | null>(null);
   const [rewriteRequest, setRewriteRequest] = useState('');
+  // An applied AI rewrite marks the song as AI-assisted when it is saved.
+  const [usedAiRewrite, setUsedAiRewrite] = useState(false);
   const [baseline, setBaseline] = useState({ title: song.title ?? '', style: readStyle(song), lyrics: song.lyrics ?? '' });
   const [versions, setVersions] = useState<SongVersion[] | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -132,6 +134,7 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
     try {
       applyResponse(await request('PATCH', body));
       setSelectedVersionId(null);
+      setUsedAiRewrite(false);
       setStatus({ kind: 'success', message: t('saved') });
     } catch (error) {
       setStatus({ kind: 'error', message: error instanceof Error ? error.message : t('error') });
@@ -142,7 +145,7 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
 
   const handleSave = () => {
     trackEvent('song_saved', { source: 'editor', revised: true });
-    return runMutation({ title, style, lyrics });
+    return runMutation({ title, style, lyrics, ...(usedAiRewrite ? { aiAssisted: true } : {}) });
   };
 
   const handleRestore = (versionId: string) => {
@@ -251,6 +254,7 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                 getIdToken={getIdToken}
                 onApply={replacement => {
                   setLyrics(applyRewrite(lyrics, lineSelection.start, lineSelection.end, replacement));
+                  setUsedAiRewrite(true);
                   selectLine(null);
                 }}
                 onClose={() => selectLine(null)}

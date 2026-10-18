@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { AI_SHARE_LABEL, HUMAN_SHARE_LABEL } from '@/lib/aiDisclosure';
 import { toMusicToolFormat } from '@/lib/lyricsFormat';
 
 const SITE_URL = 'https://novasingerai.com';
@@ -12,6 +13,7 @@ type SharedSongProps = {
   title: string | null;
   lyrics: string;
   style: string | null;
+  aiAssisted: boolean;
 };
 
 const SECTION_TAG = /^\[[^\]]*\]$/;
@@ -40,12 +42,14 @@ export const getServerSideProps: GetServerSideProps<SharedSongProps> = async ({ 
       shareId,
       title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : null,
       lyrics: typeof data.lyrics === 'string' ? data.lyrics : '',
-      style: typeof data.style === 'string' && data.style.trim() ? data.style.trim() : null
+      style: typeof data.style === 'string' && data.style.trim() ? data.style.trim() : null,
+      // Shares made before this field existed came from chats.
+      aiAssisted: data.aiAssisted !== false
     }
   };
 };
 
-export default function SharedSongPage({ shareId, title, lyrics, style }: SharedSongProps) {
+export default function SharedSongPage({ shareId, title, lyrics, style, aiAssisted }: SharedSongProps) {
   const [copied, setCopied] = useState(false);
   const displayTitle = title ?? '제목 없는 노래';
   const preview = lyrics
@@ -82,11 +86,13 @@ export default function SharedSongPage({ shareId, title, lyrics, style }: Shared
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
+        {/* Machine-readable AI-generation label (AI Basic Act); the visible label is on the page. */}
+        {aiAssisted ? <meta name="ai-generated" content="true" /> : null}
       </Head>
 
       <main className="shared-song">
         <article className="shared-song__card">
-          <p className="shared-song__eyebrow">NovaSingerAI로 만든 가사</p>
+          <p className="shared-song__eyebrow">{aiAssisted ? AI_SHARE_LABEL : HUMAN_SHARE_LABEL}</p>
           <h1>{displayTitle}</h1>
           {style ? <p className="shared-song__style">🎚 {style}</p> : null}
 

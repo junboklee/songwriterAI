@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { useChatSession, type ChatReply } from '@/hooks/useChatSession';
 import { useLyricsAutoSave } from '@/hooks/useLyricsAutoSave';
+import { AI_BADGE, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
 import { getAssistantBubbleColor, isDayeonAssistant } from '@/lib/assistantBubbleColors';
 
 export default function ChatPage() {
@@ -136,7 +137,12 @@ export default function ChatPage() {
                       style={{ borderRadius: 18 }}
                     />
                     <div>
-                      <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem' }}>{character.name}</p>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem' }}>
+                        {character.name}{' '}
+                        <span className="ai-badge" title={AI_SERVICE_NOTICE}>
+                          {AI_BADGE}
+                        </span>
+                      </p>
                       <p
                         style={{
                           margin: '6px 0 0',

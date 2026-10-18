@@ -1,6 +1,7 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import type { DocumentReference } from 'firebase-admin/firestore';
 
+import { isAiAssisted } from '@/lib/aiDisclosure';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
 
@@ -19,6 +20,8 @@ export type VersionInput = {
   lyrics: string;
   style?: string | null;
   source: VersionSource;
+  // Set when an AI rewrite is part of this version; the song then stays marked as AI-assisted.
+  aiAssisted?: boolean;
 };
 
 export const serializeSong = (id: string, data: FirebaseFirestore.DocumentData) => ({
@@ -31,6 +34,7 @@ export const serializeSong = (id: string, data: FirebaseFirestore.DocumentData) 
   metadata: data.metadata && typeof data.metadata === 'object' ? data.metadata : {},
   versionCount: typeof data.versionCount === 'number' ? data.versionCount : 0,
   shareId: typeof data.shareId === 'string' ? data.shareId : null,
+  aiAssisted: isAiAssisted(data),
   createdAt: serializeTimestamp(data.createdAt),
   updatedAt: serializeTimestamp(data.updatedAt)
 });
@@ -88,6 +92,9 @@ export async function appendSongVersion(songRef: DocumentReference, input: Versi
     if (input.style !== undefined) {
       updates['metadata.style'] = input.style;
     }
+    if (input.aiAssisted) {
+      updates.aiAssisted = true;
+    }
     tx.update(songRef, updates);
 
     // Keep the public share page in sync with the latest version.
@@ -98,6 +105,7 @@ export async function appendSongVersion(songRef: DocumentReference, input: Versi
           title: input.title,
           lyrics: input.lyrics,
           ...(input.style !== undefined ? { style: input.style } : {}),
+          aiAssisted: input.aiAssisted || isAiAssisted(song),
           updatedAt: now
         },
         { merge: true }
@@ -168,6 +176,8 @@ export async function shareSong(ownerId: string, songRef: DocumentReference) {
     title: song.title ?? null,
     lyrics: song.lyrics ?? '',
     style: song.metadata?.style ?? null,
+    // Drives the "AI 생성" label on the public page and share image.
+    aiAssisted: isAiAssisted(song),
     createdAt: now,
     updatedAt: now
   });

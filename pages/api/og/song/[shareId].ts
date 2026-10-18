@@ -24,8 +24,12 @@ export default async function handler(req: NextRequest) {
       return new Response(null, { status: share.status === 404 ? 404 : 502 });
     }
 
-    const { title, lyrics } = (await share.json()) as { title: string | null; lyrics: string };
-    const image = await renderSongCard({ title, lyrics });
+    const { title, lyrics, aiAssisted } = (await share.json()) as {
+      title: string | null;
+      lyrics: string;
+      aiAssisted?: boolean;
+    };
+    const image = await renderSongCard({ title, lyrics, aiAssisted: aiAssisted !== false });
     image.headers.set('Cache-Control', 'private, no-store');
     return image;
   } catch (error) {
