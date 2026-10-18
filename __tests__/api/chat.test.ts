@@ -239,4 +239,16 @@ describe('/api/chat handler', () => {
     expect(res.end).toHaveBeenCalled();
     expect(saveThreadSnapshotMock).toHaveBeenCalled();
   });
+
+  it('reminds the model not to reproduce lyrics when an existing song is requested', async () => {
+    await handler(createRequest({ message: '밤편지 원곡 가사 알려줘' }), createResponse());
+
+    expect(generateReplyMock.mock.calls[0][0]).toContain('# Reminder for this turn');
+  });
+
+  it('leaves ordinary songwriting requests unchanged', async () => {
+    await handler(createRequest({ message: '이별 노래 가사 써줘' }), createResponse());
+
+    expect(generateReplyMock.mock.calls[0][0]).not.toContain('# Reminder for this turn');
+  });
 });

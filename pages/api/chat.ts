@@ -10,6 +10,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
 import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
 import { generateReply, streamReply, type ChatTurn } from '@/lib/llm';
+import { withLyricsGuard } from '@/lib/lyricsGuard';
 import { assertWithinMonthlyQuota, recordChatUsage, type TokenUsage } from '@/lib/usage';
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -182,12 +183,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       requestedThreadId ??
       adminDb.collection('users').doc(user.uid).collection('conversations').doc().id;
 
+    const guarded = withLyricsGuard(persona.instructions, text);
+
     logInfo('chat.request', {
       uid: user.uid,
       threadId: currentThreadId,
       characterId: resolvedCharacterId,
       personaOrigin: persona.origin,
-      historyLength: history.length
+      historyLength: history.length,
+      // Looks like a request for an existing song's lyrics (message text itself is not logged).
+      existingLyricsRequest: guarded.flagged
     });
 
     const userCreatedAt = new Date();
@@ -217,13 +222,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader('X-Accel-Buffering', 'no');
       res.flushHeaders?.();
 
-      for await (const delta of streamReply(persona.instructions, turns, captureUsage)) {
+      for await (const delta of streamReply(guarded.instructions, turns, captureUsage)) {
         replyText += delta;
         writeEvent(res, 'delta', { text: delta });
       }
       replyText = replyText.trim();
     } else {
-      replyText = await generateReply(persona.instructions, turns, captureUsage);
+      replyText = await generateReply(guarded.instructions, turns, captureUsage);
     }
 
     if (!replyText) {

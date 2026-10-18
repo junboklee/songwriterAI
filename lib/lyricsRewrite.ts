@@ -11,7 +11,7 @@ Rules
 - Keep the same number of lines as the selection unless the request explicitly asks for more or fewer.
 - Keep each line's syllable count close to the original line so it still fits the melody.
 - Stay consistent with the rest of the song: point of view, tense, names, imagery and rhyme scheme.
-- Write in the same language as the selection unless asked otherwise. Never copy lyrics of existing songs.
+- Write in the same language as the selection unless asked otherwise. Never copy, quote or closely imitate lyrics of existing songs, even if asked.
 - Output only the rewritten lines inside <rewrite></rewrite>. No explanations.`;
 
 export function buildRewriteInput({
