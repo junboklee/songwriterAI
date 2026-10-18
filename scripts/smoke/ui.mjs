@@ -58,7 +58,8 @@ try {
   check('chat shows the Dayeon greeting', greeting.includes('오늘 하루는 어땠어'), greeting);
 
   const before = await page.$$eval('.chat-message', nodes => nodes.length);
-  await page.type('.chat-input textarea', '한 줄짜리 짧은 인사만 해줘.');
+  // Ask for lyrics so the <lyrics>/<style> markup paths (previews, history) are exercised too.
+  await page.type('.chat-input textarea', '비 오는 밤에 대한 4줄짜리 짧은 가사를 써줘.');
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => new URL(location.href).searchParams.has('threadId'), { timeout: 90000 });
   await page.waitForFunction(count => document.querySelectorAll('.chat-message').length >= count + 2, { timeout: 10000 }, before);
@@ -75,6 +76,23 @@ try {
   await page.waitForSelector('.history-card__message', { timeout: 30000 });
   const historyText = await page.$eval('.history-card__details', el => el.textContent ?? '');
   check('history shows the conversation without raw markup', historyText.length > 0 && !/<\/?(lyrics|style)/.test(historyText));
+
+  // The reply had lyrics, so auto-save must have stored them even though the page was reloaded.
+  const songsResponse = await fetch(`${BASE_URL}/api/profile/songs`, {
+    headers: { Authorization: `Bearer ${await getIdToken()}` }
+  });
+  const songs = (await songsResponse.json().catch(() => ({}))).songs ?? [];
+  check('lyrics auto-saved to the library', songs.some(song => song.metadata?.source === 'auto-from-chat'), `${songs.length} songs`);
+
+  await page.goto(`${BASE_URL}/chat`, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('.sidebar-item', { timeout: 30000 });
+  const sidebarText = await page.$$eval('.sidebar-item', nodes => nodes.map(node => node.textContent ?? '').join(' '));
+  check('chat sidebar preview without raw markup', sidebarText.length > 0 && !/<\/?(lyrics|style)/.test(sidebarText));
+
+  await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('.dashboard-card__meta', { timeout: 30000 });
+  const previews = await page.$$eval('.dashboard-card__meta', nodes => nodes.map(node => node.textContent ?? '').join(' '));
+  check('dashboard preview without raw markup', previews.length > 0 && !/<\/?(lyrics|style)/.test(previews));
 } catch (error) {
   check('ui smoke run', false, error.message);
 } finally {
