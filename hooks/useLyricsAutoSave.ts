@@ -8,6 +8,15 @@ import { extractLyrics } from '@/lib/lyricsFormat';
 
 const STORAGE_KEY = 'songwriter:autoSaveLyrics';
 
+// Set once the page starts unloading. The keepalive request still reaches the server, but the
+// unloading page sees it fail, which is not worth reporting.
+let pageLeaving = false;
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => {
+    pageLeaving = true;
+  });
+}
+
 const readStored = () => {
   try {
     return window.localStorage.getItem(STORAGE_KEY);
@@ -80,7 +89,11 @@ export function useLyricsAutoSave(threadId: string | null, characterId: string) 
             trackEvent('song_saved', { source: 'auto', revised: Boolean(saved.revised) });
           }
         })
-        .catch(saveError => console.error('Failed to store lyrics automatically', saveError));
+        .catch(saveError => {
+          if (!pageLeaving) {
+            console.error('Failed to store lyrics automatically', saveError);
+          }
+        });
     },
     [enabled]
   );

@@ -354,6 +354,10 @@ export default function CharacterCreate() {
                     <p className="cai-form-card__subtitle">{t('form.sections.visibilitySubtitle')}</p>
                   </div>
                   <div className="cai-form-card__body">
+                    <p className="cai-form-card__subtitle">
+                      실존 인물(가수·연예인 등)을 사칭하거나 성적인 내용을 담은 캐릭터는 공개할 수 없어요.{' '}
+                      <Link href="/safety#characters">안전 정책</Link>
+                    </p>
                     <div className="cai-visibility-options">
                       {visibilityDescriptors.map(option => (
                         <label

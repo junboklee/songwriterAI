@@ -20,6 +20,7 @@ export const OPERATOR = {
 // Effective dates of the current versions (YYYY-MM-DD).
 export const TERMS_EFFECTIVE_DATE = '2026-10-14';
 export const PRIVACY_EFFECTIVE_DATE = '2026-10-14';
+export const SAFETY_POLICY_EFFECTIVE_DATE = '2026-10-18';
 
 export const hasUnfilledLegalInfo = () =>
   JSON.stringify(OPERATOR).includes(LEGAL_PLACEHOLDER);

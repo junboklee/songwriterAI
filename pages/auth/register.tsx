@@ -44,6 +44,8 @@ export default function Register() {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 만 14세 미만은 가입할 수 없다 (약관 제3조, 개인정보 처리방침 10).
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const redirectTarget = useMemo(() => {
     if (typeof router.query.redirect === 'string') {
@@ -143,11 +145,16 @@ export default function Register() {
       <div className="auth-form">
         {error ? <div className="auth-form__error">{error}</div> : null}
 
+        <label className="auth-age-check">
+          <input type="checkbox" checked={ageConfirmed} onChange={event => setAgeConfirmed(event.target.checked)} />
+          <span>만 14세 이상입니다 (필수)</span>
+        </label>
+
         <button
           type="button"
           className="auth-form__button auth-form__button--primary"
           onClick={handleGoogleRegister}
-          disabled={isLoading}
+          disabled={isLoading || !ageConfirmed}
         >
           <span className="auth-form__icon auth-form__icon--light" style={{ color: '#4285F4' }}>
             G
@@ -159,7 +166,7 @@ export default function Register() {
           type="button"
           className="auth-form__button auth-form__button--secondary"
           onClick={handleAppleRegister}
-          disabled={isLoading}
+          disabled={isLoading || !ageConfirmed}
         >
           <span className="auth-form__icon" style={{ color: '#fff', background: '#000' }}>
             
@@ -217,7 +224,7 @@ export default function Register() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !ageConfirmed}
             className="auth-form__button auth-form__button--secondary auth-form__button--email"
           >
             {isLoading ? t('emailLoading') : t('emailContinue')}

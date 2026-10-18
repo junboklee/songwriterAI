@@ -10,12 +10,14 @@ import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatVideoPanel } from '@/components/chat/ChatVideoPanel';
+import { CrisisHelpBanner } from '@/components/chat/CrisisHelpBanner';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { useChatSession, type ChatReply } from '@/hooks/useChatSession';
 import { useLyricsAutoSave } from '@/hooks/useLyricsAutoSave';
 import { AI_BADGE, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
 import { getAssistantBubbleColor, isDayeonAssistant } from '@/lib/assistantBubbleColors';
+import { looksLikeCrisis } from '@/lib/safety';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function ChatPage() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [input, setInput] = useState('');
+  const [showCrisisHelp, setShowCrisisHelp] = useState(false);
 
   const requestedCharacterId = Array.isArray(router.query.characterId)
     ? router.query.characterId[0] ?? null
@@ -101,6 +104,9 @@ export default function ChatPage() {
   }, [messages, isLoading]);
 
   const handleSend = (text: string) => {
+    if (looksLikeCrisis(text)) {
+      setShowCrisisHelp(true);
+    }
     setInput('');
     void session.send(text);
   };
@@ -183,6 +189,7 @@ export default function ChatPage() {
                   typingLabel={tChat('typingIndicator.assistant')}
                 />
 
+                {showCrisisHelp ? <CrisisHelpBanner onClose={() => setShowCrisisHelp(false)} /> : null}
                 <ChatComposer
                   ref={chatInputRef}
                   value={input}

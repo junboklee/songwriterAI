@@ -4506,3 +4506,44 @@ textarea {
   color: inherit;
   text-decoration: underline;
 }
+
+.auth-age-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.crisis-help {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(110, 231, 183, 0.4);
+  background: rgba(110, 231, 183, 0.08);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.crisis-help__lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.crisis-help a {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.crisis-help__close {
+  justify-self: end;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
