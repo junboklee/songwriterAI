@@ -14,6 +14,8 @@ type LyricsRewritePanelProps = {
   lyrics: string;
   selection: LineSelection;
   style: string;
+  // Prefilled request, e.g. from a singability check.
+  initialInstruction?: string;
   getIdToken: () => Promise<string>;
   onApply: (replacement: string) => void;
   onClose: () => void;
@@ -38,12 +40,13 @@ export function LyricsRewritePanel({
   lyrics,
   selection,
   style,
+  initialInstruction = '',
   getIdToken,
   onApply,
   onClose
 }: LyricsRewritePanelProps) {
   const { t } = useTranslation('songEditor');
-  const [instruction, setInstruction] = useState('');
+  const [instruction, setInstruction] = useState(initialInstruction);
   const [result, setResult] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
