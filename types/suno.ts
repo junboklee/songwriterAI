@@ -8,6 +8,7 @@ export type SongEntry = {
   metadata: Record<string, unknown>;
   versionCount?: number;
   shareId?: string | null;
+  aiAssisted?: boolean;
   createdAt: string | null;
   updatedAt: string | null;
 };

@@ -79,6 +79,32 @@ describe('appendSongVersion', () => {
     );
   });
 
+  it('marks the song and its share page as AI-assisted when an AI rewrite was saved', async () => {
+    tx.get.mockResolvedValue(snapshot({ title: 'Song', lyrics: 'v1', versionCount: 1, shareId: 'share-1' }));
+
+    await appendSongVersion(songRef, { title: 'Song', lyrics: 'v2', source: 'manual', aiAssisted: true });
+
+    expect(tx.update).toHaveBeenCalledWith(songRef, expect.objectContaining({ aiAssisted: true }));
+    expect(tx.set).toHaveBeenCalledWith(
+      { path: 'sharedSongs/share-1' },
+      expect.objectContaining({ aiAssisted: true }),
+      { merge: true }
+    );
+  });
+
+  it('keeps a hand-written song unmarked', async () => {
+    tx.get.mockResolvedValue(snapshot({ title: 'Song', lyrics: 'v1', versionCount: 1, shareId: 'share-1' }));
+
+    await appendSongVersion(songRef, { title: 'Song', lyrics: 'v2', source: 'manual' });
+
+    expect(tx.update.mock.calls[0][1]).not.toHaveProperty('aiAssisted');
+    expect(tx.set).toHaveBeenCalledWith(
+      { path: 'sharedSongs/share-1' },
+      expect.objectContaining({ aiAssisted: false }),
+      { merge: true }
+    );
+  });
+
   it('fails when the song no longer exists', async () => {
     tx.get.mockResolvedValue(snapshot(null));
 

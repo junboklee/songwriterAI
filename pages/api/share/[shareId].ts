@@ -22,7 +22,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = snapshot.data() ?? {};
     return res.status(200).json({
       title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : null,
-      lyrics: typeof data.lyrics === 'string' ? data.lyrics : ''
+      lyrics: typeof data.lyrics === 'string' ? data.lyrics : '',
+      // Shares made before this field existed came from chats.
+      aiAssisted: data.aiAssisted !== false
     });
   } catch (error) {
     console.error('Share API error:', error);

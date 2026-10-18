@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
 
+import { AI_SHARE_LABEL, HUMAN_SHARE_LABEL } from '@/lib/aiDisclosure';
+
 // 1200x630 share card for /s/{shareId}: song title, a few lyric lines and the service name.
 
 const SECTION_TAG = /^\[[^\]]*\]$/;
@@ -33,10 +35,18 @@ async function loadKoreanFont(text: string): Promise<ArrayBuffer | null> {
   }
 }
 
-export async function renderSongCard({ title, lyrics }: { title: string | null; lyrics: string }) {
+export async function renderSongCard({
+  title,
+  lyrics,
+  aiAssisted = true
+}: {
+  title: string | null;
+  lyrics: string;
+  aiAssisted?: boolean;
+}) {
   const displayTitle = (title ?? '제목 없는 노래').slice(0, 30);
   const lines = cardLines(lyrics);
-  const brand = 'NovaSingerAI · AI와 함께 쓴 가사';
+  const brand = aiAssisted ? `NovaSingerAI · ${AI_SHARE_LABEL}` : `NovaSingerAI · ${HUMAN_SHARE_LABEL}`;
   const domain = 'novasingerai.com';
   const font = await loadKoreanFont(`${displayTitle}${lines.join('')}${brand}${domain}…♪`);
 

@@ -18,6 +18,7 @@ type PatchPayload = {
   style?: unknown;
   restoreVersionId?: unknown;
   share?: unknown;
+  aiAssisted?: unknown;
 };
 
 const MAX_LYRICS_LENGTH = 20_000;
@@ -87,7 +88,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const style =
           payload.style === undefined ? current.metadata?.style ?? null : optionalString(payload.style);
 
-        await appendSongVersion(songRef, { title, lyrics, style, source: 'manual' });
+        await appendSongVersion(songRef, {
+          title,
+          lyrics,
+          style,
+          source: 'manual',
+          aiAssisted: payload.aiAssisted === true
+        });
       }
     }
 

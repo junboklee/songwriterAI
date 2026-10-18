@@ -3,6 +3,7 @@ import { forwardRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 
 import { SongBriefWizard } from '@/components/chat/SongBriefWizard';
 import { useTranslation } from '@/context/I18nContext';
+import { AI_OUTPUT_CAVEAT, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
 import { QUICK_REPLIES } from '@/lib/chat/model';
 
 // Show the remaining monthly AI requests once this few are left.
@@ -106,7 +107,7 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
           <span>가사 자동 저장</span>
         </label>
         <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-          AI가 만든 답변은 부정확하거나 기존 곡과 비슷할 수 있어요.{' '}
+          {AI_SERVICE_NOTICE} {AI_OUTPUT_CAVEAT}{' '}
           <Link href="/terms#ai" style={{ color: 'inherit', textDecoration: 'underline' }}>
             자세히
           </Link>
