@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { ShareActions } from '@/components/ShareActions';
 import { AI_SHARE_LABEL, HUMAN_SHARE_LABEL } from '@/lib/aiDisclosure';
 import { toMusicToolFormat } from '@/lib/lyricsFormat';
 
@@ -107,6 +108,8 @@ export default function SharedSongPage({ shareId, title, lyrics, style, aiAssist
               )
             )}
           </div>
+
+          <ShareActions shareId={shareId} url={pageUrl} title={`${displayTitle} — NovaSingerAI`} description={preview} />
 
           <div className="shared-song__actions">
             <button type="button" className="btn btn--ghost" onClick={() => void handleCopy()}>

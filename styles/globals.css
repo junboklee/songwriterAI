@@ -4547,3 +4547,21 @@ textarea {
   font-size: 0.78rem;
   cursor: pointer;
 }
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-actions__kakao {
+  background: #fee500;
+  border-color: #fee500;
+  color: #191919;
+}
+
+.share-actions__status {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}

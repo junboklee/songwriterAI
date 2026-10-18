@@ -7,10 +7,12 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://novasingerai.com'
 // next/og only runs on the edge runtime in the Pages Router.
 export const config = { runtime: 'edge' };
 
-// Share-card image for /s/{shareId}. Data comes from /api/share/{id} on every request, so an
-// un-shared or deleted song stops producing an image straight away.
+// Share-card image for /s/{shareId} (?format=story for the 1080x1920 story card). Data comes from
+// /api/share/{id} on every request, so an un-shared or deleted song stops producing an image.
 export default async function handler(req: NextRequest) {
-  const shareId = new URL(req.url).pathname.split('/').pop();
+  const url = new URL(req.url);
+  const shareId = url.pathname.split('/').pop();
+  const format = url.searchParams.get('format') === 'story' ? 'story' : 'wide';
   if (!shareId) {
     return new Response(null, { status: 400 });
   }
@@ -29,7 +31,7 @@ export default async function handler(req: NextRequest) {
       lyrics: string;
       aiAssisted?: boolean;
     };
-    const image = await renderSongCard({ title, lyrics, aiAssisted: aiAssisted !== false });
+    const image = await renderSongCard({ title, lyrics, aiAssisted: aiAssisted !== false, format });
     image.headers.set('Cache-Control', 'private, no-store');
     return image;
   } catch (error) {
