@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
 
-import { BadRequestError } from '@/lib/errors';
+import { findCharacterLimitError, parseCategories } from '@/lib/characterFields';
+import { getAvatarFile, getSingleValue, parseCharacterForm } from '@/lib/characterForm';
+import { AppError, BadRequestError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { deleteConversationsByCharacter } from '@/lib/conversationCleanup';
@@ -11,36 +12,13 @@ import { buildCharacterInstructions } from '@/lib/characterPrompt';
 import { assertValidAvatarFile } from '@/lib/avatarValidation';
 import { deleteAvatarByUrl, uploadAvatar } from '@/lib/avatarStorage';
 import { assertPublishable } from '@/lib/moderation';
+import { enforceRateLimit } from '@/lib/rateLimiter';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-const parseForm = (req: NextApiRequest): Promise<{ fields: Fields; files: Files }> => {
-  const form = formidable({});
-  return new Promise((resolve, reject) => {
-    form.parse(
-      req,
-      (err: Error | null, fields: Fields, files: Files) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ fields, files });
-      }
-    );
-  });
-};
-
-const getSingleValue = (value: string | string[] | undefined): string | undefined => {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value;
-};
-
 
 type CharacterDocument = {
   name?: string;
@@ -161,7 +139,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // For PATCH requests
-    const { fields, files } = await parseForm(req);
+    await enforceRateLimit(`characters:${authUser.uid}`);
+    const { fields, files } = await parseCharacterForm(req);
     const snapshot = await characterRef.get();
 
     if (!snapshot.exists) {
@@ -211,27 +190,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (genderField && GENDER_OPTIONS.has(genderField)) {
       updates.gender = genderField;
     }
-    if (categoriesRaw) {
-      try {
-        const parsed = JSON.parse(categoriesRaw);
-        if (Array.isArray(parsed)) {
-          updates.categories = parsed.filter(
-            (category: unknown): category is string => typeof category === 'string'
-          );
-        }
-      } catch {
-        // ignore if parsing fails
-      }
+    const categories = parseCategories(categoriesRaw);
+    if (categories) {
+      updates.categories = categories;
     }
     if (typeof example === 'string') {
       const trimmed = example.trim();
       updates.example = trimmed || null;
     }
 
-    const rawAvatarFile = files.avatar;
-    const avatarFile = (Array.isArray(rawAvatarFile) ? rawAvatarFile[0] : rawAvatarFile) as
-      | FormidableFile
-      | undefined;
+    // Validate before uploading anything.
+    const textOf = (key: string) => (typeof updates[key] === 'string' ? (updates[key] as string) : null);
+    const limitError = findCharacterLimitError(
+      {
+        name: textOf('name'),
+        greeting: textOf('greeting'),
+        shortDescription: textOf('shortDescription'),
+        longDescription: textOf('longDescription'),
+        example: textOf('example')
+      },
+      categories ?? []
+    );
+    if (limitError) {
+      throw new BadRequestError(limitError);
+    }
+
+    const avatarFile = getAvatarFile(files);
     const avatarRemovedField = fields.avatarRemoved; // Get the raw field value
 
     if (avatarFile) {
@@ -344,7 +328,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: error.message });
     }
 
-    if (error instanceof BadRequestError) {
+    if (error instanceof AppError && error.statusCode < 500) {
       return res.status(error.statusCode).json({ error: error.message, code: error.code });
     }
 

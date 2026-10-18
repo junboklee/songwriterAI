@@ -171,6 +171,7 @@
       shortDescriptionPlaceholder: '캐릭터를 한 줄로 소개해 주세요.',
       longDescriptionPlaceholder: '캐릭터의 배경, 말투, 역할을 자세히 적어 주세요.',
       categoryPlaceholder: '태그를 추가하려면 Enter를 누르세요...',
+      categoryRemove: '태그 제거',
       submit: '캐릭터 생성',
       submitting: '생성 중...',
       greetingCount: '{{count}} / 2048',
