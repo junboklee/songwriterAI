@@ -75,14 +75,14 @@ export default function SharedSongPage({ shareId, title, lyrics, style, aiAssist
     <>
       <Head>
         <title>{`${displayTitle} | NovaSingerAI`}</title>
-        <meta name="description" content={preview} />
+        <meta key="description" name="description" content={preview} />
         {/* Shared by link only; keep these pages out of search results. */}
         <meta name="robots" content="noindex" />
-        <link rel="canonical" href={pageUrl} />
-        <meta property="og:type" content="article" />
+        <link key="canonical" rel="canonical" href={pageUrl} />
+        <meta key="og:type" property="og:type" content="article" />
         <meta property="og:title" content={`${displayTitle} — NovaSingerAI`} />
-        <meta property="og:description" content={preview} />
-        <meta property="og:url" content={pageUrl} />
+        <meta key="og:description" property="og:description" content={preview} />
+        <meta key="og:url" property="og:url" content={pageUrl} />
         <meta property="og:image" content={`${SITE_URL}/api/og/song/${shareId}`} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />

@@ -26,6 +26,7 @@ export default function ChatPage() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [input, setInput] = useState('');
+  const promptParam = typeof router.query.prompt === 'string' ? router.query.prompt.slice(0, 500) : '';
   const [showCrisisHelp, setShowCrisisHelp] = useState(false);
 
   const requestedCharacterId = Array.isArray(router.query.characterId)
@@ -60,6 +61,13 @@ export default function ChatPage() {
     : isUserTyping
       ? tChat('status.userTyping')
       : tChat('status.ready', { replacements: { name: character.name } });
+
+  // Topic pages (/lyrics/*) link here with a ready-made request; it is only filled in, never sent.
+  useEffect(() => {
+    if (promptParam) {
+      setInput(current => current || promptParam);
+    }
+  }, [promptParam]);
 
   const handleRolePromptSelect = useCallback((promptText: string) => {
     setInput(promptText);
