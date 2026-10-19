@@ -1,17 +1,13 @@
-# *
+# Share pages (/s/*) stay crawlable so link previews (KakaoTalk, social) work; they carry noindex.
 User-agent: *
 Allow: /
-
-# *
-User-agent: *
 Disallow: /auth
 Disallow: /chat
 Disallow: /dashboard
 Disallow: /history
 Disallow: /settings
+Disallow: /suno
+Disallow: /admin
+Disallow: /character/create
 
-# Host
-Host: https://novasingerai.com
-
-# Sitemaps
 Sitemap: https://novasingerai.com/sitemap.xml

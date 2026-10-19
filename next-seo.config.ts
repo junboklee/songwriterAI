@@ -1,23 +1,20 @@
-const title = 'SongwriterAI';
+const title = 'NovaSingerAI';
 const description =
-  'AI 작사가와 실시간으로 협업하며 가사를 만들고 버전 관리까지 할 수 있는 SongwriterAI 플랫폼입니다.';
-const url = 'https://novasingerai.com';
+  'AI 싱어송라이터 캐릭터와 대화하며 오늘의 이야기를 노래 가사로 만들고, Suno 같은 AI 음악 도구에 바로 쓸 수 있게 다듬는 서비스입니다.';
+const siteUrl = 'https://novasingerai.com';
 
 const config = {
   defaultTitle: title,
-  titleTemplate: '%s | SongwriterAI',
+  titleTemplate: '%s | NovaSingerAI',
   description,
-  canonical: url,
+  siteUrl,
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    url,
     siteName: title,
     description
   },
   twitter: {
-    handle: '@songwriterai',
-    site: '@songwriterai',
     cardType: 'summary_large_image'
   }
 };

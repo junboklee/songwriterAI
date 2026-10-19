@@ -1,9 +1,20 @@
 import type { GetServerSideProps } from 'next';
 
+import { LYRICS_TOPICS } from '@/lib/lyricsTopics';
+
 const SITE_URL = 'https://novasingerai.com';
 
 // Public, indexable pages only. Logged-in areas are disallowed in robots.txt and /s/* share pages are noindex.
-const routes = ['/', '/explore', '/pricing', '/terms', '/privacy', '/safety'];
+const routes = [
+  '/',
+  '/lyrics',
+  ...LYRICS_TOPICS.map(topic => `/lyrics/${topic.slug}`),
+  '/explore',
+  '/pricing',
+  '/terms',
+  '/privacy',
+  '/safety'
+];
 
 const buildSitemap = () => {
   const lastmod = new Date().toISOString();

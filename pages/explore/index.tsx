@@ -143,8 +143,8 @@ export default function ExplorePage() {
   return (
     <>
       <Head>
-        <title>{`${t('title')} | NovaSingerAI`}</title>
-        <meta name="description" content={t('subtitle')} />
+        <title key="title">{`${t('title')} | NovaSingerAI`}</title>
+        <meta key="description" name="description" content={t('subtitle')} />
       </Head>
       <AppShell sidebar={sidebar}>
         <div className="page-actions-bar">

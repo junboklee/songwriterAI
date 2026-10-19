@@ -43,15 +43,34 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>NovaSingerAI | AI 송라이팅 코파일럿</title>
+        <title key="title">NovaSingerAI | AI 작사·노래 가사 만들기</title>
         <meta
+          key="description"
           name="description"
-          content="AI작사가와 협업하며 가사를 실시간으로 만들고 가사를 보관하는 가장 간단한 워크플로우."
+          content="AI 싱어송라이터와 대화하면 오늘의 이야기가 노래 가사가 돼요. 생일 노래, 축가, 고백 노래 가사를 만들고 Suno 같은 AI 음악 도구에 바로 쓰세요."
         />
-        <meta property="og:title" content="NovaSingerAI" />
+        <meta key="og:title" property="og:title" content="NovaSingerAI | AI 작사·노래 가사 만들기" />
         <meta
+          key="og:description"
           property="og:description"
-          content="아이디어부터 완성본까지 AI캐릭터와 함께 작사 작업을 경험해 보세요."
+          content="아이디어부터 완성본까지 AI 캐릭터와 함께 작사 작업을 경험해 보세요."
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: 'NovaSingerAI',
+              url: 'https://novasingerai.com',
+              applicationCategory: 'MusicApplication',
+              operatingSystem: 'Web',
+              inLanguage: 'ko',
+              description: 'AI 싱어송라이터 캐릭터와 대화하며 노래 가사를 만들고 다듬는 웹 서비스',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+              publisher: { '@type': 'Organization', name: '주식회사 콜드브러시' }
+            })
+          }}
         />
       </Head>
       <div className="landing-bg">
@@ -152,6 +171,7 @@ export default function Home() {
           </section>
         </main>
         <footer className="landing-footer">
+          <Link href="/lyrics">주제별 가사 만들기</Link>
           <Link href="/pricing">요금 안내</Link>
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">

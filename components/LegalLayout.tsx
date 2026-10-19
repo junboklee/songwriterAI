@@ -14,8 +14,8 @@ export function LegalLayout({ title, effectiveDate, description, children }: Leg
   return (
     <>
       <Head>
-        <title>{`${title} | NovaSingerAI`}</title>
-        <meta name="description" content={description} />
+        <title key="title">{`${title} | NovaSingerAI`}</title>
+        <meta key="description" name="description" content={description} />
       </Head>
       <main className="legal-page">
         <nav className="legal-page__nav">

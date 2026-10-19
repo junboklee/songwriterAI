@@ -38,13 +38,15 @@ export default function PricingPage() {
   return (
     <>
       <Head>
-        <title>요금제 | SongwriterAI</title>
+        <title key="title">요금제 | NovaSingerAI</title>
         <meta
+          key="description"
           name="description"
           content="NovaSingerAI는 베타 기간 동안 무료로 제공됩니다. 유료 플랜 출시 계획을 확인하세요."
         />
-        <meta property="og:title" content="요금제 | SongwriterAI" />
+        <meta key="og:title" property="og:title" content="요금제 | NovaSingerAI" />
         <meta
+          key="og:description"
           property="og:description"
           content="베타 무료 이용과 유료 플랜 출시 계획 안내."
         />
