@@ -19,6 +19,22 @@ type PatchPayload = {
   restoreVersionId?: unknown;
   share?: unknown;
   aiAssisted?: unknown;
+  aiLines?: unknown;
+};
+
+const MAX_AI_LINES = 200;
+
+// Keeps only AI-rewritten lines that are really in the saved lyrics.
+const sanitizeAiLines = (value: unknown, lyrics: string) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const present = new Set(lyrics.split(/\r?\n/).map(line => line.trim()));
+  const lines = value
+    .filter((line): line is string => typeof line === 'string')
+    .map(line => line.trim())
+    .filter(line => line && present.has(line));
+  return Array.from(new Set(lines)).slice(0, MAX_AI_LINES);
 };
 
 const MAX_LYRICS_LENGTH = 20_000;
@@ -88,12 +104,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const style =
           payload.style === undefined ? current.metadata?.style ?? null : optionalString(payload.style);
 
+        const aiLines = sanitizeAiLines(payload.aiLines, lyrics);
         await appendSongVersion(songRef, {
           title,
           lyrics,
           style,
           source: 'manual',
-          aiAssisted: payload.aiAssisted === true
+          aiAssisted: payload.aiAssisted === true || aiLines.length > 0,
+          aiLines
         });
       }
     }

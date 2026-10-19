@@ -20,5 +20,7 @@ export type SongVersion = {
   lyrics: string;
   style: string | null;
   source: 'initial' | 'auto-from-chat' | 'manual' | 'restore';
+  // Lines an AI rewrite produced in this version (for the authorship record).
+  aiLines?: string[];
   createdAt: string | null;
 };

@@ -4006,6 +4006,35 @@ textarea {
   font-size: 0.85rem;
 }
 
+.authorship {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+}
+
+.authorship h3 {
+  margin: 0;
+}
+
+.authorship__counts {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.authorship__counts strong {
+  display: block;
+  font-size: 1.2rem;
+  color: var(--text-primary, #f8fafc);
+}
+
 .singability {
   display: grid;
   gap: 8px;
