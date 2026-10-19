@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { LyricsRewritePanel, toLineSelection, type LineSelection } from '@/components/LyricsRewritePanel';
+import { ShareActions } from '@/components/ShareActions';
 import { SingabilityPanel } from '@/components/SingabilityPanel';
 import { useTranslation } from '@/context/I18nContext';
 import { applyRewrite } from '@/lib/lyricsRewrite';
@@ -40,7 +41,6 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
   const [status, setStatus] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [copied, setCopied] = useState<'lyrics' | 'style' | null>(null);
   const [shareId, setShareId] = useState<string | null>(song.shareId ?? null);
-  const [linkCopied, setLinkCopied] = useState(false);
 
   const dateFormatter = useMemo(
     () =>
@@ -157,19 +157,6 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
 
   const shareUrl =
     shareId && typeof window !== 'undefined' ? `${window.location.origin}/s/${shareId}` : null;
-
-  const handleCopyLink = async () => {
-    if (!shareUrl) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setLinkCopied(true);
-      window.setTimeout(() => setLinkCopied(false), 2000);
-    } catch {
-      setStatus({ kind: 'error', message: t('error') });
-    }
-  };
 
   // Suno's custom mode has separate Lyrics and Style fields, so each is copied on its own.
   const handleCopy = async (part: 'lyrics' | 'style') => {
@@ -315,10 +302,15 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                   <a href={shareUrl} target="_blank" rel="noreferrer" className="song-editor__share-url">
                     {shareUrl}
                   </a>
+                  {shareId ? (
+                    <ShareActions
+                      shareId={shareId}
+                      url={shareUrl}
+                      title={`${title || '제목 없는 노래'} — NovaSingerAI`}
+                      description={t('shareHint')}
+                    />
+                  ) : null}
                   <div className="song-editor__actions">
-                    <button type="button" className="btn btn--ghost" onClick={() => void handleCopyLink()}>
-                      {linkCopied ? t('copied') : t('shareCopy')}
-                    </button>
                     <button
                       type="button"
                       className="btn btn--ghost"
