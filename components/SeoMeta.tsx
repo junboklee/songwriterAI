@@ -4,7 +4,11 @@ import Script from 'next/script';
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || process.env.NEXT_PUBLIC_GOOGLE_TAG_ID;
 const SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
-const NAVER_VERIFICATION = process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION;
+// Comma-separated: each Naver account that manages the site has its own code.
+const NAVER_VERIFICATIONS = (process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ?? '')
+  .split(',')
+  .map(code => code.trim())
+  .filter(Boolean);
 
 export default function SeoMeta() {
   return (
@@ -14,9 +18,11 @@ export default function SeoMeta() {
           <meta name="google-site-verification" content={SITE_VERIFICATION} />
         </Head>
       ) : null}
-      {NAVER_VERIFICATION ? (
+      {NAVER_VERIFICATIONS.length ? (
         <Head>
-          <meta name="naver-site-verification" content={NAVER_VERIFICATION} />
+          {NAVER_VERIFICATIONS.map(code => (
+            <meta key={`naver-${code}`} name="naver-site-verification" content={code} />
+          ))}
         </Head>
       ) : null}
       {GTM_ID ? (
