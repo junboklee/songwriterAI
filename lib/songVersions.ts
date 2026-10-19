@@ -22,6 +22,8 @@ export type VersionInput = {
   source: VersionSource;
   // Set when an AI rewrite is part of this version; the song then stays marked as AI-assisted.
   aiAssisted?: boolean;
+  // The lines that AI rewrite produced, so the authorship record can tell them from typed lines.
+  aiLines?: string[];
 };
 
 export const serializeSong = (id: string, data: FirebaseFirestore.DocumentData) => ({
@@ -45,6 +47,7 @@ export const serializeVersion = (id: string, data: FirebaseFirestore.DocumentDat
   lyrics: (data.lyrics as string | undefined) ?? '',
   style: (data.style as string | undefined) ?? null,
   source: (data.source as VersionSource | undefined) ?? 'manual',
+  aiLines: Array.isArray(data.aiLines) ? (data.aiLines as unknown[]).filter((line): line is string => typeof line === 'string') : [],
   createdAt: serializeTimestamp(data.createdAt)
 });
 
@@ -79,6 +82,7 @@ export async function appendSongVersion(songRef: DocumentReference, input: Versi
       lyrics: input.lyrics,
       style: input.style ?? null,
       source: input.source,
+      ...(input.aiLines?.length ? { aiLines: input.aiLines } : {}),
       createdAt: now
     });
     added += 1;

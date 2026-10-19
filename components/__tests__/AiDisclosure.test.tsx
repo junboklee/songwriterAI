@@ -87,6 +87,11 @@ describe('SongEditor', () => {
       call.url === '/api/profile/songs/s1' && Boolean(call.body?.lyrics);
     await waitFor(() => expect(calls.some(isSave)).toBe(true));
     const save = calls.find(isSave);
-    expect(save?.body).toMatchObject({ lyrics: '[Verse]\n삼월의 바람이 불어\n너를 다시 생각해', aiAssisted: true });
+    expect(save?.body).toMatchObject({
+      lyrics: '[Verse]\n삼월의 바람이 불어\n너를 다시 생각해',
+      aiAssisted: true,
+      // Saved so the authorship record can tell AI-rewritten lines from typed ones.
+      aiLines: ['삼월의 바람이 불어']
+    });
   });
 });
