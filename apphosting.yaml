@@ -18,10 +18,10 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: 'G-6LKKE1TE6E'
 
-  # KakaoTalk share button (public JavaScript key). Uncomment once the app exists at
-  # developers.kakao.com with https://novasingerai.com registered under 플랫폼 > Web.
-  # - variable: NEXT_PUBLIC_KAKAO_JS_KEY
-  #   value: '<JavaScript 키>'
+  # KakaoTalk share button: public JavaScript key of Kakao app NovaSingerAI (ID 1613560),
+  # usable only from the domains registered for it (https://novasingerai.com).
+  - variable: NEXT_PUBLIC_KAKAO_JS_KEY
+    value: 'b70544de57d89364269892ade1faa139'
 
   # Analytics and search-engine ownership (public values that end up in page HTML)
   - variable: NEXT_PUBLIC_GA_MEASUREMENT_ID
