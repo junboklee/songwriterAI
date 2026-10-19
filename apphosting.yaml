@@ -29,7 +29,8 @@ env:
   - variable: NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
     value: 'xj272WhtPSXKO3nCOtlgB0lLKZHnwN8xLc4wBDQX8H8'
   - variable: NEXT_PUBLIC_NAVER_SITE_VERIFICATION
-    value: 'df9da447e53d2d57c84de7189ba4079ad97cdf80'
+    # Comma-separated, one code per Naver account (Search Advisor).
+    value: 'df9da447e53d2d57c84de7189ba4079ad97cdf80,2497089899362af9013034eec6c378fcd3cb14e3'
 
   - variable: FIREBASE_PROJECT_ID
     value: 'character-ai-12ae8'
