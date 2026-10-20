@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { ComingSoonActions } from '@/components/chat/ComingSoonActions';
 import { AI_LYRICS_LABEL } from '@/lib/aiDisclosure';
 import { extractLyrics, toDisplayText, toMusicToolFormat } from '@/lib/lyricsFormat';
 
@@ -50,6 +51,7 @@ export function AssistantMessageBody({ content }: Props) {
           {copied ? '복사됨 ✓' : '가사 복사 (Suno 형식)'}
         </button>
       ) : null}
+      {lyrics ? <ComingSoonActions /> : null}
     </>
   );
 }

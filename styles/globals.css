@@ -4517,6 +4517,42 @@ textarea {
   vertical-align: middle;
 }
 
+.coming-soon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.coming-soon__button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px dashed currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.coming-soon__button[aria-pressed='true'] {
+  border-style: solid;
+  opacity: 1;
+}
+
+.coming-soon__badge {
+  margin-left: 4px;
+  font-size: 0.68rem;
+  opacity: 0.75;
+}
+
+.coming-soon__thanks {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
 .ai-label {
   display: block;
   margin-top: 10px;

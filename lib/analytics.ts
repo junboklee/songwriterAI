@@ -14,6 +14,7 @@ export type AnalyticsEvent =
   | 'lyrics_copied'
   | 'singability_fix_opened'
   | 'authorship_exported'
+  | 'feature_interest'
   | 'brief_wizard_used'
   | 'character_created'
   | 'character_liked'
