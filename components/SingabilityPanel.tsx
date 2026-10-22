@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import { useTranslation } from '@/context/I18nContext';
 import { checkSingability, type SingabilityIssue } from '@/lib/singability';
@@ -7,6 +7,8 @@ type SingabilityPanelProps = {
   lyrics: string;
   // Opens the line rewrite for `line` with a prefilled request.
   onFix: (line: number, request: string) => void;
+  // Shown under the hint, e.g. the "fix all" control.
+  actions?: ReactNode;
 };
 
 const replacementsOf = (issue: SingabilityIssue) => ({
@@ -15,7 +17,7 @@ const replacementsOf = (issue: SingabilityIssue) => ({
 });
 
 // Lists what may be hard for AI music tools to sing, each with a one-click line rewrite.
-export function SingabilityPanel({ lyrics, onFix }: SingabilityPanelProps) {
+export function SingabilityPanel({ lyrics, onFix, actions }: SingabilityPanelProps) {
   const { t } = useTranslation('songEditor');
   const issues = useMemo(() => checkSingability(lyrics), [lyrics]);
   const lines = lyrics.split('\n');
@@ -29,6 +31,7 @@ export function SingabilityPanel({ lyrics, onFix }: SingabilityPanelProps) {
         </span>
       </div>
       <p className="song-editor__hint">{t('singabilityHint')}</p>
+      {actions}
       {issues.length === 0 ? <p className="singability__ok">{t('singabilityOk')}</p> : null}
       <ul className="singability__list">
         {issues.map(issue => (

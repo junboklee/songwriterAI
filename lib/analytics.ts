@@ -13,6 +13,8 @@ export type AnalyticsEvent =
   | 'lyrics_rewritten'
   | 'lyrics_copied'
   | 'singability_fix_opened'
+  | 'singability_fix_all'
+  | 'singability_fix_all_applied'
   | 'authorship_exported'
   | 'feature_interest'
   | 'brief_wizard_used'

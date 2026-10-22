@@ -85,6 +85,24 @@ export function restoreSectionTags(originalLines: string[], rewrittenText: strin
   return result.join('\n');
 }
 
+// Browser call to POST /api/lyrics/rewrite. Throws with the API's error message.
+export async function requestRewrite(
+  getIdToken: () => Promise<string>,
+  body: { lyrics: string; selection: string; instruction: string; style?: string },
+  fallbackError: string
+): Promise<string> {
+  const response = await fetch('/api/lyrics/rewrite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await getIdToken()}` },
+    body: JSON.stringify(body)
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(typeof payload.error === 'string' && payload.error ? payload.error : fallbackError);
+  }
+  return typeof payload.replacement === 'string' ? payload.replacement : '';
+}
+
 // Replaces the [start, end) character range of `lyrics` with `replacement`.
 export function applyRewrite(lyrics: string, start: number, end: number, replacement: string) {
   return lyrics.slice(0, start) + replacement + lyrics.slice(end);
