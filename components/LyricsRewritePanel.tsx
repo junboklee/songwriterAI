@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useTranslation } from '@/context/I18nContext';
 import { diffLines } from '@/lib/lyricsTools';
+import { requestRewrite } from '@/lib/lyricsRewrite';
 import { trackEvent } from '@/lib/analytics';
 
 export type LineSelection = {
@@ -60,18 +61,14 @@ export function LyricsRewritePanel({
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch('/api/lyrics/rewrite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await getIdToken()}` },
-        body: JSON.stringify({ lyrics, selection: selection.text, instruction: trimmed, style })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(typeof payload.error === 'string' ? payload.error : t('error'));
-      }
+      const replacement = await requestRewrite(
+        getIdToken,
+        { lyrics, selection: selection.text, instruction: trimmed, style },
+        t('error')
+      );
       setInstruction(trimmed);
       trackEvent('lyrics_rewritten', { line_count: lineCount, preset: QUICK_REQUESTS.some(key => t(key) === trimmed) });
-      setResult(payload.replacement);
+      setResult(replacement);
     } catch (runError) {
       setError(runError instanceof Error ? runError.message : t('error'));
     } finally {

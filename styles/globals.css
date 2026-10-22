@@ -4101,6 +4101,26 @@ textarea {
   padding: 4px 12px;
   font-size: 0.78rem;
 }
+.singability__fix-all {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.singability__fix-all .btn {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+}
+.singability__fix-all-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.singability__fix-all-review {
+  display: grid;
+  gap: 8px;
+  font-size: 0.85rem;
+}
 
 .song-editor__line {
   display: grid;

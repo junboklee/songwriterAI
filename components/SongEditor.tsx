@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { AuthorshipPanel } from '@/components/AuthorshipPanel';
 import { LyricsRewritePanel, toLineSelection, type LineSelection } from '@/components/LyricsRewritePanel';
 import { ShareActions } from '@/components/ShareActions';
+import { SingabilityFixAll } from '@/components/SingabilityFixAll';
 import { SingabilityPanel } from '@/components/SingabilityPanel';
 import { useTranslation } from '@/context/I18nContext';
 import { applyRewrite } from '@/lib/lyricsRewrite';
@@ -263,6 +264,18 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                 trackEvent('singability_fix_opened');
                 selectLine(lineRange(lyrics, line), request);
               }}
+              actions={
+                <SingabilityFixAll
+                  lyrics={lyrics}
+                  style={style}
+                  getIdToken={getIdToken}
+                  onApply={(fixed, fixedLines) => {
+                    setLyrics(fixed);
+                    setAiLines(prev => [...prev, ...fixedLines]);
+                    selectLine(null);
+                  }}
+                />
+              }
             />
 
             <label className="song-editor__toggle">
