@@ -76,7 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const authUser = await requireUser(req);
+    // Members who cannot confirm they are adults must still be able to leave.
+    const authUser = await requireUser(req, { allowUnconfirmedAge: true });
     await deleteUserAccount(authUser.uid);
     return res.status(200).json({ success: true });
   } catch (error) {

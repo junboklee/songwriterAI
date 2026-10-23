@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
 import { adminDb } from '@/lib/firebaseAdmin';
+import { AgeConfirmationRequiredError } from '@/lib/errors';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
 import { getMonthlyUsage } from '@/lib/usage';
@@ -139,6 +140,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return res.status(401).json({ error: error.message });
+    }
+    if (error instanceof AgeConfirmationRequiredError) {
+      return res.status(403).json({ error: error.message, code: error.code });
     }
 
     console.error('Profile API error:', error);

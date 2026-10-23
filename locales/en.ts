@@ -14,7 +14,7 @@ export const en = {
     defaultHeroLabel: 'Start a new conversation with a lifelike AI companion.',
     termsPrefix: 'By continuing you agree to the ',
     termsAnd: ' and the ',
-    termsSuffix: '. You must be 14 or older to sign up.',
+    termsSuffix: '. You must be 19 or older (Korean age of majority) to sign up.',
     footer: {
       home: 'Home',
       pricing: 'Pricing',
@@ -51,6 +51,11 @@ export const en = {
       }
     },
     register: {
+      birthLabel: 'Date of birth, 8 digits (required)',
+      birthPlaceholder: 'e.g. 19950315',
+      birthHelp: 'You must be 19 or older. Your date of birth is only used for this check and is not stored.',
+      birthInvalid: 'Please enter a valid date of birth.',
+      underAge: 'Sorry, you must be 19 or older to sign up.',
       title: 'YEON:VERSE',
       subtitle: 'Craft an emotive duet with your AI copilot in under ten minutes.',
       dashboardCta: 'Dashboard',
@@ -305,6 +310,31 @@ export const en = {
       spam: 'Spam or advertising',
       other: 'Other'
     }
+  },
+  ageGate: {
+    title: 'Please confirm your date of birth',
+    body: 'NovaSingerAI is for people aged 19 or older. Enter your date of birth to continue.',
+    birthLabel: 'Date of birth (8 digits)',
+    birthPlaceholder: 'e.g. 19950315',
+    submit: 'Confirm',
+    checking: 'Checking...',
+    privacyHint: 'Your date of birth is only used for this check and is not stored.',
+    error: 'Could not confirm. Please try again shortly.',
+    underAgeTitle: 'Available from age 19',
+    underAgeBody: 'Sorry, NovaSingerAI is only for people aged 19 or older. Please come back when you turn 19. You can delete your account and everything saved in it now if you like.',
+    underAgeNotice: 'From {{date}} only people aged 19 or older can use the service. Copy any lyrics you need before then; you can delete your account from the dashboard.',
+    deleteAccount: 'Delete account',
+    deleteConfirm: 'Chats, lyrics and characters will all be deleted permanently. Delete?',
+    deleteYes: 'Delete',
+    deleting: 'Deleting...',
+    deleteError: 'Could not delete the account. Please try again shortly.',
+    cancel: 'Cancel',
+    retry: 'Enter date of birth again',
+    terms: 'Terms',
+    logout: 'Log out',
+    noticeLabel: 'Age policy change',
+    notice: 'From {{date}} NovaSingerAI is for people aged 19 or older. Please confirm your date of birth.',
+    noticeAction: 'Confirm date of birth'
   },
   songEditor: {
     title: 'Edit lyrics',

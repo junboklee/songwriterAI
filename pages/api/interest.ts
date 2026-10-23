@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { FieldValue } from 'firebase-admin/firestore';
 
-import { AppError } from '@/lib/errors';
+import { AppError, AgeConfirmationRequiredError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { logInfo } from '@/lib/logger';
 import { enforceRateLimit } from '@/lib/rateLimiter';
@@ -43,6 +43,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return res.status(401).json({ error: error.message });
+    }
+    if (error instanceof AgeConfirmationRequiredError) {
+      return res.status(403).json({ error: error.message, code: error.code });
     }
     if (error instanceof AppError && error.statusCode < 500) {
       return res.status(error.statusCode).json({ error: error.message });

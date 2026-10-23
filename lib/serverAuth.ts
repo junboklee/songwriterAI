@@ -1,6 +1,8 @@
 import type { NextApiRequest } from 'next';
+import { ageGateState, type AgeGateState } from '@/lib/age';
 import { adminAuth } from '@/lib/firebaseAdmin';
-import { UnauthorizedError } from '@/lib/errors';
+import { AgeConfirmationRequiredError, UnauthorizedError } from '@/lib/errors';
+import { logWarn } from '@/lib/logger';
 
 export type AuthenticatedUser = {
   uid: string;
@@ -9,7 +11,12 @@ export type AuthenticatedUser = {
   name?: string;
   picture?: string;
   emailVerified?: boolean;
+  // Adult-only policy (lib/age.ts); null when the account record could not be read.
+  ageGate?: AgeGateState | null;
 };
+
+// Custom claim set by POST /api/profile/age once the member confirms they are 만 19세 or older.
+export const ADULT_CLAIM = 'adultConfirmedAt';
 
 async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser> {
   try {
@@ -20,6 +27,8 @@ async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser
           email?: string;
           displayName?: string;
           photoURL?: string;
+          customClaims?: Record<string, unknown>;
+          metadata?: { creationTime?: string };
         }
       | null = null;
 
@@ -35,7 +44,14 @@ async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser
       displayName: decoded.name ?? userRecord?.displayName ?? undefined,
       name: decoded.name ?? userRecord?.displayName ?? undefined,
       picture: decoded.picture ?? userRecord?.photoURL ?? undefined,
-      emailVerified: decoded.email_verified === true
+      emailVerified: decoded.email_verified === true,
+      // Read from the account record rather than the token, so a confirmation counts immediately.
+      ageGate: userRecord
+        ? ageGateState({
+            confirmed: Boolean(userRecord.customClaims?.[ADULT_CLAIM]),
+            createdAt: userRecord.metadata?.creationTime ? new Date(userRecord.metadata.creationTime) : null
+          })
+        : null
     };
   } catch {
     throw new UnauthorizedError('Firebase ID token is invalid.');
@@ -59,8 +75,13 @@ function extractIdToken(req: NextApiRequest): string | null {
   return null;
 }
 
+type AuthOptions = { allowUnconfirmedAge?: boolean };
+
+// Rejects accounts that must confirm their age first. Only the endpoints an unconfirmed member
+// still needs (confirming the age, deleting the account) pass `allowUnconfirmedAge`.
 export async function authenticateRequest(
-  req: NextApiRequest
+  req: NextApiRequest,
+  { allowUnconfirmedAge = false }: AuthOptions = {}
 ): Promise<{ user: AuthenticatedUser; idToken: string }> {
   const idToken = extractIdToken(req);
 
@@ -69,6 +90,13 @@ export async function authenticateRequest(
   }
 
   const user = await verifyFirebaseIdToken(idToken);
+
+  if (user.ageGate === null) {
+    // A failed account lookup should not lock everyone out; the next request checks again.
+    logWarn('auth.age_gate_unknown', { uid: user.uid });
+  } else if (user.ageGate === 'required' && !allowUnconfirmedAge) {
+    throw new AgeConfirmationRequiredError();
+  }
 
   return { user, idToken };
 }
@@ -86,8 +114,8 @@ export async function getOptionalUser(req: NextApiRequest): Promise<Authenticate
   }
 }
 
-export async function requireUser(req: NextApiRequest): Promise<AuthenticatedUser> {
-  const { user } = await authenticateRequest(req);
+export async function requireUser(req: NextApiRequest, options: AuthOptions = {}): Promise<AuthenticatedUser> {
+  const { user } = await authenticateRequest(req, options);
   return user;
 }
 

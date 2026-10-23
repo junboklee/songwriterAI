@@ -4592,13 +4592,95 @@ textarea {
   text-decoration: underline;
 }
 
-.auth-age-check {
-  display: flex;
-  align-items: center;
+.auth-birth {
+  display: grid;
   gap: 8px;
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+.auth-birth__help {
+  font-size: 0.75rem;
+}
+.auth-birth__error,
+.age-gate__error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #fca5a5;
+}
+
+.age-gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+.age-gate__card {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 28px 24px;
+  border: 1px solid var(--divider);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.age-gate__card h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.age-gate__card p {
+  margin: 0;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.age-gate__form,
+.age-gate__field {
+  display: grid;
+  gap: 8px;
+}
+.age-gate__field span,
+.age-gate__hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.age-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.age-gate__footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+.age-gate__footer a,
+.age-gate__link {
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
   cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+.age-notice {
+  display: grid;
+  gap: 10px;
+  margin: 12px 16px 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.08);
+  font-size: 0.85rem;
+}
+.age-notice p {
+  margin: 0;
+  word-break: keep-all;
+}
+.age-notice .btn {
+  justify-self: start;
+  padding: 6px 14px;
+  font-size: 0.82rem;
 }
 
 .crisis-help {

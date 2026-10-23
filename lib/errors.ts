@@ -16,6 +16,13 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+// The account has not confirmed it is 만 19세 or older (lib/age.ts). The client shows the age gate.
+export class AgeConfirmationRequiredError extends AppError {
+  constructor(message = '만 19세 이상만 이용할 수 있어요. 생년월일을 확인해 주세요.') {
+    super(message, { statusCode: 403, code: 'AGE_CONFIRMATION_REQUIRED' });
+  }
+}
+
 export class RateLimitError extends AppError {
   constructor(message: string) {
     super(message, { statusCode: 429, code: 'RATE_LIMIT_EXCEEDED' });

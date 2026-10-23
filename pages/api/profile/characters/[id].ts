@@ -3,7 +3,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 import { findCharacterLimitError, parseCategories } from '@/lib/characterFields';
 import { getAvatarFile, getSingleValue, parseCharacterForm } from '@/lib/characterForm';
-import { AppError, BadRequestError } from '@/lib/errors';
+import { AppError, BadRequestError, AgeConfirmationRequiredError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { deleteConversationsByCharacter } from '@/lib/conversationCleanup';
@@ -326,6 +326,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return res.status(401).json({ error: error.message });
+    }
+    if (error instanceof AgeConfirmationRequiredError) {
+      return res.status(403).json({ error: error.message, code: error.code });
     }
 
     if (error instanceof AppError && error.statusCode < 500) {

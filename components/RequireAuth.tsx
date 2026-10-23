@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 
+import { AgeGate, AgeNoticeBanner } from '@/components/AgeGate';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 
@@ -11,7 +12,7 @@ type RequireAuthProps = {
 
 export function RequireAuth({ children }: RequireAuthProps) {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, ageGate } = useAuth();
   const { t } = useTranslation('common');
 
   useEffect(() => {
@@ -36,5 +37,15 @@ export function RequireAuth({ children }: RequireAuthProps) {
     return null;
   }
 
-  return <>{children}</>;
+  // Adult-only policy: new accounts confirm their age before anything else; older ones are reminded.
+  if (ageGate === 'required') {
+    return <AgeGate />;
+  }
+
+  return (
+    <>
+      {ageGate === 'grace' ? <AgeNoticeBanner /> : null}
+      {children}
+    </>
+  );
 }

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 import { adminDb } from '@/lib/firebaseAdmin';
+import { AgeConfirmationRequiredError } from '@/lib/errors';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 
 // POST likes a public character, DELETE removes the like. Both are idempotent.
@@ -54,6 +55,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return res.status(401).json({ error: error.message });
+    }
+    if (error instanceof AgeConfirmationRequiredError) {
+      return res.status(403).json({ error: error.message, code: error.code });
     }
     console.error('Character like API error:', error);
     return res.status(500).json({ error: 'Unexpected server error.' });

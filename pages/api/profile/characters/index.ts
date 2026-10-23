@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import { adminDb } from '@/lib/firebaseAdmin';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
+import { AgeConfirmationRequiredError } from '@/lib/errors';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import { DEFAULT_CHARACTER_AVATAR } from '@/lib/constants';
 
@@ -87,6 +88,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return res.status(401).json({ error: error.message });
+    }
+    if (error instanceof AgeConfirmationRequiredError) {
+      return res.status(403).json({ error: error.message, code: error.code });
     }
 
     console.error('Characters API error:', error);
