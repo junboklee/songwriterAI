@@ -14,7 +14,7 @@
     defaultHeroLabel: '사람 같은 AI와 함께 새로운 대화를 시작해 보세요.',
     termsPrefix: '계속 진행하면 ',
     termsAnd: '과 ',
-    termsSuffix: '에 동의하는 것으로 간주됩니다. 만 14세 이상만 가입할 수 있습니다.',
+    termsSuffix: '에 동의하는 것으로 간주됩니다. 만 19세 이상만 가입할 수 있습니다.',
     footer: {
       home: '홈',
       pricing: '요금 안내',
@@ -49,6 +49,11 @@
       }
     },
     register: {
+      birthLabel: '생년월일 8자리 (필수)',
+      birthPlaceholder: '예: 19950315',
+      birthHelp: '만 19세 이상만 가입할 수 있어요. 생년월일은 나이 확인에만 쓰고 저장하지 않아요.',
+      birthInvalid: '생년월일을 정확히 입력해 주세요.',
+      underAge: '죄송해요. 만 19세 이상만 가입할 수 있어요.',
       title: 'YEON:VERSE',
       subtitle: '10분 만에 감성적인 도버스와 함께 나만의 이야기를 만들어 보세요.',
       dashboardCta: '대시보드',
@@ -299,6 +304,31 @@
       spam: '스팸·광고',
       other: '기타'
     }
+  },
+  ageGate: {
+    title: '생년월일을 확인해 주세요',
+    body: 'NovaSingerAI는 만 19세 이상만 이용할 수 있어요. 생년월일을 입력하면 바로 이어서 이용할 수 있어요.',
+    birthLabel: '생년월일 8자리',
+    birthPlaceholder: '예: 19950315',
+    submit: '확인',
+    checking: '확인 중...',
+    privacyHint: '생년월일은 나이 확인에만 쓰고 저장하지 않아요. 확인했다는 기록만 남아요.',
+    error: '확인하지 못했어요. 잠시 후 다시 시도해 주세요.',
+    underAgeTitle: '만 19세부터 이용할 수 있어요',
+    underAgeBody: '죄송해요. NovaSingerAI는 만 19세 이상만 이용할 수 있어요. 만 19세가 되면 다시 찾아 주세요. 원하면 지금 계정과 저장된 내용을 모두 삭제할 수 있어요.',
+    underAgeNotice: '{{date}}부터는 만 19세 이상만 이용할 수 있어요. 그 전에 필요한 가사는 복사해 두고, 계정은 대시보드에서 삭제할 수 있어요.',
+    deleteAccount: '계정 삭제',
+    deleteConfirm: '대화, 가사, 캐릭터가 모두 지워지고 되돌릴 수 없어요. 삭제할까요?',
+    deleteYes: '삭제',
+    deleting: '삭제 중...',
+    deleteError: '계정을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.',
+    cancel: '취소',
+    retry: '생년월일 다시 입력',
+    terms: '이용약관',
+    logout: '로그아웃',
+    noticeLabel: '이용 연령 변경 안내',
+    notice: '{{date}}부터 NovaSingerAI는 만 19세 이상만 이용할 수 있어요. 미리 생년월일을 확인해 주세요.',
+    noticeAction: '생년월일 확인하기'
   },
   songEditor: {
     title: '가사 편집',

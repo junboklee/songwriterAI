@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 import { CrisisHelpBanner } from '@/components/chat/CrisisHelpBanner';
+import { confirmAge } from '@/lib/ageClient';
 import RegisterPage from '@/pages/auth/register';
 import SafetyPage from '@/pages/safety';
 
@@ -18,6 +20,9 @@ jest.mock('firebase/auth', () => ({
   updateProfile: jest.fn()
 }));
 jest.mock('@/lib/analyticsAuth', () => ({ trackAuth: jest.fn() }));
+jest.mock('@/lib/ageClient', () => ({ confirmAge: jest.fn().mockResolvedValue({ ok: true }) }));
+const mockRefreshAgeGate = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ refreshAgeGate: mockRefreshAgeGate }) }));
 jest.mock('@/context/I18nContext', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 
 describe('CrisisHelpBanner', () => {
@@ -32,17 +37,39 @@ describe('CrisisHelpBanner', () => {
 });
 
 describe('sign-up age check', () => {
-  it('keeps every sign-up button disabled until the user confirms being 14 or older', () => {
-    render(<RegisterPage />);
-    const buttons = [
-      screen.getByRole('button', { name: /googleContinue/ }),
-      screen.getByRole('button', { name: /appleContinue/ }),
-      screen.getByRole('button', { name: 'emailContinue' })
-    ];
-    buttons.forEach(button => expect(button).toBeDisabled());
+  const buttons = () => [
+    screen.getByRole('button', { name: /googleContinue/ }),
+    screen.getByRole('button', { name: /appleContinue/ }),
+    screen.getByRole('button', { name: 'emailContinue' })
+  ];
+  const birthInput = () => screen.getByPlaceholderText('birthPlaceholder');
 
-    fireEvent.click(screen.getByLabelText('만 14세 이상입니다 (필수)'));
-    buttons.forEach(button => expect(button).toBeEnabled());
+  it('keeps every sign-up button disabled until an adult birth date is entered', () => {
+    render(<RegisterPage />);
+    buttons().forEach(button => expect(button).toBeDisabled());
+
+    fireEvent.change(birthInput(), { target: { value: `${new Date().getFullYear() - 10}0101` } });
+    expect(screen.getByText('underAge')).toBeInTheDocument();
+    buttons().forEach(button => expect(button).toBeDisabled());
+
+    fireEvent.change(birthInput(), { target: { value: '19990231' } });
+    expect(screen.getByText('birthInvalid')).toBeInTheDocument();
+
+    fireEvent.change(birthInput(), { target: { value: '19900115' } });
+    buttons().forEach(button => expect(button).toBeEnabled());
+  });
+
+  it('records the confirmation on the new account', async () => {
+    const user = { uid: 'u1' };
+    (createUserWithEmailAndPassword as jest.Mock).mockResolvedValue({ user });
+    render(<RegisterPage />);
+    fireEvent.change(birthInput(), { target: { value: '1990-01-15' } });
+    fireEvent.change(screen.getByLabelText('emailLabel'), { target: { value: 'a@b.co' } });
+    fireEvent.change(screen.getByLabelText('passwordLabel', { exact: false }), { target: { value: 'secret12' } });
+    fireEvent.click(screen.getByRole('button', { name: 'emailContinue' }));
+
+    await waitFor(() => expect(confirmAge).toHaveBeenCalledWith(user, '1990-01-15', ''));
+    expect(mockRefreshAgeGate).toHaveBeenCalled();
   });
 });
 

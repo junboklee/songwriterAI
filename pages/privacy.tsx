@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { LegalLayout } from '@/components/LegalLayout';
+import { AGE_POLICY_START, EXISTING_MEMBER_DEADLINE } from '@/lib/age';
 import { OPERATOR, PRIVACY_EFFECTIVE_DATE } from '@/lib/legal';
 
 // Keep this page in sync with what the code actually stores and sends (README "Firestore Data Model").
@@ -33,6 +34,12 @@ export default function PrivacyPage() {
             </td>
           </tr>
           <tr>
+            <td>연령 확인</td>
+            <td>
+              생년월일(만 19세 이상인지 확인하는 데만 쓰고 저장하지 않음), 연령 확인 시각(계정 정보에 기록)
+            </td>
+          </tr>
+          <tr>
             <td>서비스 이용</td>
             <td>
               닉네임, AI 캐릭터와의 대화 내용, 작성·저장한 가사와 버전 기록, 직접 만든 캐릭터 정보와 업로드한 이미지,
@@ -48,7 +55,7 @@ export default function PrivacyPage() {
 
       <h2>2. 이용 목적</h2>
       <ul>
-        <li>회원 식별과 계정 관리</li>
+        <li>회원 식별과 계정 관리, 이용 연령(만 19세 이상) 확인</li>
         <li>AI 대화 응답과 가사 생성, 대화·가사·버전의 저장과 표시</li>
         <li>공개 캐릭터·공유 링크 등 이용자가 선택한 공개 기능 제공</li>
         <li>부정 이용 방지(요청 속도 제한, 신고 처리, 공개 콘텐츠 검사)</li>
@@ -131,8 +138,12 @@ export default function PrivacyPage() {
         쿠키 저장을 거부할 수 있으나, 일부 기능 이용이 제한될 수 있습니다.
       </p>
 
-      <h2>10. 만 14세 미만 아동</h2>
-      <p>서비스는 만 14세 미만 아동의 회원가입을 받지 않습니다.</p>
+      <h2>10. 이용 연령</h2>
+      <p>
+        서비스는 만 19세 이상만 이용할 수 있으며, 만 19세 미만(만 14세 미만 아동 포함)의 회원가입을 받지 않습니다. 가입할 때
+        입력한 생년월일은 연령 확인에만 쓰고 저장하지 않습니다. {AGE_POLICY_START} 전에 가입한 회원은{' '}
+        {EXISTING_MEMBER_DEADLINE}까지 생년월일을 확인해야 계속 이용할 수 있습니다.
+      </p>
 
       <h2>11. 개인정보 보호책임자</h2>
       <ul>

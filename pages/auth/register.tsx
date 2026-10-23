@@ -2,14 +2,18 @@ import { FirebaseError } from 'firebase/app';
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
-  updateProfile
+  updateProfile,
+  type User
 } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { FormEvent, useMemo, useState } from 'react';
 
 import { AuthLayout } from '@/components/AuthLayout';
 import { AuthNotice } from '@/components/AuthNotice';
+import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
+import { isAdult, parseBirthDate } from '@/lib/age';
+import { confirmAge } from '@/lib/ageClient';
 import { appleProvider, auth, provider } from '@/lib/firebase';
 import { trackAuth } from '@/lib/analyticsAuth';
 
@@ -44,8 +48,13 @@ export default function Register() {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // 만 14세 미만은 가입할 수 없다 (약관 제3조, 개인정보 처리방침 10).
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  // 만 19세 미만은 가입할 수 없다 (약관 제4조, 개인정보 처리방침 10, lib/age.ts).
+  const [birthDate, setBirthDate] = useState('');
+  const birth = useMemo(() => parseBirthDate(birthDate), [birthDate]);
+  const ageConfirmed = birth !== null && isAdult(birth);
+  const ageMessage =
+    birthDate.replace(/\D/g, '').length < 8 ? null : birth === null ? t('birthInvalid') : ageConfirmed ? null : t('underAge');
+  const { refreshAgeGate } = useAuth();
 
   const redirectTarget = useMemo(() => {
     if (typeof router.query.redirect === 'string') {
@@ -59,7 +68,12 @@ export default function Register() {
     return '/dashboard';
   }, [router.query.redirect]);
 
-  const pushAfterAuth = () => {
+  // Records the adult confirmation on the new account. If this fails the age gate asks again later.
+  const pushAfterAuth = async (user: User) => {
+    const result = await confirmAge(user, birthDate, '');
+    if (result.ok) {
+      await refreshAgeGate().catch(() => undefined);
+    }
     router.push(redirectTarget);
   };
 
@@ -76,7 +90,7 @@ export default function Register() {
       }
 
       trackAuth(credential, 'email', 'sign_up');
-      pushAfterAuth();
+      await pushAfterAuth(credential.user);
     } catch (err) {
       setError(mapFirebaseError(err, 'email', t));
     } finally {
@@ -89,8 +103,9 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      trackAuth(await signInWithPopup(auth, provider), 'google', 'sign_up');
-      pushAfterAuth();
+      const credential = await signInWithPopup(auth, provider);
+      trackAuth(credential, 'google', 'sign_up');
+      await pushAfterAuth(credential.user);
     } catch (err) {
       setError(mapFirebaseError(err, 'google', t));
     } finally {
@@ -110,7 +125,7 @@ export default function Register() {
         await updateProfile(credential.user, { displayName });
       }
 
-      pushAfterAuth();
+      await pushAfterAuth(credential.user);
     } catch (err) {
       setError(mapFirebaseError(err, 'apple', t));
     } finally {
@@ -145,9 +160,21 @@ export default function Register() {
       <div className="auth-form">
         {error ? <div className="auth-form__error">{error}</div> : null}
 
-        <label className="auth-age-check">
-          <input type="checkbox" checked={ageConfirmed} onChange={event => setAgeConfirmed(event.target.checked)} />
-          <span>만 14세 이상입니다 (필수)</span>
+        <label className="auth-birth">
+          <span>{t('birthLabel')}</span>
+          <input
+            className="auth-form__input"
+            inputMode="numeric"
+            autoComplete="bday"
+            maxLength={10}
+            placeholder={t('birthPlaceholder')}
+            value={birthDate}
+            onChange={event => setBirthDate(event.target.value)}
+            aria-describedby="auth-birth-help"
+          />
+          <span id="auth-birth-help" className={ageMessage ? 'auth-birth__error' : 'auth-birth__help'}>
+            {ageMessage ?? t('birthHelp')}
+          </span>
         </label>
 
         <button

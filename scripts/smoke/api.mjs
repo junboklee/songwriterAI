@@ -17,6 +17,16 @@ const auth = { Authorization: `Bearer ${idToken}` };
 const json = { ...auth, 'Content-Type': 'application/json' };
 
 try {
+  // Adult-only policy: minors are refused, and the smoke account stays confirmed (idempotent).
+  const ageCall = birthDate =>
+    fetch(`${BASE_URL}/api/profile/age`, { method: 'POST', headers: json, body: JSON.stringify({ birthDate }) }).then(
+      async r => ({ status: r.status, data: await r.json().catch(() => ({})) })
+    );
+  const minor = await ageCall(`${new Date().getFullYear() - 15}0101`);
+  check('age: under 19 is refused', minor.status === 403 && minor.data.code === 'UNDER_AGE', String(minor.status));
+  const adult = await ageCall('19900101');
+  check('age: adult confirmation', adult.status === 200 && adult.data.confirmed === true, String(adult.status));
+
   // Streaming chat in a new conversation.
   const stream = await fetch(`${BASE_URL}/api/chat`, {
     method: 'POST',

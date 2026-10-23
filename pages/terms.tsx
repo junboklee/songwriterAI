@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { LegalLayout } from '@/components/LegalLayout';
+import { AGE_POLICY_START, EXISTING_MEMBER_DEADLINE } from '@/lib/age';
 import { OPERATOR, TERMS_EFFECTIVE_DATE } from '@/lib/legal';
 
 export default function TermsPage() {
@@ -30,7 +31,16 @@ export default function TermsPage() {
       </p>
 
       <h2>제4조 (회원가입)</h2>
-      <p>만 14세 이상인 사람은 이 약관과 개인정보처리방침에 동의하고 가입할 수 있습니다.</p>
+      <ul>
+        <li>
+          만 19세 이상(생년월일로 계산한 만 나이)인 사람은 이 약관과 개인정보처리방침에 동의하고 가입할 수 있습니다.
+        </li>
+        <li>
+          운영자는 가입할 때 생년월일로 연령을 확인하며, 노래 생성·결제 등 일부 기능을 이용하기 전에 본인인증을 요청할 수
+          있습니다.
+        </li>
+        <li>만 19세 미만으로 확인되거나 연령 확인을 하지 않은 회원은 서비스 이용이 제한될 수 있습니다.</li>
+      </ul>
 
       <h2>제5조 (서비스의 내용과 요금)</h2>
       <ul>
@@ -116,7 +126,15 @@ export default function TermsPage() {
       <p>이 약관은 대한민국 법률에 따르며, 분쟁이 생기면 「민사소송법」에 따른 관할 법원에서 해결합니다.</p>
 
       <h2>부칙</h2>
-      <p>이 약관은 {TERMS_EFFECTIVE_DATE}부터 시행합니다.</p>
+      <ul>
+        <li>이 약관은 {TERMS_EFFECTIVE_DATE}부터 시행합니다.</li>
+        <li>
+          제4조의 이용 연령(만 19세 이상)은 {AGE_POLICY_START} 이후 가입하는 회원에게 바로 적용하고, 그 전에 가입한
+          회원에게는 {EXISTING_MEMBER_DEADLINE}부터 적용합니다. 기존 회원은 그 전까지 생년월일을 확인하면 계속 이용할 수
+          있습니다.
+        </li>
+        <li>이전 약관(2026-10-14 시행)은 이용 연령을 만 14세 이상으로 정했습니다.</li>
+      </ul>
 
       <h2>운영자 정보</h2>
       <ul>
