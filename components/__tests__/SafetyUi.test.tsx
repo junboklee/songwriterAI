@@ -71,6 +71,33 @@ describe('sign-up age check', () => {
     await waitFor(() => expect(confirmAge).toHaveBeenCalledWith(user, '1990-01-15', ''));
     expect(mockRefreshAgeGate).toHaveBeenCalled();
   });
+
+  it('saves lyrics written in the no-signup trial to the new library', async () => {
+    const user = { uid: 'u1', getIdToken: jest.fn().mockResolvedValue('token') };
+    (createUserWithEmailAndPassword as jest.Mock).mockResolvedValue({ user });
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    window.localStorage.setItem(
+      'novasinger.trialLyrics',
+      JSON.stringify({ title: '너의 봄', body: '[Verse]\n봄날 같은 너', style: 'ballad', savedAt: Date.now() })
+    );
+    render(<RegisterPage />);
+    fireEvent.change(birthInput(), { target: { value: '19900115' } });
+    fireEvent.change(screen.getByLabelText('emailLabel'), { target: { value: 'a@b.co' } });
+    fireEvent.change(screen.getByLabelText('passwordLabel', { exact: false }), { target: { value: 'secret12' } });
+    fireEvent.click(screen.getByRole('button', { name: 'emailContinue' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/profile/songs');
+    expect(JSON.parse(init.body)).toEqual({
+      title: '너의 봄',
+      lyrics: '[Verse]\n봄날 같은 너',
+      characterId: '1',
+      metadata: { source: 'trial', style: 'ballad' }
+    });
+    expect(window.localStorage.getItem('novasinger.trialLyrics')).toBeNull();
+  });
 });
 
 describe('safety policy page', () => {

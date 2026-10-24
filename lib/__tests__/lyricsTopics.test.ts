@@ -23,7 +23,7 @@ describe('lyrics topic pages', () => {
     const topic = getLyricsTopic('birthday-song');
     expect(topic).not.toBeNull();
     const href = topicChatHref(topic!);
-    expect(href.startsWith('/chat?characterId=1&prompt=')).toBe(true);
+    expect(href.startsWith('/try?prompt=')).toBe(true);
     expect(decodeURIComponent(href.split('prompt=')[1])).toBe(topic!.prompt);
     expect(getLyricsTopic('nope')).toBeNull();
   });

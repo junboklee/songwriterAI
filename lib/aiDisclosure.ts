@@ -21,6 +21,8 @@ export function isAiAssisted(song: SongLike) {
   return (
     song.aiAssisted === true ||
     (typeof song.threadId === 'string' && song.threadId.length > 0) ||
-    song.metadata?.source === 'auto-from-chat'
+    song.metadata?.source === 'auto-from-chat' ||
+    // Lyrics written in the no-signup trial and saved after sign-up.
+    song.metadata?.source === 'trial'
   );
 }

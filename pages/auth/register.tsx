@@ -14,7 +14,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { isAdult, parseBirthDate } from '@/lib/age';
 import { confirmAge } from '@/lib/ageClient';
+import { trackEvent } from '@/lib/analytics';
 import { appleProvider, auth, provider } from '@/lib/firebase';
+import { takeTrialLyrics } from '@/lib/trialHandoff';
 import { trackAuth } from '@/lib/analyticsAuth';
 
 const mapFirebaseError = (
@@ -68,11 +70,27 @@ export default function Register() {
     return '/dashboard';
   }, [router.query.redirect]);
 
-  // Records the adult confirmation on the new account. If this fails the age gate asks again later.
+  // Records the adult confirmation on the new account (if this fails the age gate asks again later),
+  // then saves lyrics written in the no-signup trial (/try) to the library.
   const pushAfterAuth = async (user: User) => {
     const result = await confirmAge(user, birthDate, '');
     if (result.ok) {
       await refreshAgeGate().catch(() => undefined);
+      const trialLyrics = takeTrialLyrics();
+      if (trialLyrics) {
+        await fetch('/api/profile/songs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await user.getIdToken()}` },
+          body: JSON.stringify({
+            title: trialLyrics.title,
+            lyrics: trialLyrics.body,
+            characterId: '1',
+            metadata: { source: 'trial', style: trialLyrics.style }
+          })
+        })
+          .then(response => trackEvent('trial_lyrics_saved', { ok: response.ok }))
+          .catch(() => undefined);
+      }
     }
     router.push(redirectTarget);
   };

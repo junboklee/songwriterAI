@@ -13,7 +13,8 @@ describe('legal pages', () => {
     expect(screen.getByText(/OpenAI, L\.L\.C\./)).toBeTruthy();
     expect(screen.getByText(/Google LLC/)).toBeTruthy();
     expect(screen.getByText(/만 19세 미만\(만 14세 미만 아동 포함\)의 회원가입을 받지 않습니다/)).toBeTruthy();
-    expect(screen.getByText(/저장하지 않음/)).toBeTruthy();
+    expect(screen.getByText(/만 19세 이상인지 확인하는 데만 쓰고 저장하지 않음/)).toBeTruthy();
+    expect(screen.getByText(/답변을 만드는 데만 쓰고 저장하지 않음/)).toBeTruthy();
   });
 
   it('terms include the AI-generated content notice linked from the chat page', () => {

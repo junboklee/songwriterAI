@@ -120,10 +120,13 @@ export default function Home() {
                 완성한 가사는 Suno 같은 AI 음악 도구에 붙여 넣기만 하면 노래가 됩니다.
               </p>
               <div className="hero-cta">
-                <Link href="/auth/register" className="cta primary">
+                <Link href="/try" className="cta primary">
                   <div className="cta-card">
-                    <span className="cta-label">무료로 시작하기</span>
+                    <span className="cta-label">가입 없이 바로 써 보기</span>
                   </div>
+                </Link>
+                <Link href="/auth/register" className="hero-login">
+                  무료로 가입하기
                 </Link>
                 <Link href="/auth/login" className="hero-login">
                   이미 계정이 있어요 · 로그인
@@ -202,9 +205,9 @@ export default function Home() {
           <section className="bottom-cta">
             <p className="poster-eyebrow">NOW LIVE</p>
             <h2>지금 바로 NovaSingerAI를 체험해 보세요</h2>
-            <Link href="/auth/register" className="cta primary">
+            <Link href="/try" className="cta primary">
               <div className="cta-card">
-                <span className="cta-label">무료로 시작하기</span>
+                <span className="cta-label">가입 없이 바로 써 보기</span>
               </div>
             </Link>
           </section>
