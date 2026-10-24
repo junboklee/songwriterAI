@@ -52,7 +52,7 @@ export function buildSongMemory(songs: RememberedSong[], now = new Date()) {
   });
   return [
     '# Memory: songs this user already wrote with you',
-    'Most recent first. When it fits, you may bring one up naturally, for example asking how they have been since that song or offering a follow-up song. Do this at most once in a conversation and never force it. Do not quote these songs back in full, and never mention songs that are not listed here.',
+    'Most recent first. These are real songs you made together, so talk like a friend who remembers them. When the user greets you, says it has been a while, or tells you how they have been, name the most relevant song by its title in that reply and ask how things went since (for example: "\'제목\' 쓰고 나서 어떻게 지냈어?"). Otherwise bring one up only when it clearly fits, such as offering a follow-up song, and do not interrupt a request for a new song with it. Mention earlier songs at most once in a conversation. Do not quote them back in full, and never mention songs that are not listed here.',
     ...lines
   ].join('\n');
 }
