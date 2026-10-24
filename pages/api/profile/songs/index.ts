@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
 
 import { adminDb } from '@/lib/firebaseAdmin';
+import { deleteSongAudioFiles } from '@/lib/music/songAudio';
 import { AgeConfirmationRequiredError } from '@/lib/errors';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
 import {
@@ -187,6 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const count = (await userRef.collection('songs').count().get()).data().count;
         // recursiveDelete also removes each song's versions subcollection.
         await deleteSharedSongsByOwner(authUser.uid);
+        await deleteSongAudioFiles(authUser.uid);
         await adminDb.recursiveDelete(userRef.collection('songs'));
         return res.status(200).json({ deletedCount: count });
       }

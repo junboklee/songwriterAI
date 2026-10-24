@@ -9,6 +9,7 @@ export type AnalyticsEvent =
   | 'song_saved'
   | 'song_version_restored'
   | 'song_shared'
+  | 'song_audio_requested'
   | 'share_action'
   | 'lyrics_rewritten'
   | 'lyrics_copied'

@@ -5,6 +5,7 @@ import { AuthorshipPanel } from '@/components/AuthorshipPanel';
 import { LyricsRewritePanel, toLineSelection, type LineSelection } from '@/components/LyricsRewritePanel';
 import { ShareActions } from '@/components/ShareActions';
 import { SingabilityFixAll } from '@/components/SingabilityFixAll';
+import { SongAudioPanel } from '@/components/SongAudioPanel';
 import { SingabilityPanel } from '@/components/SingabilityPanel';
 import { useTranslation } from '@/context/I18nContext';
 import { applyRewrite } from '@/lib/lyricsRewrite';
@@ -355,6 +356,8 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
                 </button>
               )}
             </div>
+
+            <SongAudioPanel songId={song.id} getIdToken={getIdToken} dirty={dirty} />
 
             {versions?.length ? (
               <AuthorshipPanel title={title} versions={versions} initialFromAi={Boolean(song.threadId)} />
