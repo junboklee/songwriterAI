@@ -360,7 +360,7 @@ export function SongEditor({ song, getIdToken, onClose, onSaved }: SongEditorPro
             <SongAudioPanel songId={song.id} getIdToken={getIdToken} dirty={dirty} />
 
             {versions?.length ? (
-              <AuthorshipPanel title={title} versions={versions} initialFromAi={Boolean(song.threadId)} />
+              <AuthorshipPanel title={title} versions={versions} initialFromAi={Boolean(song.threadId) || song.metadata?.source === 'trial'} />
             ) : null}
 
             <h3>{t('versions')}</h3>

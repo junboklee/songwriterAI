@@ -6,11 +6,13 @@ import { extractLyrics, toDisplayText, toMusicToolFormat } from '@/lib/lyricsFor
 
 type Props = {
   content: string;
+  // The "coming soon" interest buttons need an account, so the no-signup trial hides them.
+  showComingSoon?: boolean;
 };
 
 // Renders an assistant reply, hiding the <lyrics>/<style> markup and offering a
 // one-click copy of the lyrics in [Section]-tag format for AI music tools.
-export function AssistantMessageBody({ content }: Props) {
+export function AssistantMessageBody({ content, showComingSoon = true }: Props) {
   const [copied, setCopied] = useState(false);
   const lyrics = extractLyrics(content);
 
@@ -51,7 +53,7 @@ export function AssistantMessageBody({ content }: Props) {
           {copied ? '복사됨 ✓' : '가사 복사 (Suno 형식)'}
         </button>
       ) : null}
-      {lyrics ? <ComingSoonActions /> : null}
+      {lyrics && showComingSoon ? <ComingSoonActions /> : null}
     </>
   );
 }
