@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { deleteAllConversations } from '@/lib/conversationCleanup';
 import { deleteUserAvatars } from '@/lib/avatarStorage';
+import { deleteSongAudioFiles } from '@/lib/music/songAudio';
 import { deleteSharedSongsByOwner } from '@/lib/songVersions';
 import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 import { requireUser, UnauthorizedError } from '@/lib/serverAuth';
@@ -51,6 +52,7 @@ async function deleteUserAccount(uid: string) {
   await deleteAllConversations(uid);
   await deleteUserCharacters(uid);
   await deleteSharedSongsByOwner(uid);
+  await deleteSongAudioFiles(uid);
   await adminDb.recursiveDelete(userRef.collection('songs'));
   await deleteSubcollection(userRef.collection('threads'));
   await adminDb.recursiveDelete(userRef.collection('usage'));

@@ -4,6 +4,7 @@ import type { DocumentReference } from 'firebase-admin/firestore';
 import { isAiAssisted } from '@/lib/aiDisclosure';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { serializeTimestamp } from '@/lib/firestoreUtils';
+import { deleteSongAudioFiles } from '@/lib/music/songAudio';
 
 // users/{uid}/songs/{songId}/versions/{versionId} holds every saved revision of a song.
 // The song document itself always mirrors the latest version.
@@ -200,11 +201,15 @@ export async function unshareSong(songRef: DocumentReference) {
   await batch.commit();
 }
 
-// Deletes a song with its versions and public share page.
+// Deletes a song with its versions, generated audio and public share page.
 export async function deleteSongDeep(songRef: DocumentReference) {
   const shareId = (await songRef.get()).get('shareId');
   if (typeof shareId === 'string' && shareId) {
     await adminDb.collection(SHARED_SONGS_COLLECTION).doc(shareId).delete();
+  }
+  const ownerId = songRef.parent.parent?.id;
+  if (ownerId) {
+    await deleteSongAudioFiles(ownerId, songRef.id);
   }
   await adminDb.recursiveDelete(songRef);
 }

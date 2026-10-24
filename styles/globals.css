@@ -4732,3 +4732,48 @@ textarea {
   font-size: 0.8rem;
   color: var(--text-secondary);
 }
+
+.song-audio {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+}
+.song-audio__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.song-audio__header h3 {
+  margin: 0;
+}
+.song-audio__badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.16);
+  color: #93c5fd;
+}
+.song-audio__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+}
+.song-audio__list li {
+  display: grid;
+  gap: 6px;
+}
+.song-audio__list audio {
+  width: 100%;
+}
+.song-audio__list .btn {
+  justify-self: start;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+}
