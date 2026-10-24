@@ -4,6 +4,7 @@ import { authenticateRequest } from '@/lib/serverAuth';
 import { enforceRateLimit } from '@/lib/rateLimiter';
 import { saveThreadSnapshot } from '@/lib/chatPersistence';
 import { generateReply, streamReply } from '@/lib/llm';
+import { loadSongMemory } from '@/lib/songMemory';
 import { assertWithinMonthlyQuota, recordChatUsage } from '@/lib/usage';
 import { AppError } from '@/lib/errors';
 import handler from '@/pages/api/chat';
@@ -11,6 +12,7 @@ import handler from '@/pages/api/chat';
 jest.mock('@/lib/serverAuth');
 jest.mock('@/lib/rateLimiter');
 jest.mock('@/lib/chatPersistence');
+jest.mock('@/lib/songMemory', () => ({ MEMORY_MAX_HISTORY: 2, loadSongMemory: jest.fn().mockResolvedValue('') }));
 jest.mock('@/lib/llm', () => ({
   generateReply: jest.fn(),
   streamReply: jest.fn()
@@ -256,5 +258,13 @@ describe('/api/chat handler', () => {
     await handler(createRequest({ message: '요즘 그냥 죽고 싶어' }), createResponse());
 
     expect(generateReplyMock.mock.calls[0][0]).toContain('# Safety reminder for this turn');
+  });
+
+  it('tells the character about earlier songs when a conversation starts', async () => {
+    (loadSongMemory as jest.Mock).mockResolvedValueOnce('# Memory: songs this user already wrote with you\n- "이별 노래"');
+    await handler(createRequest({ message: '오랜만이야' }), createResponse());
+
+    expect(loadSongMemory).toHaveBeenCalledWith('user-1', null, null);
+    expect(generateReplyMock.mock.calls[0][0]).toContain('- "이별 노래"');
   });
 });

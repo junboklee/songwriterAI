@@ -12,6 +12,7 @@ import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
 import { generateReply, streamReply, type ChatTurn } from '@/lib/llm';
 import { withLyricsGuard } from '@/lib/lyricsGuard';
 import { CRISIS_REMINDER, looksLikeCrisis } from '@/lib/safety';
+import { loadSongMemory, MEMORY_MAX_HISTORY } from '@/lib/songMemory';
 import { assertWithinMonthlyQuota, recordChatUsage, type TokenUsage } from '@/lib/usage';
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -184,7 +185,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       requestedThreadId ??
       adminDb.collection('users').doc(user.uid).collection('conversations').doc().id;
 
-    const guarded = withLyricsGuard(persona.instructions, text);
+    // Character memory (lib/songMemory.ts): earlier songs with this character, at the start of a chat.
+    const memory =
+      history.length <= MEMORY_MAX_HISTORY ? await loadSongMemory(user.uid, resolvedCharacterId, requestedThreadId) : '';
+    const guarded = withLyricsGuard(memory ? `${persona.instructions}\n\n${memory}` : persona.instructions, text);
     const crisisSignal = looksLikeCrisis(text);
     const instructions = crisisSignal ? `${guarded.instructions}\n\n${CRISIS_REMINDER}` : guarded.instructions;
 
@@ -194,6 +198,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       characterId: resolvedCharacterId,
       personaOrigin: persona.origin,
       historyLength: history.length,
+      songMemory: Boolean(memory),
       // Looks like a request for an existing song's lyrics (message text itself is not logged).
       existingLyricsRequest: guarded.flagged,
       // Counted to watch how often people reach out in crisis; the text itself is never logged.
