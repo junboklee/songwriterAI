@@ -85,4 +85,14 @@ describe('/api/profile/songs/[songId]/audio', () => {
     songData = null;
     expect((await call('GET')).code).toBe(404);
   });
+  it('lets the configured test accounts generate without admin rights', async () => {
+    (isAdmin as jest.Mock).mockReturnValue(false);
+    process.env.MUSIC_TESTER_UIDS = 'other, u1';
+    try {
+      const res = await call('GET');
+      expect(res.body?.canGenerate).toBe(true);
+    } finally {
+      delete process.env.MUSIC_TESTER_UIDS;
+    }
+  });
 });
