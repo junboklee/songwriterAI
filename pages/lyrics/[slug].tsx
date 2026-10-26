@@ -34,7 +34,7 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
 
         <div className="topic-cta">
           <Link href={topicChatHref(topic)} className="btn btn--primary">
-            Dayeon과 바로 만들기
+            가입 없이 Dayeon과 바로 만들기
           </Link>
           <Link href="/auth/register" className="btn btn--ghost">
             무료로 시작하기
@@ -71,7 +71,7 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
 
         <div className="topic-cta">
           <Link href={topicChatHref(topic)} className="btn btn--primary">
-            지금 가사 만들기
+            가입 없이 지금 가사 만들기
           </Link>
         </div>
 
