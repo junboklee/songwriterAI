@@ -9,10 +9,18 @@ import { countSongAudio, listSongAudio, MAX_AUDIO_PER_SONG, saveSongAudio } from
 import { enforceRateLimit } from '@/lib/rateLimiter';
 import { requireUser } from '@/lib/serverAuth';
 
+// Matched by uid, which cannot be claimed by another account the way an unverified email could.
+const musicTesterUids = () =>
+  (process.env.MUSIC_TESTER_UIDS ?? '')
+    .split(',')
+    .map(uid => uid.trim())
+    .filter(Boolean);
+
 // GET  -> { canGenerate, items }  audio generated for this song (newest first)
 // POST { length: 'clip' | 'full' } -> { item }  sings the song's current lyrics with Lyria
-// Generation is admin-only while the feature is tested; public launch needs identity verification
-// (terms 제4조) and the free/paid allowance decided for it.
+// Generation is limited to admins (and the test accounts in MUSIC_TESTER_UIDS, e.g. the production
+// smoke account) while the feature is tested; public launch needs identity verification (terms 제4조)
+// and the free/paid allowance decided for it.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.setHeader('Allow', 'GET, POST');
@@ -31,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!song.exists) {
       return res.status(404).json({ error: 'Song not found.' });
     }
-    const canGenerate = isAdmin(user);
+    const canGenerate = isAdmin(user) || musicTesterUids().includes(user.uid);
 
     if (req.method === 'GET') {
       return res.status(200).json({ canGenerate, items: await listSongAudio(songRef) });

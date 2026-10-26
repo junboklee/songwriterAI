@@ -49,3 +49,7 @@ env:
   # Comma-separated, email-verified accounts allowed to use /admin/reports. Empty = admin pages disabled.
   - variable: ADMIN_EMAILS
     value: 'ljbn333@gmail.com'
+  # Comma-separated account uids that may generate songs (Lyria) while it is admin-only, besides the
+  # admins: the production smoke account (scripts/smoke), so the song pipeline can be checked after deploys.
+  - variable: MUSIC_TESTER_UIDS
+    value: 'snZvO6b14khDnga4MDrMhoZkpWM2'
