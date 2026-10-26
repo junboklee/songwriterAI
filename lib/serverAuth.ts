@@ -13,6 +13,8 @@ export type AuthenticatedUser = {
   emailVerified?: boolean;
   // Adult-only policy (lib/age.ts); null when the account record could not be read.
   ageGate?: AgeGateState | null;
+  // Identity verification (lib/identity.ts): the keyed hash of the verified person, if verified.
+  identityKey?: string | null;
 };
 
 // Custom claim set by POST /api/profile/age once the member confirms they are 만 19세 or older.
@@ -51,7 +53,9 @@ async function verifyFirebaseIdToken(idToken: string): Promise<AuthenticatedUser
             confirmed: Boolean(userRecord.customClaims?.[ADULT_CLAIM]),
             createdAt: userRecord.metadata?.creationTime ? new Date(userRecord.metadata.creationTime) : null
           })
-        : null
+        : null,
+      identityKey:
+        typeof userRecord?.customClaims?.identityKey === 'string' ? (userRecord.customClaims.identityKey as string) : null
     };
   } catch {
     throw new UnauthorizedError('Firebase ID token is invalid.');
