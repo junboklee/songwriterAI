@@ -4884,3 +4884,46 @@ textarea {
   color: #fca5a5;
   font-size: 0.85rem;
 }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.metric {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.metric__label,
+.metric__note {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.metric__value {
+  font-size: 1.5rem;
+}
+.metric-bars {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+.metric-bars li {
+  display: grid;
+  grid-template-columns: 3.2em 1fr 2em;
+  align-items: center;
+  gap: 8px;
+}
+.metric-bars__bar {
+  height: 10px;
+  min-width: 2px;
+  border-radius: 999px;
+  background: rgba(108, 92, 231, 0.8);
+}
