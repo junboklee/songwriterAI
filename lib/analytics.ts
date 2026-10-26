@@ -13,6 +13,7 @@ export type AnalyticsEvent =
   | 'trial_message'
   | 'trial_signup_click'
   | 'trial_lyrics_saved'
+  | 'identity_verification_started'
   | 'share_action'
   | 'lyrics_rewritten'
   | 'lyrics_copied'

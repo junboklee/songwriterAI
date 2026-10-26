@@ -53,3 +53,9 @@ env:
   # admins: the production smoke account (scripts/smoke), so the song pipeline can be checked after deploys.
   - variable: MUSIC_TESTER_UIDS
     value: 'snZvO6b14khDnga4MDrMhoZkpWM2'
+  # Public song launch (lib/music/access.ts). Keep 'false' until PortOne identity verification is set up:
+  # NEXT_PUBLIC_PORTONE_STORE_ID and NEXT_PUBLIC_PORTONE_IDENTITY_CHANNEL_KEY (public values) plus the
+  # secret PORTONE_API_SECRET, and the privacy policy lists PortOne and Google Vertex AI (see
+  # reports/노래 기능 공개 체크리스트.md).
+  - variable: SONG_PUBLIC
+    value: 'false'

@@ -1,26 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-import { isAdmin } from '@/lib/adminAuth';
 import { AppError, BadRequestError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { logError, logInfo } from '@/lib/logger';
+import { reserveSong, songAccess } from '@/lib/music/access';
 import { generateSong, MAX_SUNG_LYRICS, type SongLength } from '@/lib/music/lyria';
 import { countSongAudio, listSongAudio, MAX_AUDIO_PER_SONG, saveSongAudio } from '@/lib/music/songAudio';
 import { enforceRateLimit } from '@/lib/rateLimiter';
 import { requireUser } from '@/lib/serverAuth';
 
-// Matched by uid, which cannot be claimed by another account the way an unverified email could.
-const musicTesterUids = () =>
-  (process.env.MUSIC_TESTER_UIDS ?? '')
-    .split(',')
-    .map(uid => uid.trim())
-    .filter(Boolean);
-
-// GET  -> { canGenerate, items }  audio generated for this song (newest first)
+// GET  -> { access, canGenerate, items }  audio generated for this song (newest first)
 // POST { length: 'clip' | 'full' } -> { item }  sings the song's current lyrics with Lyria
-// Generation is limited to admins (and the test accounts in MUSIC_TESTER_UIDS, e.g. the production
-// smoke account) while the feature is tested; public launch needs identity verification (terms 제4조)
-// and the free/paid allowance decided for it.
+// Who may generate, and the free preview, are decided in lib/music/access.ts.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.setHeader('Allow', 'GET, POST');
@@ -39,17 +30,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!song.exists) {
       return res.status(404).json({ error: 'Song not found.' });
     }
-    const canGenerate = isAdmin(user) || musicTesterUids().includes(user.uid);
 
     if (req.method === 'GET') {
-      return res.status(200).json({ canGenerate, items: await listSongAudio(songRef) });
+      const [access, items] = await Promise.all([songAccess(user), listSongAudio(songRef)]);
+      return res.status(200).json({ access, canGenerate: access === 'unlimited' || access === 'free', items });
     }
 
-    if (!canGenerate) {
-      throw new AppError('노래 만들기는 아직 준비 중이에요.', { statusCode: 403, code: 'FORBIDDEN' });
-    }
     await enforceRateLimit(user.uid);
-
     const length: SongLength = req.body?.length === 'full' ? 'full' : 'clip';
     const lyrics = typeof song.get('lyrics') === 'string' ? (song.get('lyrics') as string).trim() : '';
     if (!lyrics) {
@@ -62,13 +49,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new BadRequestError(`한 곡에는 노래를 ${MAX_AUDIO_PER_SONG}개까지 만들 수 있어요.`);
     }
 
+    const release = await reserveSong(user, length);
     const style = song.get('metadata')?.style;
     const started = Date.now();
-    const result = await generateSong({ length, style: typeof style === 'string' ? style : null, lyrics });
-    const item = await saveSongAudio(user.uid, songRef, length, result);
-    logInfo('music.generated', { uid: user.uid, songId, length, model: result.model, bytes: item.bytes, ms: Date.now() - started });
-
-    return res.status(201).json({ item });
+    try {
+      const result = await generateSong({ length, style: typeof style === 'string' ? style : null, lyrics });
+      const item = await saveSongAudio(user.uid, songRef, length, result);
+      logInfo('music.generated', { uid: user.uid, songId, length, model: result.model, bytes: item.bytes, ms: Date.now() - started });
+      return res.status(201).json({ item });
+    } catch (error) {
+      // A failed generation does not use up the free preview.
+      await release().catch(releaseError => logError('music.release_failed', releaseError));
+      throw error;
+    }
   } catch (error) {
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ error: error.message, code: error.code });
