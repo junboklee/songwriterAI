@@ -111,7 +111,7 @@ export default function AdminReportsPage() {
       </Head>
       <main className="admin-page">
         <nav>
-          <Link href="/dashboard">← 대시보드</Link>
+          <Link href="/dashboard">← 대시보드</Link> · <Link href="/admin/metrics">서비스 지표</Link>
         </nav>
         <h1>신고 검토</h1>
         <p className="admin-page__hint">
