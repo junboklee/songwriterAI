@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { trackEvent } from '@/lib/analytics';
 import TryPage from '@/pages/try';
 
 const mockReplace = jest.fn();
@@ -7,7 +8,7 @@ const mockPush = jest.fn();
 let mockQuery: Record<string, string> = {};
 let mockUser: { uid: string } | null = null;
 jest.mock('next/router', () => ({
-  useRouter: () => ({ query: mockQuery, replace: mockReplace, push: mockPush })
+  useRouter: () => ({ query: mockQuery, isReady: true, replace: mockReplace, push: mockPush })
 }));
 jest.mock('next/head', () => ({ __esModule: true, default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 jest.mock('next/link', () => ({
@@ -79,5 +80,10 @@ describe('/try', () => {
     mockQuery = { prompt: '축가' };
     render(<TryPage />);
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(`/chat?characterId=1&prompt=${encodeURIComponent('축가')}`));
+  });
+  it('records where the visitor came from', () => {
+    mockQuery = { from: 'share' };
+    render(<TryPage />);
+    expect(trackEvent).toHaveBeenCalledWith('trial_view', { from: 'share' });
   });
 });

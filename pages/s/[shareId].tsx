@@ -115,10 +115,13 @@ export default function SharedSongPage({ shareId, title, lyrics, style, aiAssist
             <button type="button" className="btn btn--ghost" onClick={() => void handleCopy()}>
               {copied ? '복사됨 ✓' : '가사 복사 (Suno 형식)'}
             </button>
-            <Link href="/" className="btn btn--primary">
-              나도 AI와 가사 쓰기
+            <Link href="/try?from=share" className="btn btn--primary">
+              가입 없이 나도 가사 써 보기
             </Link>
           </div>
+          <p className="shared-song__invite">
+            NovaSingerAI에서는 AI 싱어송라이터 다연에게 이야기를 들려주면 부르기 좋은 한국어 가사로 만들어 줘요.
+          </p>
         </article>
       </main>
 
@@ -135,6 +138,14 @@ export default function SharedSongPage({ shareId, title, lyrics, style, aiAssist
           display: grid;
           gap: 16px;
           align-content: start;
+        }
+
+        .shared-song__invite {
+          margin: 0;
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          line-height: 1.6;
+          word-break: keep-all;
         }
 
         .shared-song__eyebrow {

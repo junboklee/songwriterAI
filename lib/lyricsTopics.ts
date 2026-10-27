@@ -542,4 +542,5 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
 export const getLyricsTopic = (slug: string) => LYRICS_TOPICS.find(topic => topic.slug === slug) ?? null;
 
 // Visitors try it without signing up first; /try sends members on to the full chat.
-export const topicChatHref = (topic: LyricsTopic) => `/try?prompt=${encodeURIComponent(topic.prompt)}`;
+export const topicChatHref = (topic: LyricsTopic) =>
+  `/try?from=topic&prompt=${encodeURIComponent(topic.prompt)}`;

@@ -33,6 +33,14 @@ export default function TryPage() {
   const [showCrisis, setShowCrisis] = useState(false);
 
   const prompt = typeof router.query.prompt === 'string' ? router.query.prompt.slice(0, 500) : '';
+  // Where the visitor came from (share page, topic page, landing), for GA attribution.
+  const from = typeof router.query.from === 'string' ? router.query.from.slice(0, 20) : 'direct';
+
+  useEffect(() => {
+    if (router.isReady) {
+      trackEvent('trial_view', { from });
+    }
+  }, [router.isReady, from]);
 
   // Members go straight to the full chat with the same starting prompt.
   useEffect(() => {
@@ -59,7 +67,7 @@ export default function TryPage() {
     setError(null);
     setTurns(prev => [...prev, { role: 'user', content: text }]);
     setInput('');
-    trackEvent('trial_message', { turn: turns.filter(turn => turn.role === 'user').length + 1 });
+    trackEvent('trial_message', { turn: turns.filter(turn => turn.role === 'user').length + 1, from });
     try {
       const response = await fetch('/api/trial/chat', {
         method: 'POST',
@@ -101,7 +109,7 @@ export default function TryPage() {
     if (lyrics) {
       saveTrialLyrics(lyrics);
     }
-    trackEvent('trial_signup_click', { hasLyrics: Boolean(lyrics) });
+    trackEvent('trial_signup_click', { hasLyrics: Boolean(lyrics), from });
     void router.push(REGISTER_HREF);
   };
 

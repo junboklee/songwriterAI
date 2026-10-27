@@ -10,6 +10,7 @@ export type AnalyticsEvent =
   | 'song_version_restored'
   | 'song_shared'
   | 'song_audio_requested'
+  | 'trial_view'
   | 'trial_message'
   | 'trial_signup_click'
   | 'trial_lyrics_saved'
