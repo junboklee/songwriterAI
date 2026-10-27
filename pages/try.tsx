@@ -174,6 +174,9 @@ export default function TryPage() {
             onKeyDown={handleKeyDown}
             disabled={busy || limitReached}
           />
+          {input.includes('○') ? (
+            <p className="trial__hint">○○ 부분을 내 이야기로 바꾸면 더 나만의 노래가 돼요. 그대로 보내도 다연이 먼저 써 줘요.</p>
+          ) : null}
           <div className="trial__actions">
             <span className="trial__remaining">
               {remaining !== null ? `오늘 남은 체험 ${remaining}회` : '오늘 체험 3회'}

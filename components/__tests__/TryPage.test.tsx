@@ -45,12 +45,13 @@ describe('/try', () => {
   });
 
   it('prefills the topic prompt and keeps the lyrics for after sign-up', async () => {
-    mockQuery = { prompt: '친구 결혼식 축가 가사를 쓰고 싶어.' };
+    mockQuery = { prompt: '친구 결혼식 축가 가사를 쓰고 싶어. 두 사람은 ○○에서 만났어.' };
     global.fetch = jest.fn().mockResolvedValue(
       reply({ reply: '<lyrics title="너의 봄">\n[Verse]\n봄날 같은 너</lyrics>\n<style>ballad</style>', remaining: 1 })
     ) as unknown as typeof fetch;
     render(<TryPage />);
-    expect(screen.getByPlaceholderText(/쓰고 싶은 노래/)).toHaveValue('친구 결혼식 축가 가사를 쓰고 싶어.');
+    expect(screen.getByPlaceholderText(/쓰고 싶은 노래/)).toHaveValue('친구 결혼식 축가 가사를 쓰고 싶어. 두 사람은 ○○에서 만났어.');
+    expect(screen.getByText(/○○ 부분을 내 이야기로 바꾸면/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('만 19세 이상입니다 (필수)'));
     fireEvent.click(screen.getByRole('button', { name: '보내기' }));

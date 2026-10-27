@@ -4927,3 +4927,8 @@ textarea {
   border-radius: 999px;
   background: rgba(108, 92, 231, 0.8);
 }
+.trial__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #c4b5fd;
+}
