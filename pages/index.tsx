@@ -321,11 +321,13 @@ export default function Home() {
           gap: 0.5rem;
         }
 
-        .cta {
+        /* Link renders an <a> without the styled-jsx scope class, so target it through :global. */
+        .hero-cta :global(.cta),
+        .bottom-cta :global(.cta) {
           text-decoration: none;
         }
 
-        .cta.primary .cta-card {
+        .cta-card {
           padding: 1.4rem 2.6rem;
           border-radius: 1.5rem;
           font-weight: 700;
@@ -340,8 +342,9 @@ export default function Home() {
         }
 
         .cta-label {
-          font-size: 2rem;
+          font-size: clamp(1.2rem, 5vw, 1.6rem);
           letter-spacing: 0.02em;
+          white-space: nowrap;
         }
 
         .cta-desc {
@@ -349,7 +352,7 @@ export default function Home() {
           color: rgba(255, 255, 255, 0.85);
         }
 
-        .cta.primary:hover .cta-card {
+        .cta-card:hover {
           transform: translateY(-3px);
           box-shadow: 0 35px 80px rgba(99, 102, 241, 0.5);
         }
@@ -373,7 +376,7 @@ export default function Home() {
           gap: 1.5rem;
         }
 
-        .hero-login {
+        .hero-cta :global(.hero-login) {
           display: inline-block;
           margin-top: 12px;
           font-size: 0.9rem;
