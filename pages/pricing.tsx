@@ -13,8 +13,8 @@ const plans = [
       '가사 자동 보관 · Suno 형식 복사',
       '월 300회 AI 요청 (매월 1일 초기화)'
     ],
-    cta: '무료로 시작',
-    href: '/auth/login'
+    cta: '가입 없이 바로 써 보기',
+    href: '/try?from=pricing'
   },
   {
     name: 'Studio',
@@ -72,7 +72,9 @@ export default function PricingPage() {
                 ))}
               </ul>
               {plan.href && plan.cta ? (
-                <Link href={plan.href}>{plan.cta}</Link>
+                <Link href={plan.href} className="btn btn--primary">
+                  {plan.cta}
+                </Link>
               ) : (
                 <span className="cta-disabled">출시 알림 예정</span>
               )}

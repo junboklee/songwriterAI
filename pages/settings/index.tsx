@@ -100,12 +100,12 @@ export default function SettingsPage() {
         sidebar={
           <div className="glass-panel" style={{ padding: 24, display: 'grid', gap: 18 }}>
             <div>
-              <p className="section-title">Account</p>
+              <p className="section-title">계정</p>
               <div className="sidebar-list" style={{ marginTop: 14 }}>
                 <div className="sidebar-item">
                   <span className="sidebar-item__icon">{'\uD83D\uDCE7'}</span>
                   <div>
-                    <p style={{ margin: 0, fontWeight: 600 }}>Email</p>
+                    <p style={{ margin: 0, fontWeight: 600 }}>이메일</p>
                     <p
                       style={{
                         margin: '4px 0 0',
@@ -113,14 +113,14 @@ export default function SettingsPage() {
                         fontSize: '0.85rem'
                       }}
                     >
-                      {user?.email ?? 'Not available'}
+                      {user?.email ?? '없음'}
                     </p>
                   </div>
                 </div>
                 <div className="sidebar-item">
                   <span className="sidebar-item__icon">{'\u2B50'}</span>
                   <div>
-                    <p style={{ margin: 0, fontWeight: 600 }}>Plan</p>
+                    <p style={{ margin: 0, fontWeight: 600 }}>요금제</p>
                     <p
                       style={{
                         margin: '4px 0 0',
@@ -128,14 +128,14 @@ export default function SettingsPage() {
                         fontSize: '0.85rem'
                       }}
                     >
-                      {usage?.plan === 'studio' ? 'Studio' : 'Beta (free)'}
+                      {usage?.plan === 'studio' ? 'Studio' : '베타 (무료)'}
                     </p>
                   </div>
                 </div>
                 <div className="sidebar-item">
                   <span className="sidebar-item__icon">{'\uD83C\uDFB5'}</span>
                   <div>
-                    <p style={{ margin: 0, fontWeight: 600 }}>AI requests this month</p>
+                    <p style={{ margin: 0, fontWeight: 600 }}>이번 달 AI 요청</p>
                     <p
                       style={{
                         margin: '4px 0 0',
@@ -152,9 +152,13 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="callout">
-              All features are free during the beta. Paid plans with higher limits will be announced on
-              the pricing page before launch.
+              베타 기간에는 모든 기능이 무료예요. 한도가 더 큰 유료 요금제는 출시 전에 요금 안내 페이지에서
+              먼저 알려 드려요.
             </div>
+            {/* The header actions are hidden on phones, so sign-out also lives in the menu. */}
+            <button type="button" onClick={handleSignOut} className="btn btn--ghost">
+              로그아웃
+            </button>
           </div>
         }
       >
@@ -162,10 +166,10 @@ export default function SettingsPage() {
           actions={
             <>
               <Link href="/dashboard" className="btn btn--ghost">
-                Back to dashboard
+                대시보드로
               </Link>
               <button type="button" onClick={handleSignOut} className="btn btn--primary">
-                Sign out
+                로그아웃
               </button>
             </>
           }
@@ -177,7 +181,7 @@ export default function SettingsPage() {
           onSubmit={handleSave}
         >
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.6rem' }}>Profile settings</h1>
+            <h1 style={{ margin: 0, fontSize: '1.6rem' }}>프로필 설정</h1>
             <p
               style={{
                 margin: '8px 0 0',
@@ -186,26 +190,26 @@ export default function SettingsPage() {
                 lineHeight: 1.6
               }}
             >
-              Update how your name appears when sharing characters and chatting across the platform.
+              캐릭터를 공유하거나 대화할 때 보이는 이름을 바꿀 수 있어요.
             </p>
           </div>
 
           <label style={{ display: 'grid', gap: 10 }}>
-            <span style={{ fontWeight: 600 }}>Display name</span>
+            <span style={{ fontWeight: 600 }}>표시 이름</span>
             <input
               className="search-input"
-              placeholder="How should the community address you?"
+              placeholder="다른 사람에게 보일 이름을 입력해 주세요."
               value={displayName}
               onChange={event => setDisplayName(event.target.value)}
             />
             <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              This name appears in character credits and shared chats.
+              공개한 캐릭터의 만든 사람 표시와 공유한 대화에 이 이름이 보여요.
             </span>
           </label>
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <button type="submit" className="btn btn--primary" disabled={saving}>
-              {saving ? 'Saving...' : 'Save changes'}
+              {saving ? '저장 중...' : '변경 사항 저장'}
             </button>
           </div>
 

@@ -6,7 +6,7 @@ describe('AppNav', () => {
   it('renders the default brand label', () => {
     render(<AppNav />);
 
-    expect(screen.getByText(/Character Studio/i)).toBeInTheDocument();
+    expect(screen.getByText(/NovaSingerAI/i)).toBeInTheDocument();
   });
 
   it('renders custom actions inside the header', () => {

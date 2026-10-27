@@ -4932,3 +4932,16 @@ textarea {
   font-size: 0.8rem;
   color: #c4b5fd;
 }
+
+/* The fixed mobile menu buttons (.app-shell__mobile-toggle, .dashboard-mobile-toggle) sit in the
+   top-left corner. Later breakpoint rules above shrink the top padding again, so reserve room for
+   the button here, last, or it covers the page title. */
+@media (max-width: 900px) {
+  .app-shell--with-sidebar {
+    padding-top: 76px;
+  }
+
+  .dashboard-main {
+    padding-top: 76px;
+  }
+}
