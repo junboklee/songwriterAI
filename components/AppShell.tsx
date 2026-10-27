@@ -17,7 +17,7 @@ export function AppShell({ sidebar, children }: AppShellProps) {
           <button
             type="button"
             className="app-shell__mobile-toggle"
-            aria-label="Open navigation"
+            aria-label="메뉴 열기"
             onClick={() => setIsMobileSidebarOpen(true)}
           >
             <span />
@@ -29,7 +29,7 @@ export function AppShell({ sidebar, children }: AppShellProps) {
               <button
                 type="button"
                 className="app-shell__sidebar-close"
-                aria-label="Close navigation"
+                aria-label="메뉴 닫기"
                 onClick={closeSidebar}
               >
                 ×
@@ -41,7 +41,7 @@ export function AppShell({ sidebar, children }: AppShellProps) {
             <button
               type="button"
               className="app-shell__sidebar-backdrop"
-              aria-label="Hide navigation"
+              aria-label="메뉴 닫기"
               onClick={closeSidebar}
             />
           ) : null}

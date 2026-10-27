@@ -11,7 +11,7 @@ export function AppNav({ actions, showBrand = true }: AppNavProps) {
       <div className="app-nav__logo" aria-hidden={!showBrand}>
         {showBrand ? (
           <>
-            <span>Character Studio</span>
+            <span>NovaSingerAI</span>
           </>
         ) : null}
       </div>
