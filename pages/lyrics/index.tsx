@@ -7,6 +7,8 @@ export default function LyricsTopicsIndex() {
   return (
     <TopicLayout
       title="주제별 가사 만들기"
+      path="/lyrics"
+      card="home"
       description="생일 축하 노래, 결혼식 축가, 고백 노래, 부모님께 드리는 노래까지. 상황에 맞는 노래 가사를 AI 싱어송라이터와 함께 만들어 보세요."
     >
       <h1>어떤 노래를 만들고 싶나요?</h1>
