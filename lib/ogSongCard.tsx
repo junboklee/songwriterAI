@@ -65,17 +65,20 @@ export async function renderSongCard({
   title,
   lyrics,
   aiAssisted = true,
-  format = 'wide'
+  format = 'wide',
+  label
 }: {
   title: string | null;
   lyrics: string;
   aiAssisted?: boolean;
   format?: CardFormat;
+  // Replaces the AI/human share label, for cards that are not a shared song (see ogPageCard).
+  label?: string;
 }) {
   const story = format === 'story';
   const displayTitle = (title ?? '제목 없는 노래').slice(0, story ? 20 : 30);
   const lines = story ? storyLines(lyrics) : cardLines(lyrics);
-  const brand = aiAssisted ? `NovaSingerAI · ${AI_SHARE_LABEL}` : `NovaSingerAI · ${HUMAN_SHARE_LABEL}`;
+  const brand = `NovaSingerAI · ${label ?? (aiAssisted ? AI_SHARE_LABEL : HUMAN_SHARE_LABEL)}`;
   const domain = 'novasingerai.com';
   const font = await loadKoreanFont(`${displayTitle}${lines.join('')}${brand}${domain}…♪`);
 

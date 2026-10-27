@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { LYRICS_TOPICS } from '@/lib/lyricsTopics';
+import { pageCardPath } from '@/lib/ogPageCard';
 
 const highlights = [
   {
@@ -64,6 +65,14 @@ export default function Home() {
           property="og:description"
           content="아이디어부터 완성본까지 AI 캐릭터와 함께 작사 작업을 경험해 보세요."
         />
+        <meta key="og:type" property="og:type" content="website" />
+        <meta key="og:url" property="og:url" content="https://novasingerai.com/" />
+        <meta key="og:site_name" property="og:site_name" content="NovaSingerAI" />
+        <meta key="og:image" property="og:image" content={`https://novasingerai.com${pageCardPath('home')}`} />
+        <meta key="og:image:width" property="og:image:width" content="1200" />
+        <meta key="og:image:height" property="og:image:height" content="630" />
+        <meta key="twitter:card" name="twitter:card" content="summary_large_image" />
+        <link key="canonical" rel="canonical" href="https://novasingerai.com/" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -27,7 +27,13 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
   };
 
   return (
-    <TopicLayout title={topic.title} description={topic.description} jsonLd={faqJsonLd}>
+    <TopicLayout
+      title={topic.title}
+      description={topic.description}
+      path={`/lyrics/${topic.slug}`}
+      card={topic.slug}
+      jsonLd={faqJsonLd}
+    >
       <article>
         <h1>{topic.heading}</h1>
         <p className="topic-lead">{topic.intro}</p>
