@@ -46,6 +46,10 @@ describe('checkSingability', () => {
     ]);
   });
 
+  it('flags template placeholders left in a draft', () => {
+    expect(kinds('[Verse]\n○○의 바람이 불던 날')).toEqual([['symbols', 1]]);
+  });
+
   it('leaves parentheses (backing vocals) and single letters alone', () => {
     expect(checkSingability('[Chorus]\n너를 불러 (불러)\n오 나의 별 A')).toEqual([]);
   });

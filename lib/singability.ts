@@ -27,9 +27,9 @@ export type SingabilityIssue = {
 const SECTION_TAG = /^\[[^\]]*\]$/;
 const HANGUL = /[가-힣]/;
 const LATIN_WORD = /[A-Za-z]{2,}/;
-// Emoji and symbols that tools either sing oddly or drop. Parentheses are left alone: Suno
-// treats them as backing vocals on purpose.
-const SYMBOLS = /[\p{Extended_Pictographic}*#@^_=<>{}|\\~♡♥★☆♪♫]/u;
+// Emoji and symbols that tools either sing oddly or drop, plus template placeholders (○○) left in
+// a draft. Parentheses are left alone: Suno treats them as backing vocals on purpose.
+const SYMBOLS = /[\p{Extended_Pictographic}*#@^_=<>{}|\\~♡♥★☆♪♫○●]/u;
 
 export const MAX_LINE_SYLLABLES = 20;
 const MIN_SECTION_LINES = 3;
