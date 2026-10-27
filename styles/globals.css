@@ -4944,4 +4944,9 @@ textarea {
   .dashboard-main {
     padding-top: 76px;
   }
+
+  /* The chat page runs edge to edge (no shell padding), so only its header makes room. */
+  .chat-page .chat-layout__header {
+    padding-left: 76px;
+  }
 }
