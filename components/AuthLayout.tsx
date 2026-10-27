@@ -33,7 +33,8 @@ export function AuthLayout({
   subtitle,
   children,
   heroLabel,
-  heroSrc = '/images/auth-hero.jpg',
+  // Pre-sized WebP: App Hosting serves images unoptimized (the original JPEG is 974 KB).
+  heroSrc = '/images/auth-hero-1024.webp',
   heroContent,
   navPrimaryAction,
   navSecondaryAction

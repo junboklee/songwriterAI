@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -102,13 +101,24 @@ export default function Home() {
           <section className="hero">
             <div className="hero-image">
               <p className="hero-eyebrow">AI Singer-Songwriter</p>
-              <Image
-                src="/images/auth-hero.jpg"
-                alt="AI 작사가와 협업 중인 뮤지션"
-                width={1920}
-                height={1080}
-                priority
-              />
+              {/* App Hosting serves images unoptimized, so the sizes are prepared ahead (WebP, about 10–30 KB
+                  instead of the 974 KB original) and picked by the browser. */}
+              <picture>
+                <source
+                  type="image/webp"
+                  srcSet="/images/auth-hero-640.webp 640w, /images/auth-hero-1024.webp 1024w, /images/auth-hero-1456.webp 1456w"
+                  sizes="(max-width: 960px) calc(100vw - 48px), 912px"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element -- next/image cannot emit a <picture> source set */}
+                <img
+                  src="/images/auth-hero-1280.jpg"
+                  alt="AI 작사가와 협업 중인 뮤지션"
+                  width={1456}
+                  height={816}
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              </picture>
             </div>
             <div className="hero-copy">
               <h1>
