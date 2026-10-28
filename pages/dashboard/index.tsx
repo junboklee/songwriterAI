@@ -190,7 +190,8 @@ export default function Dashboard() {
   const displayName =
     profile.data?.profile.displayName?.trim() ||
     user?.displayName ||
-    user?.email ||
+    // Without a nickname, greet by the part before @ rather than the whole address.
+    user?.email?.split('@')[0] ||
     dashboardText.sidebarProfileRole;
 
   const profileEmail = profile.data?.profile.email || user?.email || '';
@@ -396,18 +397,21 @@ export default function Dashboard() {
 
   return (
     <RequireAuth>
-      <button
-        type="button"
-        className="dashboard-mobile-toggle"
-        aria-label="사이드바 열기"
-        aria-controls="dashboard-sidebar"
-        aria-expanded={isMobileNavOpen}
-        onClick={openMobileNav}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      {/* Hidden while the drawer is open: it sits above the drawer and would cover its top. */}
+      {isMobileNavOpen ? null : (
+        <button
+          type="button"
+          className="dashboard-mobile-toggle"
+          aria-label="사이드바 열기"
+          aria-controls="dashboard-sidebar"
+          aria-expanded={isMobileNavOpen}
+          onClick={openMobileNav}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      )}
       <div className="dashboard-page">
         <DashboardSidebar
           text={dashboardText}

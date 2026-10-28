@@ -14,16 +14,18 @@ export function AppShell({ sidebar, children }: AppShellProps) {
     <div className={`app-shell${hasSidebar ? ' app-shell--with-sidebar' : ''}${isMobileSidebarOpen ? ' app-shell--sidebar-open' : ''}`}>
       {hasSidebar ? (
         <>
-          <button
-            type="button"
-            className="app-shell__mobile-toggle"
-            aria-label="메뉴 열기"
-            onClick={() => setIsMobileSidebarOpen(true)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+          {isMobileSidebarOpen ? null : (
+            <button
+              type="button"
+              className="app-shell__mobile-toggle"
+              aria-label="메뉴 열기"
+              onClick={() => setIsMobileSidebarOpen(true)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          )}
           <aside className="app-shell__sidebar">
             <div className="app-shell__sidebar-inner">
               <button
