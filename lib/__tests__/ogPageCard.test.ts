@@ -13,6 +13,12 @@ describe('pageCard', () => {
     });
   });
 
+  it('has a card for the lyrics checker, and no topic takes its slug', () => {
+    expect(pageCard('check')).toEqual(expect.objectContaining({ label: '무료 도구' }));
+    const reserved = ['home', 'check'];
+    LYRICS_TOPICS.forEach(topic => expect(reserved).not.toContain(topic.slug));
+  });
+
   it('returns null for unknown pages', () => {
     expect(pageCard('nope')).toBeNull();
     expect(pageCard('')).toBeNull();

@@ -8,6 +8,7 @@ const SITE_URL = 'https://novasingerai.com';
 const routes = [
   '/',
   '/lyrics',
+  '/lyrics/check',
   ...LYRICS_TOPICS.map(topic => `/lyrics/${topic.slug}`),
   '/explore',
   '/pricing',

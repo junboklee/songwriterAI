@@ -233,6 +233,7 @@ export default function Home() {
         </main>
         <footer className="landing-footer">
           <Link href="/lyrics">주제별 가사 만들기</Link>
+          <Link href="/lyrics/check">가사 음절 수 세기</Link>
           <Link href="/pricing">요금 안내</Link>
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">

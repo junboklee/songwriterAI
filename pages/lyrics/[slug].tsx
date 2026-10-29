@@ -66,6 +66,11 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
           ))}
         </ul>
 
+        <p className="topic-lead">
+          가사를 다 썼다면 <Link href="/lyrics/check">가창성 검사기</Link>로 줄마다 음절 수와 부르기 어려운 곳을 확인해
+          보세요.
+        </p>
+
         <h2>자주 묻는 질문</h2>
         <dl>
           {topic.faq.map(item => (
