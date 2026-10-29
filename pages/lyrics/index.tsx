@@ -16,6 +16,10 @@ export default function LyricsTopicsIndex() {
         상황을 고르면 만드는 방법과 예시 가사, 잘 쓰는 팁을 볼 수 있어요. 마음에 들면 바로 AI 싱어송라이터 Dayeon과
         내 이야기로 가사를 만들어 보세요.
       </p>
+      <p className="topic-lead">
+        이미 쓴 가사가 있다면 <Link href="/lyrics/check">가사 음절 수 세기 · 가창성 검사기</Link>로 부르기 어려운 줄을
+        찾아보세요.
+      </p>
       {TOPIC_GROUPS.map(group => (
         <section key={group.id}>
           <h2>{group.name}</h2>
