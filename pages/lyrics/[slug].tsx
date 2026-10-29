@@ -15,7 +15,8 @@ export const getStaticProps: GetStaticProps<{ topic: LyricsTopic }> = async ({ p
 };
 
 export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
-  const others = LYRICS_TOPICS.filter(item => item.slug !== topic.slug);
+  const similar = LYRICS_TOPICS.filter(item => item.group === topic.group && item.slug !== topic.slug);
+  const others = LYRICS_TOPICS.filter(item => item.group !== topic.group);
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -81,14 +82,23 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
           </Link>
         </div>
 
-        <h2>다른 주제</h2>
+        <h2>비슷한 주제</h2>
         <ul>
-          {others.map(item => (
+          {similar.map(item => (
             <li key={item.slug}>
               <Link href={`/lyrics/${item.slug}`}>{item.title}</Link>
             </li>
           ))}
         </ul>
+
+        <h2>다른 주제</h2>
+        <p className="topic-links">
+          {others.map(item => (
+            <Link key={item.slug} href={`/lyrics/${item.slug}`}>
+              {item.label}
+            </Link>
+          ))}
+        </p>
       </article>
     </TopicLayout>
   );

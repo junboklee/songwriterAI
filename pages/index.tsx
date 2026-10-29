@@ -169,7 +169,7 @@ export default function Home() {
             <div className="topic-chips">
               {LYRICS_TOPICS.map(topic => (
                 <Link key={topic.slug} href={`/lyrics/${topic.slug}`} className="topic-chip">
-                  {topic.title.replace(/ 가사 (만들기|쓰기)$/, '')}
+                  {topic.label}
                 </Link>
               ))}
             </div>
