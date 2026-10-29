@@ -43,7 +43,11 @@ function logForwardedShape(req: NextApiRequest) {
   );
   logInfo('trial.xff_shape', {
     shape: shape.join(','),
-    headers: Object.keys(req.headers).filter(name => /ip|forward|client|via/i.test(name)).join(',')
+    headers: Object.keys(req.headers).filter(name => /ip|forward|client|via/i.test(name)).join(','),
+    // Whether App Hosting's own client-IP header can be set by the caller, and whether it matches
+    // the entry just before the two Google proxy hops.
+    fahClass: String(req.headers['x-fah-client-ip'] ?? '').startsWith('203.0.113.') ? 'test' : 'other',
+    fahMatchesThirdFromEnd: req.headers['x-fah-client-ip'] === entries[entries.length - 3]
   });
 }
 
