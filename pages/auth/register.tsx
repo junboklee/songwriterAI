@@ -15,7 +15,7 @@ import { useTranslation } from '@/context/I18nContext';
 import { isAdult, parseBirthDate } from '@/lib/age';
 import { confirmAge } from '@/lib/ageClient';
 import { trackEvent } from '@/lib/analytics';
-import { appleProvider, auth, provider } from '@/lib/firebase';
+import { appleProvider, appleSignInEnabled, auth, provider } from '@/lib/firebase';
 import { takeTrialLyrics } from '@/lib/trialHandoff';
 import { trackAuth } from '@/lib/analyticsAuth';
 
@@ -207,17 +207,19 @@ export default function Register() {
           {isLoading ? t('googleLoading') : t('googleContinue')}
         </button>
 
-        <button
-          type="button"
-          className="auth-form__button auth-form__button--secondary"
-          onClick={handleAppleRegister}
-          disabled={isLoading || !ageConfirmed}
-        >
-          <span className="auth-form__icon" style={{ color: '#fff', background: '#000' }}>
-            
-          </span>
-          {isLoading ? t('appleLoading') : t('appleContinue')}
-        </button>
+        {appleSignInEnabled ? (
+          <button
+            type="button"
+            className="auth-form__button auth-form__button--secondary"
+            onClick={handleAppleRegister}
+            disabled={isLoading || !ageConfirmed}
+          >
+            <span className="auth-form__icon" style={{ color: '#fff', background: '#000' }}>
+              
+            </span>
+            {isLoading ? t('appleLoading') : t('appleContinue')}
+          </button>
+        ) : null}
 
         <div className="auth-form__divider">{t('divider')}</div>
 

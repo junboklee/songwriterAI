@@ -13,7 +13,7 @@ jest.mock('next/link', () => ({
 }));
 jest.mock('next/image', () => ({ __esModule: true, default: () => null }));
 jest.mock('next/router', () => ({ useRouter: () => ({ query: {}, push: jest.fn() }) }));
-jest.mock('@/lib/firebase', () => ({ auth: {}, provider: {}, appleProvider: {} }));
+jest.mock('@/lib/firebase', () => ({ auth: {}, provider: {}, appleProvider: {}, appleSignInEnabled: true }));
 jest.mock('firebase/auth', () => ({
   createUserWithEmailAndPassword: jest.fn(),
   signInWithPopup: jest.fn(),

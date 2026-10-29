@@ -29,4 +29,9 @@ const appleProvider = new OAuthProvider('apple.com');
 appleProvider.addScope('email');
 appleProvider.addScope('name');
 
-export { auth, provider, appleProvider };
+// Sign in with Apple needs the Apple team ID, key ID and private key in the Firebase console
+// (otherwise every attempt fails with "Code flow is not enabled for Apple"). Show the button only
+// once that is done and NEXT_PUBLIC_APPLE_SIGN_IN=true is set in apphosting.yaml.
+const appleSignInEnabled = process.env.NEXT_PUBLIC_APPLE_SIGN_IN === 'true';
+
+export { auth, provider, appleProvider, appleSignInEnabled };
