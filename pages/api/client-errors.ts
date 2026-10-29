@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+import { clientIp } from '@/lib/clientIp';
 import { AppError } from '@/lib/errors';
 import { logError } from '@/lib/logger';
 import { enforceRateLimit } from '@/lib/rateLimiter';
@@ -16,7 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const body = (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body ?? {}) as Record<string, unknown>;
+  let body: Record<string, unknown>;
+  try {
+    body = (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body ?? {}) as Record<string, unknown>;
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON.' });
+  }
   const message = clip(body.message, 500);
   const kind = typeof body.kind === 'string' && KINDS.has(body.kind) ? body.kind : null;
   if (!message || !kind) {
@@ -24,9 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const forwarded = req.headers['x-forwarded-for'];
-    const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
-    await enforceRateLimit(`client-errors:${ip}`);
+    await enforceRateLimit(`client-errors:${clientIp(req)}`);
   } catch (error) {
     if (error instanceof AppError && error.statusCode === 429) {
       return res.status(429).end();

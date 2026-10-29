@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
+import { clientIp } from '@/lib/clientIp';
 import { AppError, BadRequestError } from '@/lib/errors';
 import { generateReply } from '@/lib/llm';
 import { logError, logInfo } from '@/lib/logger';
@@ -9,7 +10,6 @@ import { CRISIS_REMINDER, looksLikeCrisis } from '@/lib/safety';
 import {
   TRIAL_MAX_MESSAGE,
   cleanupTrialUsage,
-  clientIp,
   consumeTrialMessage,
   sanitizeTrialHistory
 } from '@/lib/trial';

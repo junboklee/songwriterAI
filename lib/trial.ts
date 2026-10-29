@@ -2,14 +2,13 @@
 // before creating an account. Nothing they type is stored; only a daily counter keyed by a keyed
 // hash of their IP (never the IP itself), plus a global daily cap that bounds the AI cost.
 import { createHmac } from 'crypto';
-import type { NextApiRequest } from 'next';
 import { Timestamp } from 'firebase-admin/firestore';
 
 import { todayInSeoul, formatYmd } from '@/lib/age';
 import { AppError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import type { ChatTurn } from '@/lib/llm';
-import { logInfo, logWarn } from '@/lib/logger';
+import { logWarn } from '@/lib/logger';
 
 const parsePositiveInt = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
@@ -27,34 +26,6 @@ export class TrialLimitError extends AppError {
   constructor(message: string, code: 'TRIAL_LIMIT' | 'TRIAL_CLOSED') {
     super(message, { statusCode: 429, code });
   }
-}
-
-// TEMPORARY diagnostic (remove after reading): shows the proxy hop layout of X-Forwarded-For.
-// Logged only for test requests whose first entry is a documentation address (203.0.113.x), and
-// every IP is reduced to a class, so no visitor IP is ever written.
-function logForwardedShape(req: NextApiRequest) {
-  const raw = req.headers['x-forwarded-for'];
-  const entries = (Array.isArray(raw) ? raw.join(',') : raw ?? '').split(',').map(entry => entry.trim());
-  if (!entries[0]?.startsWith('203.0.113.')) {
-    return;
-  }
-  const shape = entries.map(entry =>
-    entry.startsWith('203.0.113.') ? 'test' : /^(66\.249|35\.191|130\.211|34\.|35\.)/.test(entry) ? 'google' : 'other'
-  );
-  logInfo('trial.xff_shape', {
-    shape: shape.join(','),
-    headers: Object.keys(req.headers).filter(name => /ip|forward|client|via/i.test(name)).join(','),
-    // Whether App Hosting's own client-IP header can be set by the caller, and whether it matches
-    // the entry just before the two Google proxy hops.
-    fahClass: String(req.headers['x-fah-client-ip'] ?? '').startsWith('203.0.113.') ? 'test' : 'other',
-    fahMatchesThirdFromEnd: req.headers['x-fah-client-ip'] === entries[entries.length - 3]
-  });
-}
-
-export function clientIp(req: NextApiRequest) {
-  logForwardedShape(req);
-  const forwarded = req.headers['x-forwarded-for'];
-  return (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
 }
 
 // Keyed with a server secret and the date, so stored keys cannot be reversed or linked across days.

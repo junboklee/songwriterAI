@@ -18,7 +18,7 @@ const createResponse = () => {
 };
 
 const request = (body: unknown) =>
-  ({ method: 'POST', body, headers: { 'x-forwarded-for': '1.2.3.4, 10.0.0.1', 'user-agent': 'jest' }, socket: {} } as unknown as NextApiRequest);
+  ({ method: 'POST', body, headers: { 'x-forwarded-for': '9.9.9.9, 1.2.3.4, 66.249.0.1, 66.249.0.2', 'user-agent': 'jest' }, socket: {} } as unknown as NextApiRequest);
 
 describe('POST /api/client-errors', () => {
   beforeEach(() => jest.clearAllMocks());
