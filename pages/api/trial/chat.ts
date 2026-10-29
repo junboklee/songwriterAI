@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
 import { clientIp } from '@/lib/clientIp';
 import { AppError, BadRequestError } from '@/lib/errors';
-import { generateReply } from '@/lib/llm';
+import { generateReply, withoutPlaceholders } from '@/lib/llm';
 import { logError, logInfo } from '@/lib/logger';
 import { withLyricsGuard } from '@/lib/lyricsGuard';
 import { CRISIS_REMINDER, looksLikeCrisis } from '@/lib/safety';
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const instructions = crisis ? `${guarded.instructions}\n\n${CRISIS_REMINDER}` : guarded.instructions;
     const turns = [...sanitizeTrialHistory(body.history), { role: 'user' as const, content: text }];
 
-    const reply = await generateReply(instructions, turns);
+    const reply = await withoutPlaceholders(instructions, turns, await generateReply(instructions, turns));
     if (!reply) {
       throw new AppError('AI가 응답하지 못했어요. 다시 시도해 주세요.', { statusCode: 502, code: 'EMPTY_REPLY' });
     }

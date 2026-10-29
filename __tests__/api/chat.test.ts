@@ -15,7 +15,8 @@ jest.mock('@/lib/chatPersistence');
 jest.mock('@/lib/songMemory', () => ({ MEMORY_MAX_HISTORY: 2, loadSongMemory: jest.fn().mockResolvedValue('') }));
 jest.mock('@/lib/llm', () => ({
   generateReply: jest.fn(),
-  streamReply: jest.fn()
+  streamReply: jest.fn(),
+  withoutPlaceholders: jest.fn(async (_instructions: string, _turns: unknown, reply: string) => reply)
 }));
 jest.mock('@/lib/usage', () => ({
   assertWithinMonthlyQuota: jest.fn(async () => undefined),

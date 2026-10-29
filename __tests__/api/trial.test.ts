@@ -4,7 +4,10 @@ import handler from '@/pages/api/trial/chat';
 import { generateReply } from '@/lib/llm';
 import { consumeTrialMessage, TrialLimitError } from '@/lib/trial';
 
-jest.mock('@/lib/llm', () => ({ generateReply: jest.fn() }));
+jest.mock('@/lib/llm', () => ({
+  generateReply: jest.fn(),
+  withoutPlaceholders: jest.fn(async (_instructions: string, _turns: unknown, reply: string) => reply)
+}));
 jest.mock('@/lib/logger', () => ({ logInfo: jest.fn(), logError: jest.fn() }));
 jest.mock('@/lib/trial', () => {
   const actual = jest.requireActual('@/lib/trial');

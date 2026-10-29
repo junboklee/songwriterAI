@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 
+import { extractLyrics } from '@/lib/lyricsFormat';
 import { SONGWRITING_GUIDELINES } from '@/lib/songwritingPrompt';
 import type { TokenUsage } from '@/lib/usage';
 
@@ -63,6 +64,34 @@ export async function generateReply(
     onUsage?.(usage);
   }
   return response.output_text.trim();
+}
+
+// Template placeholders (○○) left inside the lyrics block. The prompt forbids them, but the model
+// still leaves some when the blank is a proper noun (a shop or school name), roughly 1 reply in 15.
+export const hasPlaceholderLyrics = (reply: string) => /[○●]/.test(extractLyrics(reply)?.body ?? '');
+
+export const PLACEHOLDER_RETRY_REQUEST =
+  'Your lyrics still contain ○ placeholders. Answer my previous message again from the start, in the same format, ' +
+  'with every ○ replaced by a concrete, believable detail you invent (names of people, shops, schools and places included). ' +
+  'Do not mention this correction.';
+
+// Asks once more when the reply's lyrics still contain ○ placeholders. Returns the retry only if it
+// is clean, so a failed retry never makes things worse.
+export async function withoutPlaceholders(
+  personaInstructions: string,
+  turns: ChatTurn[],
+  reply: string,
+  onUsage?: UsageCallback
+) {
+  if (!hasPlaceholderLyrics(reply)) {
+    return reply;
+  }
+  const retry = await generateReply(
+    personaInstructions,
+    [...turns, { role: 'assistant', content: reply }, { role: 'user', content: PLACEHOLDER_RETRY_REQUEST }],
+    onUsage
+  ).catch(() => '');
+  return retry && !hasPlaceholderLyrics(retry) ? retry : reply;
 }
 
 // One-shot completion with caller-supplied instructions (no chat persona or <lyrics> format rules).
