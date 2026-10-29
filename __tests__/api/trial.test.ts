@@ -24,7 +24,7 @@ const call = async (body: unknown) => {
   });
   res.setHeader = jest.fn();
   await handler(
-    { method: 'POST', headers: { 'x-forwarded-for': '203.0.113.7, 10.0.0.1' }, body, socket: {} } as unknown as NextApiRequest,
+    { method: 'POST', headers: { 'x-fah-client-ip': '203.0.113.7', 'x-forwarded-for': '198.51.100.1, 203.0.113.7, 66.249.0.1, 66.249.0.2' }, body, socket: {} } as unknown as NextApiRequest,
     res as NextApiResponse
   );
   return res;
