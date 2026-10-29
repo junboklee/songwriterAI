@@ -80,6 +80,11 @@ export function TopicLayout({ title, description, path, card, jsonLd, children }
           background: rgba(255, 255, 255, 0.03);
           white-space: pre-wrap;
         }
+        .topic-page :global(.topic-links) {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px 16px;
+        }
         .topic-page :global(.topic-cta) {
           display: flex;
           flex-wrap: wrap;

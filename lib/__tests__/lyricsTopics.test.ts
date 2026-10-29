@@ -1,4 +1,4 @@
-import { LYRICS_TOPICS, getLyricsTopic, topicChatHref } from '@/lib/lyricsTopics';
+import { LYRICS_TOPICS, TOPIC_GROUPS, getLyricsTopic, topicChatHref, topicsInGroup } from '@/lib/lyricsTopics';
 import { checkSingability } from '@/lib/singability';
 
 describe('lyrics topic pages', () => {
@@ -9,6 +9,16 @@ describe('lyrics topic pages', () => {
       expect(topic.description.length).toBeLessThanOrEqual(160);
       expect(topic.steps.length).toBeGreaterThanOrEqual(3);
       expect(topic.faq.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it('sit in a known group with a short, unique label and at least one similar topic', () => {
+    expect(new Set(LYRICS_TOPICS.map(topic => topic.label)).size).toBe(LYRICS_TOPICS.length);
+    const groupIds = TOPIC_GROUPS.map(group => group.id);
+    LYRICS_TOPICS.forEach(topic => {
+      expect(groupIds).toContain(topic.group);
+      expect(topic.label.length).toBeLessThanOrEqual(12);
+      expect(topicsInGroup(topic.group).length).toBeGreaterThanOrEqual(2);
     });
   });
 
