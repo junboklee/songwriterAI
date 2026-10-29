@@ -1,6 +1,6 @@
 ﻿export const ko = {
   common: {
-    brand: 'Nova Singer AI',
+    brand: 'NovaSingerAI',
     loadingSession: '세션을 확인하는 중입니다...',
     cancel: '취소',
     saveChanges: '변경 사항 저장',
@@ -11,7 +11,7 @@
     close: '닫기'
   },
   authLayout: {
-    defaultHeroLabel: '사람 같은 AI와 함께 새로운 대화를 시작해 보세요.',
+    defaultHeroLabel: '이야기를 들려주면 AI 싱어송라이터 다연이 노래 가사로 써 줘요.',
     termsPrefix: '계속 진행하면 ',
     termsAnd: '과 ',
     termsSuffix: '에 동의하는 것으로 간주됩니다. 만 19세 이상만 가입할 수 있습니다.',
@@ -24,8 +24,8 @@
   },
   auth: {
     login: {
-      title: 'YEON:VERSE',
-      subtitle: '안녕하세요. 저와 함께 새로운 이야기를 시작해 볼까요?',
+      title: 'NovaSingerAI',
+      subtitle: '다시 오셨네요. 다연과 쓰던 가사를 이어서 만들어 보세요.',
       registerCta: '회원가입',
       loginCta: '로그인',
       googleContinue: 'Google로 계속',
@@ -54,9 +54,9 @@
       birthHelp: '만 19세 이상만 가입할 수 있어요. 생년월일은 나이 확인에만 쓰고 저장하지 않아요.',
       birthInvalid: '생년월일을 정확히 입력해 주세요.',
       underAge: '죄송해요. 만 19세 이상만 가입할 수 있어요.',
-      title: 'YEON:VERSE',
-      subtitle: '10분 만에 감성적인 도버스와 함께 나만의 이야기를 만들어 보세요.',
-      dashboardCta: '대시보드',
+      title: 'NovaSingerAI',
+      subtitle: '다연과 대화하며 내 이야기를 노래 가사로 만들어 보세요. 가입은 무료예요.',
+      tryCta: '체험하기',
       loginCta: '로그인',
       audioOn: '배경음 끄기',
       audioOff: '배경음 켜기',

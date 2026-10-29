@@ -1576,6 +1576,20 @@ textarea {
   gap: 12px;
 }
 
+.auth-page__nav-actions .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .auth-page__nav-actions {
+    gap: 8px;
+  }
+
+  .auth-page__nav-actions .btn {
+    padding-inline: 14px;
+  }
+}
+
 .auth-page__body {
   display: grid;
   grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
@@ -1724,6 +1738,13 @@ textarea {
 .auth-hero__media img {
   object-fit: cover;
   filter: saturate(1.15);
+}
+
+.auth-hero__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .auth-hero__video {

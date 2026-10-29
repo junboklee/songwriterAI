@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -15,7 +14,6 @@ type AuthLayoutProps = {
   subtitle?: string;
   children: ReactNode;
   heroLabel?: string;
-  heroSrc?: string;
   heroContent?: ReactNode;
   navPrimaryAction?: NavAction;
   navSecondaryAction?: NavAction;
@@ -33,8 +31,6 @@ export function AuthLayout({
   subtitle,
   children,
   heroLabel,
-  // Pre-sized WebP: App Hosting serves images unoptimized (the original JPEG is 974 KB).
-  heroSrc = '/images/auth-hero-1024.webp',
   heroContent,
   navPrimaryAction,
   navSecondaryAction
@@ -90,12 +86,14 @@ export function AuthLayout({
         <section className="auth-hero">
           <div className="auth-hero__media">
             {heroContent ?? (
-              <Image
-                src={heroSrc}
-                alt="Character AI preview"
-                fill
-                sizes="(min-width: 1024px) 640px, 80vw"
-                priority
+              // Plain <img> with pre-sized WebP files: App Hosting does not serve /_next/image.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src="/images/auth-hero-1024.webp"
+                srcSet="/images/auth-hero-640.webp 640w, /images/auth-hero-1024.webp 1024w, /images/auth-hero-1456.webp 1456w"
+                sizes="(min-width: 1024px) 640px, 90vw"
+                alt=""
+                className="auth-hero__image"
               />
             )}
           </div>
