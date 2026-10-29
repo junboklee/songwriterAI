@@ -172,7 +172,7 @@ export function DashboardSidebar({
   return (
     <>
       <aside id="dashboard-sidebar" className={`dashboard-sidebar${isOpen ? ' dashboard-sidebar--open' : ''}`}>
-        <div className="dashboard-sidebar__brand">Nova Singer AI</div>
+        <div className="dashboard-sidebar__brand">NovaSingerAI</div>
 
         <div className="dashboard-sidebar__create">
           <Link href="/character/create" onClick={onClose}>

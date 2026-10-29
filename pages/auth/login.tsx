@@ -104,15 +104,6 @@ export default function Login() {
     <AuthLayout
       title={t('title')}
       subtitle={t('subtitle')}
-      heroContent={
-        <iframe
-          src="https://www.youtube.com/embed/RworMGx4p9k?autoplay=1&mute=1&loop=1&playlist=RworMGx4p9k&controls=1&showinfo=0&modestbranding=1"
-          className="auth-hero__video"
-          frameBorder="0"
-          allow="autoplay; encrypted-media"
-          allowFullScreen
-        ></iframe>
-      }
       navSecondaryAction={{
         label: t('registerCta'),
         href: '/auth/register',

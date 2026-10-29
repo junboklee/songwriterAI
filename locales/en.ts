@@ -1,6 +1,6 @@
 export const en = {
   common: {
-    brand: 'Nova Singer AI',
+    brand: 'NovaSingerAI',
     loadingSession: 'Checking your session...',
     cancel: 'Cancel',
     saveChanges: 'Save changes',
@@ -11,7 +11,7 @@ export const en = {
     close: 'Close'
   },
   authLayout: {
-    defaultHeroLabel: 'Start a new conversation with a lifelike AI companion.',
+    defaultHeroLabel: 'Tell your story and Dayeon, an AI singer-songwriter, turns it into song lyrics.',
     termsPrefix: 'By continuing you agree to the ',
     termsAnd: ' and the ',
     termsSuffix: '. You must be 19 or older (Korean age of majority) to sign up.',
@@ -24,8 +24,8 @@ export const en = {
   },
   auth: {
     login: {
-      title: 'YEON:VERSE',
-      subtitle: "Hi there. Ready to start a new story with me?",
+      title: 'NovaSingerAI',
+      subtitle: 'Welcome back. Pick up the lyrics you were writing with Dayeon.',
       registerCta: 'Sign up',
       loginCta: 'Log in',
       googleContinue: 'Continue with Google',
@@ -56,9 +56,9 @@ export const en = {
       birthHelp: 'You must be 19 or older. Your date of birth is only used for this check and is not stored.',
       birthInvalid: 'Please enter a valid date of birth.',
       underAge: 'Sorry, you must be 19 or older to sign up.',
-      title: 'YEON:VERSE',
-      subtitle: 'Craft an emotive duet with your AI copilot in under ten minutes.',
-      dashboardCta: 'Dashboard',
+      title: 'NovaSingerAI',
+      subtitle: 'Turn your story into song lyrics by chatting with Dayeon. Signing up is free.',
+      tryCta: 'Try it',
       loginCta: 'Log in',
       audioOn: 'Mute ambience',
       audioOff: 'Play ambience',
