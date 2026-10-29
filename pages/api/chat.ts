@@ -9,7 +9,7 @@ import { AppError, BadRequestError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
 import { DEFAULT_PERSONA, getDefaultCharacter } from '@/lib/defaultCharacters';
-import { generateReply, streamReply, type ChatTurn } from '@/lib/llm';
+import { generateReply, streamReply, withoutPlaceholders, type ChatTurn } from '@/lib/llm';
 import { withLyricsGuard } from '@/lib/lyricsGuard';
 import { CRISIS_REMINDER, looksLikeCrisis } from '@/lib/safety';
 import { loadSongMemory, MEMORY_MAX_HISTORY } from '@/lib/songMemory';
@@ -219,8 +219,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let replyText = '';
     let tokenUsage: TokenUsage | null = null;
+    // Adds up: a placeholder retry (withoutPlaceholders) makes a second model call.
     const captureUsage = (usage: TokenUsage) => {
-      tokenUsage = usage;
+      tokenUsage = tokenUsage
+        ? { inputTokens: tokenUsage.inputTokens + usage.inputTokens, outputTokens: tokenUsage.outputTokens + usage.outputTokens }
+        : usage;
     };
 
     if (wantsStream(req)) {
@@ -240,6 +243,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       replyText = await generateReply(instructions, turns, captureUsage);
     }
+    // When streaming, the client swaps the streamed text for the final reply in the 'done' event.
+    replyText = await withoutPlaceholders(instructions, turns, replyText, captureUsage);
 
     if (!replyText) {
       throw new AppError('AI가 응답을 생성하지 못했습니다. 다시 시도해 주세요.', {
