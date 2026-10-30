@@ -9,6 +9,7 @@ const routes = [
   '/',
   '/lyrics',
   '/lyrics/check',
+  '/lyrics/style',
   ...LYRICS_TOPICS.map(topic => `/lyrics/${topic.slug}`),
   '/explore',
   '/pricing',

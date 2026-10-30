@@ -13,9 +13,10 @@ describe('pageCard', () => {
     });
   });
 
-  it('has a card for the lyrics checker, and no topic takes its slug', () => {
+  it('has a card for each free tool, and no topic takes their slugs', () => {
     expect(pageCard('check')).toEqual(expect.objectContaining({ label: '무료 도구' }));
-    const reserved = ['home', 'check'];
+    expect(pageCard('style')).toEqual(expect.objectContaining({ label: '무료 도구' }));
+    const reserved = ['home', 'check', 'style'];
     LYRICS_TOPICS.forEach(topic => expect(reserved).not.toContain(topic.slug));
   });
 
