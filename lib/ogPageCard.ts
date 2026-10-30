@@ -1,7 +1,7 @@
 import { getLyricsTopic } from '@/lib/lyricsTopics';
 
-// Link-preview cards for the public pages: the landing page ('home'), the lyrics checker
-// ('check') and each /lyrics topic.
+// Link-preview cards for the public pages: the landing page ('home'), the free tools ('check',
+// 'style') and each /lyrics topic.
 // Everything here is static, so the image route can cache the result.
 
 export type PageCard = { title: string; lyrics: string; label: string };
@@ -19,12 +19,21 @@ const CHECK_CARD: PageCard = {
   label: '무료 도구'
 };
 
+const STYLE_CARD: PageCard = {
+  title: 'Suno 스타일 프롬프트 만들기',
+  lyrics: '장르 · 분위기 · 빠르기 · 보컬 · 악기\n고르기만 하면 영어 프롬프트로\nSuno 스타일 칸에 바로 붙여 넣기\n가입 없이 무료로 써 보세요',
+  label: '무료 도구'
+};
+
 export function pageCard(slug: string): PageCard | null {
   if (slug === 'home') {
     return HOME_CARD;
   }
   if (slug === 'check') {
     return CHECK_CARD;
+  }
+  if (slug === 'style') {
+    return STYLE_CARD;
   }
   const topic = getLyricsTopic(slug);
   return topic ? { title: topic.title, lyrics: topic.sample.lyrics, label: `예시 가사 「${topic.sample.title}」` } : null;

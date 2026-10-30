@@ -68,7 +68,7 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
 
         <p className="topic-lead">
           가사를 다 썼다면 <Link href="/lyrics/check">가창성 검사기</Link>로 줄마다 음절 수와 부르기 어려운 곳을 확인해
-          보세요.
+          보세요. Suno에 넣을 스타일은 <Link href="/lyrics/style">스타일 프롬프트 만들기</Link>에서 만들 수 있어요.
         </p>
 
         <h2>자주 묻는 질문</h2>
