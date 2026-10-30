@@ -4,7 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { authenticateRequest } from '@/lib/serverAuth';
 import { saveThreadSnapshot } from '@/lib/chatPersistence';
 import { enforceRateLimit } from '@/lib/rateLimiter';
-import { logError, logInfo } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 import { AppError, BadRequestError } from '@/lib/errors';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { buildCharacterInstructions } from '@/lib/characterPrompt';
@@ -311,7 +311,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             code: 'INTERNAL_SERVER_ERROR'
           });
 
-    if (error instanceof AppError) {
+    if (error instanceof AppError && error.statusCode < 500) {
+      // Expected rejections (bad input, missing thread, limits) stay visible without reading as outages.
+      logWarn('chat.app_error', { statusCode: error.statusCode, code: error.code, message: error.message });
+    } else if (error instanceof AppError) {
       logError('chat.app_error', error, { statusCode: error.statusCode, code: error.code });
     } else {
       logError('chat.unexpected_error', error);

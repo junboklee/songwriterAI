@@ -7,6 +7,7 @@ import { generateReply, streamReply } from '@/lib/llm';
 import { loadSongMemory } from '@/lib/songMemory';
 import { assertWithinMonthlyQuota, recordChatUsage } from '@/lib/usage';
 import { AppError } from '@/lib/errors';
+import { logError, logWarn } from '@/lib/logger';
 import handler from '@/pages/api/chat';
 
 jest.mock('@/lib/serverAuth');
@@ -202,6 +203,9 @@ describe('/api/chat handler', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ code: 'THREAD_NOT_FOUND' }));
     expect(generateReplyMock).not.toHaveBeenCalled();
     expect(saveThreadSnapshotMock).not.toHaveBeenCalled();
+    // An expected rejection is a warning, not an error.
+    expect(logWarn).toHaveBeenCalledWith('chat.app_error', expect.objectContaining({ statusCode: 404, code: 'THREAD_NOT_FOUND' }));
+    expect(logError).not.toHaveBeenCalled();
   });
 
   it('sends stored history to the model for an existing conversation', async () => {
