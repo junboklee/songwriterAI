@@ -2,9 +2,14 @@ type LogLevel = 'info' | 'warn' | 'error';
 
 type LogMetadata = Record<string, unknown>;
 
+// Cloud Logging reads `severity` from JSON lines; without it every entry is DEFAULT and
+// severity filters miss real errors.
+const SEVERITY: Record<LogLevel, string> = { info: 'INFO', warn: 'WARNING', error: 'ERROR' };
+
 const log = (level: LogLevel, event: string, metadata: LogMetadata = {}) => {
   const payload = {
     level,
+    severity: SEVERITY[level],
     event,
     timestamp: new Date().toISOString(),
     ...metadata
