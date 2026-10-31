@@ -6,7 +6,9 @@ export default class MyDocument extends Document {
   render() {
     return (
       <Html lang="ko">
-        <Head />
+        <Head>
+          <link rel="alternate" type="application/rss+xml" title="NovaSingerAI 노래 가사 만들기" href="https://novasingerai.com/rss.xml" />
+        </Head>
         <body>
           {GTM_ID ? (
             <noscript>
