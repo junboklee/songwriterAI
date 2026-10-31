@@ -19,7 +19,7 @@ export default function LyricsTopicsIndex() {
       <p className="topic-lead">
         이미 쓴 가사가 있다면 <Link href="/lyrics/check">가사 음절 수 세기 · 가창성 검사기</Link>로 부르기 어려운 줄을
         찾아보세요. Suno에 넣을 스타일은 <Link href="/lyrics/style">Suno 스타일 프롬프트 만들기</Link>에서 골라 만들 수
-        있어요.
+        있어요. 라임이 막히면 <Link href="/lyrics/rhyme">라임 찾기</Link>에서 끝 모음이 같은 단어를 찾아보세요.
       </p>
       {TOPIC_GROUPS.map(group => (
         <section key={group.id}>

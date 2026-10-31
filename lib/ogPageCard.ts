@@ -1,7 +1,7 @@
 import { getLyricsTopic } from '@/lib/lyricsTopics';
 
 // Link-preview cards for the public pages: the landing page ('home'), the free tools ('check',
-// 'style') and each /lyrics topic.
+// 'style', 'rhyme') and each /lyrics topic.
 // Everything here is static, so the image route can cache the result.
 
 export type PageCard = { title: string; lyrics: string; label: string };
@@ -25,6 +25,12 @@ const STYLE_CARD: PageCard = {
   label: '무료 도구'
 };
 
+const RHYME_CARD: PageCard = {
+  title: '라임 찾기 · 한국어 각운 사전',
+  lyrics: '사랑 · 마당 · 사탕 · 가방\n끝 모음이 같은 단어를 찾아요\n두 글자 · 세 글자 라임까지\n가입 없이 무료로 써 보세요',
+  label: '무료 도구'
+};
+
 export function pageCard(slug: string): PageCard | null {
   if (slug === 'home') {
     return HOME_CARD;
@@ -34,6 +40,9 @@ export function pageCard(slug: string): PageCard | null {
   }
   if (slug === 'style') {
     return STYLE_CARD;
+  }
+  if (slug === 'rhyme') {
+    return RHYME_CARD;
   }
   const topic = getLyricsTopic(slug);
   return topic ? { title: topic.title, lyrics: topic.sample.lyrics, label: `예시 가사 「${topic.sample.title}」` } : null;
