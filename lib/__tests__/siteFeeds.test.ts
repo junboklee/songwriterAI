@@ -45,11 +45,11 @@ describe('buildRss', () => {
   const items = xml.match(/<item>.*?<\/item>/g) ?? [];
 
   it('has one item per topic and tool, newest first', () => {
-    expect(items).toHaveLength(LYRICS_TOPICS.length + 2);
+    expect(items).toHaveLength(LYRICS_TOPICS.length + 3);
     const dates = items.map(item => Date.parse(item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] ?? ''));
     dates.forEach(date => expect(Number.isNaN(date)).toBe(false));
     expect([...dates].sort((a, b) => b - a)).toEqual(dates);
-    expect(items[0]).toContain('<link>https://novasingerai.com/lyrics/check</link>');
+    expect(items[0]).toContain('<link>https://novasingerai.com/lyrics/rhyme</link>');
   });
 
   it('publishes Korean calendar days as 09:00 KST', () => {
@@ -62,7 +62,7 @@ describe('buildRss', () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<rss version="2.0"');
     expect(xml).toContain('<atom:link href="https://novasingerai.com/rss.xml" rel="self" type="application/rss+xml"/>');
-    expect(xml).toContain('<lastBuildDate>Fri, 30 Oct 2026 00:00:00 GMT</lastBuildDate>');
+    expect(xml).toContain('<lastBuildDate>Sat, 31 Oct 2026 00:00:00 GMT</lastBuildDate>');
     // Raw ampersands or angle brackets in text would break the feed.
     expect(xml.replace(/&(amp|lt|gt|quot|apos);/g, '')).not.toMatch(/&/);
   });

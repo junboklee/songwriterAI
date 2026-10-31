@@ -16,7 +16,8 @@ describe('pageCard', () => {
   it('has a card for each free tool, and no topic takes their slugs', () => {
     expect(pageCard('check')).toEqual(expect.objectContaining({ label: '무료 도구' }));
     expect(pageCard('style')).toEqual(expect.objectContaining({ label: '무료 도구' }));
-    const reserved = ['home', 'check', 'style'];
+    expect(pageCard('rhyme')).toEqual(expect.objectContaining({ label: '무료 도구' }));
+    const reserved = ['home', 'check', 'style', 'rhyme'];
     LYRICS_TOPICS.forEach(topic => expect(reserved).not.toContain(topic.slug));
   });
 
