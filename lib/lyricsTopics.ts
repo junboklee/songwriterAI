@@ -16,6 +16,8 @@ export type LyricsTopic = {
   // Short name for chips and link lists ("생일 축하 노래"); title is the full search title.
   label: string;
   group: TopicGroup;
+  // Last time the page's text changed (YYYY-MM-DD); the sitemap and RSS feed report it.
+  updated: string;
   title: string;
   heading: string;
   description: string;
@@ -32,6 +34,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'birthday-song',
     label: '생일 축하 노래',
     group: 'celebrate',
+    updated: '2026-10-19',
     title: '생일 축하 노래 가사 만들기',
     heading: '세상에 하나뿐인 생일 축하 노래 가사 만들기',
     description:
@@ -63,6 +66,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'wedding-song',
     label: '결혼식 축가',
     group: 'celebrate',
+    updated: '2026-10-19',
     title: '결혼식 축가 가사 만들기',
     heading: '두 사람의 이야기로 만드는 결혼식 축가 가사',
     description:
@@ -94,6 +98,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'confession-song',
     label: '고백 노래',
     group: 'heart',
+    updated: '2026-10-19',
     title: '고백 노래 가사 만들기',
     heading: '말로 하기 어려운 마음을 담은 고백 노래 가사',
     description:
@@ -125,6 +130,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'parents-song',
     label: '부모님께 드리는 노래',
     group: 'heart',
+    updated: '2026-10-19',
     title: '부모님께 드리는 노래 가사 만들기',
     heading: '어버이날·생신에 부모님께 드리는 노래 가사',
     description:
@@ -156,6 +162,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'breakup-song',
     label: '이별 노래',
     group: 'heart',
+    updated: '2026-10-19',
     title: '이별 노래 가사 쓰기',
     heading: '오늘의 마음을 정리하는 이별 노래 가사 쓰기',
     description:
@@ -187,6 +194,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'suno-korean-lyrics',
     label: 'Suno 한국어 가사',
     group: 'learn',
+    updated: '2026-10-19',
     title: 'Suno 한국어 가사 잘 쓰는 법',
     heading: 'Suno에서 한국어 가사가 또렷하게 불리게 쓰는 법',
     description:
@@ -218,6 +226,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'graduation-song',
     label: '졸업 축하 노래',
     group: 'celebrate',
+    updated: '2026-10-19',
     title: '졸업 축하 노래 가사 만들기',
     heading: '함께한 시간을 담은 졸업 축하 노래 가사',
     description:
@@ -249,6 +258,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'exam-cheer-song',
     label: '수험생 응원 노래',
     group: 'heart',
+    updated: '2026-10-19',
     title: '수험생 응원 노래 가사 만들기',
     heading: '시험을 앞둔 사람에게 보내는 응원 노래 가사',
     description:
@@ -280,6 +290,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'pet-song',
     label: '반려동물 노래',
     group: 'heart',
+    updated: '2026-10-19',
     title: '반려동물 노래 가사 만들기',
     heading: '우리 강아지, 고양이를 위한 반려동물 노래 가사',
     description:
@@ -311,6 +322,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'new-year-song',
     label: '연말·새해 노래',
     group: 'celebrate',
+    updated: '2026-10-19',
     title: '연말·새해 노래 가사 만들기',
     heading: '한 해를 돌아보고 새해를 여는 노래 가사',
     description:
@@ -342,6 +354,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'anniversary-song',
     label: '연애 기념일 노래',
     group: 'celebrate',
+    updated: '2026-10-19',
     title: '연애 기념일 노래 가사 만들기',
     heading: '100일, 1주년을 위한 커플 기념일 노래 가사',
     description:
@@ -373,6 +386,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'lullaby',
     label: '아기 자장가',
     group: 'heart',
+    updated: '2026-10-19',
     title: '아기 자장가 가사 만들기',
     heading: '우리 아기만을 위한 자장가 가사 만들기',
     description:
@@ -404,6 +418,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'christmas-song',
     label: '크리스마스 캐럴',
     group: 'celebrate',
+    updated: '2026-10-26',
     title: '크리스마스 캐럴 가사 만들기',
     heading: '우리만의 크리스마스 캐럴 가사 만들기',
     description:
@@ -435,6 +450,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'proposal-song',
     label: '프러포즈 노래',
     group: 'celebrate',
+    updated: '2026-10-26',
     title: '프러포즈 노래 가사 만들기',
     heading: '평생을 약속하는 프러포즈 노래 가사',
     description:
@@ -466,6 +482,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'farewell-song',
     label: '퇴사·송별 노래',
     group: 'heart',
+    updated: '2026-10-26',
     title: '퇴사·송별 노래 가사 만들기',
     heading: '떠나는 동료에게 보내는 송별 노래 가사',
     description:
@@ -497,6 +514,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'discharge-song',
     label: '전역 축하 노래',
     group: 'celebrate',
+    updated: '2026-10-26',
     title: '전역 축하 노래 가사 만들기',
     heading: '기다린 시간을 담은 전역 축하 노래 가사',
     description:
@@ -528,6 +546,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'teacher-song',
     label: '선생님 감사 노래',
     group: 'heart',
+    updated: '2026-10-26',
     title: '선생님께 드리는 감사 노래 가사 만들기',
     heading: '고마운 선생님께 드리는 감사 노래 가사',
     description:
@@ -559,6 +578,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'comfort-song',
     label: '위로·응원 노래',
     group: 'heart',
+    updated: '2026-10-26',
     title: '위로·응원 노래 가사 만들기',
     heading: '힘든 친구에게 건네는 위로와 응원의 노래 가사',
     description:
@@ -590,6 +610,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'parents-birthday-party-song',
     label: '칠순·환갑 축하 노래',
     group: 'celebrate',
+    updated: '2026-10-27',
     title: '칠순·환갑 축하 노래 가사 만들기',
     heading: '부모님 칠순·환갑 잔치에 드리는 축하 노래 가사',
     description:
@@ -621,6 +642,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'first-birthday-song',
     label: '돌잔치 노래',
     group: 'celebrate',
+    updated: '2026-10-27',
     title: '돌잔치 노래 가사 만들기',
     heading: '아기의 첫 생일, 돌잔치와 성장 영상에 쓸 노래 가사',
     description:
@@ -652,6 +674,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'friendship-song',
     label: '우정 노래',
     group: 'heart',
+    updated: '2026-10-27',
     title: '우정 노래 가사 만들기',
     heading: '오랜 친구에게 선물하는 우정 노래 가사',
     description:
@@ -683,6 +706,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'how-to-write-lyrics',
     label: '작사하는 법',
     group: 'learn',
+    updated: '2026-10-27',
     title: '작사하는 법, 노래 가사 쓰는 법',
     heading: '처음 써 보는 사람을 위한 작사하는 법',
     description:
@@ -716,6 +740,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'rap-lyrics',
     label: '랩 가사',
     group: 'genre',
+    updated: '2026-10-28',
     title: '랩 가사 쓰는 법, 랩 가사 만들기',
     heading: '내 이야기로 쓰는 랩 가사, 벌스와 훅 만들기',
     description:
@@ -748,6 +773,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'trot-lyrics',
     label: '트로트 가사',
     group: 'genre',
+    updated: '2026-10-28',
     title: '트로트 가사 만들기',
     heading: '구성지게 꺾이는 우리만의 트로트 가사 만들기',
     description:
@@ -780,6 +806,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'kids-song',
     label: '동요',
     group: 'genre',
+    updated: '2026-10-28',
     title: '동요 가사 만들기',
     heading: '우리 아이를 위한 동요 가사 만들기',
     description:
@@ -812,6 +839,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'jingle-song',
     label: 'CM송·로고송',
     group: 'genre',
+    updated: '2026-10-28',
     title: 'CM송·로고송 가사 만들기',
     heading: '우리 가게, 우리 브랜드를 위한 CM송·로고송 가사',
     description:
@@ -844,6 +872,7 @@ export const LYRICS_TOPICS: LyricsTopic[] = [
     slug: 'enlistment-song',
     label: '입대 노래',
     group: 'heart',
+    updated: '2026-10-28',
     title: '입대 노래 가사 만들기',
     heading: '군대 가는 친구, 연인, 가족에게 건네는 입대 노래 가사',
     description:
