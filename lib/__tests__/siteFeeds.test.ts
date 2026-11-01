@@ -49,7 +49,10 @@ describe('buildRss', () => {
     const dates = items.map(item => Date.parse(item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] ?? ''));
     dates.forEach(date => expect(Number.isNaN(date)).toBe(false));
     expect([...dates].sort((a, b) => b - a)).toEqual(dates);
-    expect(items[0]).toContain('<link>https://novasingerai.com/lyrics/rhyme</link>');
+    const newest = SITE_PAGES.filter(page => page.title && page.updated).sort((a, b) =>
+      (b.updated as string).localeCompare(a.updated as string)
+    )[0];
+    expect(items[0]).toContain(`<link>https://novasingerai.com${newest.path}</link>`);
   });
 
   it('publishes Korean calendar days as 09:00 KST', () => {
@@ -62,7 +65,8 @@ describe('buildRss', () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<rss version="2.0"');
     expect(xml).toContain('<atom:link href="https://novasingerai.com/rss.xml" rel="self" type="application/rss+xml"/>');
-    expect(xml).toContain('<lastBuildDate>Sat, 31 Oct 2026 00:00:00 GMT</lastBuildDate>');
+    const firstPubDate = items[0]?.match(/<pubDate>(.*?)<\/pubDate>/)?.[1];
+    expect(xml).toContain(`<lastBuildDate>${firstPubDate}</lastBuildDate>`);
     // Raw ampersands or angle brackets in text would break the feed.
     expect(xml.replace(/&(amp|lt|gt|quot|apos);/g, '')).not.toMatch(/&/);
   });
