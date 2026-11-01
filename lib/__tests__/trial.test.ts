@@ -1,4 +1,4 @@
-import { consumeTrialMessage, sanitizeTrialHistory, visitorKey } from '@/lib/trial';
+import { consumeTrialMessage, refundTrialMessage, sanitizeTrialHistory, visitorKey } from '@/lib/trial';
 
 const docs: Record<string, { count: number }> = {};
 jest.mock('@/lib/logger', () => ({ logWarn: jest.fn() }));
@@ -10,6 +10,9 @@ jest.mock('@/lib/firebaseAdmin', () => ({
       fn({
         get: async ({ id }: { id: string }) => ({ get: (field: string) => (field === 'count' ? docs[id]?.count : undefined) }),
         set: ({ id }: { id: string }, data: { count: number }) => {
+          docs[id] = { count: data.count };
+        },
+        update: ({ id }: { id: string }, data: { count: number }) => {
           docs[id] = { count: data.count };
         }
       })
@@ -41,6 +44,25 @@ describe('consumeTrialMessage', () => {
   it('closes the trial for everyone once the daily total is reached', async () => {
     docs['2026-10-25_all'] = { count: 300 };
     await expect(consumeTrialMessage('3.3.3.3', now)).rejects.toMatchObject({ code: 'TRIAL_CLOSED' });
+  });
+});
+
+describe('refundTrialMessage', () => {
+  beforeEach(() => Object.keys(docs).forEach(key => delete docs[key]));
+  const now = new Date('2026-10-25T03:00:00Z');
+
+  it('gives back the message to the visitor and the daily total', async () => {
+    await consumeTrialMessage('4.4.4.4', now);
+    await consumeTrialMessage('4.4.4.4', now);
+    await refundTrialMessage('4.4.4.4', now);
+    expect(docs['2026-10-25_all']).toEqual({ count: 1 });
+    await expect(consumeTrialMessage('4.4.4.4', now)).resolves.toEqual({ remaining: 1 });
+  });
+
+  it('never goes below zero', async () => {
+    await refundTrialMessage('5.5.5.5', now);
+    expect(docs['2026-10-25_all']).toBeUndefined();
+    await expect(consumeTrialMessage('5.5.5.5', now)).resolves.toEqual({ remaining: 2 });
   });
 });
 

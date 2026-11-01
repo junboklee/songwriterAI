@@ -11,6 +11,7 @@ import {
   TRIAL_MAX_MESSAGE,
   cleanupTrialUsage,
   consumeTrialMessage,
+  refundTrialMessage,
   sanitizeTrialHistory
 } from '@/lib/trial';
 
@@ -22,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let consumedBy: string | null = null;
   try {
     const body = (req.body ?? {}) as { message?: unknown; history?: unknown; adult?: unknown };
     // The service is for adults only (terms 제4조), so the visitor must confirm it before trying.
@@ -36,7 +38,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new BadRequestError(`체험에서는 ${TRIAL_MAX_MESSAGE}자까지 보낼 수 있어요.`);
     }
 
-    const { remaining } = await consumeTrialMessage(clientIp(req));
+    const ip = clientIp(req);
+    const { remaining } = await consumeTrialMessage(ip);
+    consumedBy = ip;
     if (Math.random() < 0.05) {
       void cleanupTrialUsage();
     }
@@ -56,6 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     logInfo('trial.message', { remaining, historyLength: turns.length - 1, existingLyricsRequest: guarded.flagged, crisis });
     return res.status(200).json({ reply, remaining, crisis });
   } catch (error) {
+    if (consumedBy) {
+      await refundTrialMessage(consumedBy).catch(refundError => logError('trial.refund_failed', refundError));
+    }
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ error: error.message, code: error.code });
     }

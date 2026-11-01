@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 import handler from '@/pages/api/trial/chat';
 import { generateReply } from '@/lib/llm';
-import { consumeTrialMessage, TrialLimitError } from '@/lib/trial';
+import { AppError } from '@/lib/errors';
+import { consumeTrialMessage, refundTrialMessage, TrialLimitError } from '@/lib/trial';
 
 jest.mock('@/lib/llm', () => ({
   generateReply: jest.fn(),
@@ -11,7 +12,7 @@ jest.mock('@/lib/llm', () => ({
 jest.mock('@/lib/logger', () => ({ logInfo: jest.fn(), logError: jest.fn() }));
 jest.mock('@/lib/trial', () => {
   const actual = jest.requireActual('@/lib/trial');
-  return { ...actual, consumeTrialMessage: jest.fn(), cleanupTrialUsage: jest.fn() };
+  return { ...actual, consumeTrialMessage: jest.fn(), refundTrialMessage: jest.fn(), cleanupTrialUsage: jest.fn() };
 });
 jest.mock('@/lib/firebaseAdmin', () => ({}));
 
@@ -37,6 +38,7 @@ describe('POST /api/trial/chat', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (consumeTrialMessage as jest.Mock).mockResolvedValue({ remaining: 2 });
+    (refundTrialMessage as jest.Mock).mockResolvedValue(undefined);
     (generateReply as jest.Mock).mockResolvedValue('반가워! 어떤 노래를 쓸까?');
   });
 
@@ -75,6 +77,17 @@ describe('POST /api/trial/chat', () => {
     expect(res.code).toBe(429);
     expect(res.body?.code).toBe('TRIAL_LIMIT');
     expect(generateReply).not.toHaveBeenCalled();
+    expect(refundTrialMessage).not.toHaveBeenCalled();
+  });
+
+  it('gives the try back and shows the reason when the AI is unavailable', async () => {
+    (generateReply as jest.Mock).mockRejectedValue(
+      new AppError('지금은 AI가 잠시 답할 수 없어요.', { statusCode: 503, code: 'AI_UNAVAILABLE' })
+    );
+    const res = await call({ message: '노래 써 줘', adult: true });
+    expect(res.code).toBe(503);
+    expect(res.body?.code).toBe('AI_UNAVAILABLE');
+    expect(refundTrialMessage).toHaveBeenCalledWith('203.0.113.7');
   });
 
   it('rejects empty and overly long messages', async () => {
