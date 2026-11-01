@@ -306,7 +306,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const appError =
       error instanceof AppError
         ? error
-        : new AppError('Unexpected error while contacting the assistant.', {
+        : new AppError('잠시 후 다시 시도해 주세요.', {
             statusCode: 500,
             code: 'INTERNAL_SERVER_ERROR'
           });

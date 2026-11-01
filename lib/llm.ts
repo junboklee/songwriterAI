@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 
+import { AppError } from '@/lib/errors';
+import { logError } from '@/lib/logger';
 import { extractLyrics } from '@/lib/lyricsFormat';
 import { SONGWRITING_GUIDELINES } from '@/lib/songwritingPrompt';
 import type { TokenUsage } from '@/lib/usage';
@@ -38,6 +40,34 @@ function getClient() {
   return client;
 }
 
+// The provider turned the request down for the whole service (credits used up, or rate limited).
+// Users get a calm Korean message; the provider's own message goes to the log, which alerts.
+export class AiUnavailableError extends AppError {
+  constructor() {
+    super('지금은 AI가 잠시 답할 수 없어요. 잠시 후 다시 시도해 주세요.', { statusCode: 503, code: 'AI_UNAVAILABLE' });
+  }
+}
+
+const QUOTA_MESSAGE = /no credits|insufficient_quota|exceeded your current quota/i;
+
+export function asProviderError(error: unknown) {
+  if (error instanceof AppError) {
+    return error;
+  }
+  const { status, code, message } = (error ?? {}) as { status?: unknown; code?: unknown; message?: unknown };
+  const text = `${String(code ?? '')} ${String(message ?? '')}`;
+  const quota = QUOTA_MESSAGE.test(text);
+  if (!quota && status !== 429) {
+    return error;
+  }
+  logError('llm.unavailable', error, { reason: quota ? 'quota' : 'rate_limit' });
+  return new AiUnavailableError();
+}
+
+const rethrowProviderError = (error: unknown): never => {
+  throw asProviderError(error);
+};
+
 export function buildSystemPrompt(personaInstructions: string) {
   return `${SONGWRITING_GUIDELINES}\n\n# Your persona\n${personaInstructions.trim()}`;
 }
@@ -58,7 +88,9 @@ export async function generateReply(
   turns: ChatTurn[],
   onUsage?: UsageCallback
 ) {
-  const response = await getClient().responses.create(buildRequest(personaInstructions, turns));
+  const response = await getClient()
+    .responses.create(buildRequest(personaInstructions, turns))
+    .catch(rethrowProviderError);
   const usage = toTokenUsage(response.usage);
   if (usage) {
     onUsage?.(usage);
@@ -101,13 +133,15 @@ export async function completeText(
   onUsage?: UsageCallback,
   maxOutputTokens = 800
 ) {
-  const response = await getClient().responses.create({
-    model: CHAT_MODEL,
-    instructions,
-    input: [{ role: 'user', content: input }],
-    ...modelOptions(CHAT_MODEL, maxOutputTokens),
-    store: false
-  });
+  const response = await getClient()
+    .responses.create({
+      model: CHAT_MODEL,
+      instructions,
+      input: [{ role: 'user', content: input }],
+      ...modelOptions(CHAT_MODEL, maxOutputTokens),
+      store: false
+    })
+    .catch(rethrowProviderError);
   const usage = toTokenUsage(response.usage);
   if (usage) {
     onUsage?.(usage);
@@ -120,21 +154,26 @@ export async function* streamReply(
   turns: ChatTurn[],
   onUsage?: UsageCallback
 ): AsyncGenerator<string> {
-  const stream = await getClient().responses.create({
-    ...buildRequest(personaInstructions, turns),
-    stream: true
-  });
+  try {
+    const stream = await getClient().responses.create({
+      ...buildRequest(personaInstructions, turns),
+      stream: true
+    });
 
-  for await (const event of stream) {
-    if (event.type === 'response.output_text.delta') {
-      yield event.delta;
-    } else if (event.type === 'response.completed') {
-      const usage = toTokenUsage(event.response.usage);
-      if (usage) {
-        onUsage?.(usage);
+    for await (const event of stream) {
+      if (event.type === 'response.output_text.delta') {
+        yield event.delta;
+      } else if (event.type === 'response.completed') {
+        const usage = toTokenUsage(event.response.usage);
+        if (usage) {
+          onUsage?.(usage);
+        }
+      } else if (event.type === 'response.failed' || event.type === 'error') {
+        throw new Error('The model failed to generate a reply.');
       }
-    } else if (event.type === 'response.failed' || event.type === 'error') {
-      throw new Error('The model failed to generate a reply.');
     }
+  } catch (error) {
+    // The SDK reports a used-up quota while iterating the stream, not when it is created.
+    rethrowProviderError(error);
   }
 }

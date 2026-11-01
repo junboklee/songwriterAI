@@ -58,6 +58,25 @@ export async function consumeTrialMessage(ip: string, now = new Date()) {
   });
 }
 
+// Gives the message back when the AI could not answer, so a provider outage does not use up the
+// visitor's few daily tries. Never goes below zero.
+export async function refundTrialMessage(ip: string, now = new Date()) {
+  const date = formatYmd(todayInSeoul(now));
+  const refs = [
+    adminDb.collection(COLLECTION).doc(`${date}_${visitorKey(ip, date)}`),
+    adminDb.collection(COLLECTION).doc(`${date}_all`)
+  ];
+  await adminDb.runTransaction(async tx => {
+    const docs = await Promise.all(refs.map(ref => tx.get(ref)));
+    docs.forEach((doc, index) => {
+      const count = Number(doc.get('count') ?? 0);
+      if (count > 0) {
+        tx.update(refs[index], { count: count - 1 });
+      }
+    });
+  });
+}
+
 // Removes expired counters now and then (no Firestore TTL policy is configured).
 export async function cleanupTrialUsage(now = new Date()) {
   try {
