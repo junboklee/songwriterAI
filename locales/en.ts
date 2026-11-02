@@ -133,9 +133,6 @@ export const en = {
       avatarSize: 'Image size must be 2MB or smaller.'
     }
   },
-  rateLimiter: {
-    exceeded: 'You hit the request limit. Please try again shortly.'
-  },
   characterCreate: {
     pageTitle: 'Create character',
     saveSuccess: 'Character created successfully.',

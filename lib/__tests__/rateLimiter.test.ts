@@ -74,6 +74,6 @@ afterEach(() => {
     await enforceRateLimit('burst-key');
     await enforceRateLimit('burst-key');
 
-    await expect(enforceRateLimit('burst-key')).rejects.toThrow('rateLimiter.exceeded');
+    await expect(enforceRateLimit('burst-key')).rejects.toThrow('요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.');
   });
 });

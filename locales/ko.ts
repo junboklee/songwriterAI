@@ -128,9 +128,6 @@
       avatarSize: '이미지 용량은 2MB 이하여야 합니다.'
     }
   },
-  rateLimiter: {
-    exceeded: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.'
-  },
   characterCreate: {
     pageTitle: '캐릭터 만들기',
     saveSuccess: '캐릭터가 성공적으로 생성되었습니다.',

@@ -2,7 +2,6 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import { adminDb } from '@/lib/firebaseAdmin';
 import { RateLimitError } from '@/lib/errors';
-import { translate } from '@/lib/i18n';
 import { logWarn } from '@/lib/logger';
 
 type RateLimitEntry = {
@@ -18,6 +17,8 @@ const parsePositiveInt = (value: string | undefined, fallback: number) => {
 const WINDOW_MS = parsePositiveInt(process.env.CHAT_RATE_LIMIT_WINDOW_MS, 60_000);
 const MAX_REQUESTS = parsePositiveInt(process.env.CHAT_RATE_LIMIT_MAX_REQUESTS, 20);
 const RATE_LIMIT_COLLECTION = '_rateLimitWindows';
+// Plain text: translations are only registered in the browser, so translate() here returns the key.
+const EXCEEDED_MESSAGE = '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.';
 const MAX_DOC_ID_LENGTH = 150;
 const CLEANUP_INTERVAL_MS = Math.max(WINDOW_MS, 60_000);
 
@@ -76,7 +77,7 @@ export async function enforceRateLimit(key: string) {
     }
 
     if (requestCount >= MAX_REQUESTS) {
-      throw new RateLimitError(translate('rateLimiter.exceeded'));
+      throw new RateLimitError(EXCEEDED_MESSAGE);
     }
 
     tx.set(
