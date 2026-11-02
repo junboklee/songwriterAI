@@ -4905,6 +4905,26 @@ textarea {
   color: #fca5a5;
   font-size: 0.85rem;
 }
+.trial__fallback {
+  display: grid;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+.trial__fallback p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.trial__fallback ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trial__fallback a {
+  text-decoration: underline;
+}
 
 .metric-grid {
   display: grid;

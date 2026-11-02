@@ -18,6 +18,14 @@ const DAYEON = CHARACTER_PROFILES['1'];
 const MAX_MESSAGE = 1000;
 const REGISTER_HREF = `/auth/register?redirect=${encodeURIComponent('/suno')}`;
 
+// These work without the AI, so they stay useful while it can't answer.
+const FREE_TOOLS = [
+  { href: '/lyrics/structure', name: '노래 구조 짜기' },
+  { href: '/lyrics/rhyme', name: '라임 찾기' },
+  { href: '/lyrics/check', name: '가사 음절 수 세기' },
+  { href: '/lyrics/style', name: 'Suno 스타일 만들기' }
+];
+
 // No-signup trial with Dayeon (POST /api/trial/chat). Nothing is saved on the server; the latest
 // lyrics are kept in this browser so they can be saved to the library right after sign-up.
 export default function TryPage() {
@@ -30,6 +38,7 @@ export default function TryPage() {
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [limitReached, setLimitReached] = useState(false);
+  const [aiUnavailable, setAiUnavailable] = useState(false);
   const [showCrisis, setShowCrisis] = useState(false);
 
   const prompt = typeof router.query.prompt === 'string' ? router.query.prompt.slice(0, 500) : '';
@@ -65,6 +74,7 @@ export default function TryPage() {
     }
     setBusy(true);
     setError(null);
+    setAiUnavailable(false);
     setTurns(prev => [...prev, { role: 'user', content: text }]);
     setInput('');
     trackEvent('trial_message', { turn: turns.filter(turn => turn.role === 'user').length + 1, from });
@@ -79,6 +89,10 @@ export default function TryPage() {
         if (payload.code === 'TRIAL_LIMIT' || payload.code === 'TRIAL_CLOSED') {
           setLimitReached(true);
         }
+        if (payload.code === 'AI_UNAVAILABLE') {
+          setAiUnavailable(true);
+          trackEvent('trial_ai_unavailable', { from });
+        }
         throw new Error(typeof payload.error === 'string' ? payload.error : '잠시 후 다시 시도해 주세요.');
       }
       setTurns(prev => [...prev, { role: 'assistant', content: payload.reply }]);
@@ -86,7 +100,11 @@ export default function TryPage() {
       setLimitReached(payload.remaining === 0);
       setShowCrisis(Boolean(payload.crisis));
     } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : '잠시 후 다시 시도해 주세요.');
+      // The message never got a reply: take it back out of the history and return it to the box.
+      setTurns(prev => prev.slice(0, -1));
+      setInput(text);
+      // fetch rejects with a TypeError in the browser's language; only server messages are shown as is.
+      setError(sendError instanceof Error && !(sendError instanceof TypeError) ? sendError.message : '잠시 후 다시 시도해 주세요.');
     } finally {
       setBusy(false);
     }
@@ -186,6 +204,20 @@ export default function TryPage() {
             </button>
           </div>
           {error ? <p className="trial__error">{error}</p> : null}
+          {aiUnavailable ? (
+            <div className="trial__fallback">
+              <p>보내려던 글은 입력칸에 그대로 있어요. 기다리는 동안 AI 없이 쓰는 무료 도구를 써 보세요.</p>
+              <ul>
+                {FREE_TOOLS.map(tool => (
+                  <li key={tool.href}>
+                    <Link href={tool.href} target="_blank" rel="noopener">
+                      {tool.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <p className="trial__notice">
             {AI_SERVICE_NOTICE} {AI_OUTPUT_CAVEAT} 체험을 시작하면 <Link href="/terms">이용약관</Link>과{' '}
             <Link href="/privacy">개인정보처리방침</Link>에 동의하는 것으로 봅니다.
