@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 import handler from '@/pages/api/trial/chat';
 import { generateReply } from '@/lib/llm';
-import { AppError } from '@/lib/errors';
+import { AppError, RateLimitError } from '@/lib/errors';
+import { enforceRateLimit } from '@/lib/rateLimiter';
 import { consumeTrialMessage, refundTrialMessage, TrialLimitError } from '@/lib/trial';
 
 jest.mock('@/lib/llm', () => ({
@@ -15,6 +16,7 @@ jest.mock('@/lib/trial', () => {
   return { ...actual, consumeTrialMessage: jest.fn(), refundTrialMessage: jest.fn(), cleanupTrialUsage: jest.fn() };
 });
 jest.mock('@/lib/firebaseAdmin', () => ({}));
+jest.mock('@/lib/rateLimiter', () => ({ enforceRateLimit: jest.fn() }));
 
 const call = async (body: unknown) => {
   const res: Partial<NextApiResponse & { body?: Record<string, unknown>; code?: number }> = {};
@@ -40,6 +42,26 @@ describe('POST /api/trial/chat', () => {
     (consumeTrialMessage as jest.Mock).mockResolvedValue({ remaining: 2 });
     (refundTrialMessage as jest.Mock).mockResolvedValue(undefined);
     (generateReply as jest.Mock).mockResolvedValue('반가워! 어떤 노래를 쓸까?');
+  });
+
+  it('rate limits by a hashed key before using up a try', async () => {
+    (enforceRateLimit as jest.Mock).mockRejectedValueOnce(new RateLimitError('요청이 너무 많아요.'));
+    const res = await call({ message: '안녕', adult: true });
+
+    expect(res.code).toBe(429);
+    expect(consumeTrialMessage).not.toHaveBeenCalled();
+    expect(refundTrialMessage).not.toHaveBeenCalled();
+    const key = (enforceRateLimit as jest.Mock).mock.calls[0][0];
+    expect(key).toMatch(/^trial:[0-9a-f]{32}$/);
+    expect(key).not.toContain('203.0.113.7');
+  });
+
+  it('does not refund a reply that was paid for but came back empty', async () => {
+    (generateReply as jest.Mock).mockResolvedValue('');
+    const res = await call({ message: '안녕', adult: true });
+
+    expect(res.code).toBe(502);
+    expect(refundTrialMessage).not.toHaveBeenCalled();
   });
 
   it('requires the visitor to confirm they are an adult', async () => {
