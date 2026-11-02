@@ -6,7 +6,7 @@ export const SITE_URL = 'https://novasingerai.com';
 export type SitePage = {
   path: string;
   // YYYY-MM-DD of the last content change. Left out for pages whose content moves on its own
-  // (home, explore), because a lastmod that is always "today" teaches crawlers to ignore it.
+  // (home), because a lastmod that is always "today" teaches crawlers to ignore it.
   updated?: string;
   // Pages with a title and description also go into the RSS feed.
   title?: string;
@@ -59,7 +59,6 @@ export const SITE_PAGES: SitePage[] = [
   { path: '/lyrics', updated: latest([...TOOL_PAGES, ...TOPIC_PAGES].map(page => page.updated as string)) },
   ...TOOL_PAGES,
   ...TOPIC_PAGES,
-  { path: '/explore' },
   { path: '/pricing', updated: '2026-10-27' },
   { path: '/terms', updated: TERMS_EFFECTIVE_DATE },
   { path: '/privacy', updated: PRIVACY_EFFECTIVE_DATE },

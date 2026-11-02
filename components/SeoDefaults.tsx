@@ -20,6 +20,10 @@ export default function SeoDefaults() {
       <meta key="og:url" property="og:url" content={pageUrl} />
       <meta key="og:locale" property="og:locale" content={SEO.openGraph.locale} />
       <meta key="og:description" property="og:description" content={SEO.openGraph.description} />
+      {/* Same image as pageCardPath('home'); lib/ogPageCard holds every topic, too big to load on each page. */}
+      <meta key="og:image" property="og:image" content={`${SEO.siteUrl}/api/og/page/home`} />
+      <meta key="og:image:width" property="og:image:width" content="1200" />
+      <meta key="og:image:height" property="og:image:height" content="630" />
       <meta key="twitter:card" name="twitter:card" content={SEO.twitter.cardType} />
     </Head>
   );

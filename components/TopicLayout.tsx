@@ -17,6 +17,23 @@ type TopicLayoutProps = {
   children: ReactNode;
 };
 
+const LYRICS_INDEX = { name: '주제별 가사 만들기', path: '/lyrics' };
+
+// Search results show this trail instead of the raw address.
+export function breadcrumbJsonLd(title: string, path: string) {
+  const trail = [{ name: 'NovaSingerAI', path: '' }, LYRICS_INDEX, ...(path === LYRICS_INDEX.path ? [] : [{ name: title, path }])];
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: `${SITE_URL}${item.path}`
+    }))
+  };
+}
+
 // Public, indexable content pages (/lyrics/*): readable column, site nav and a sign-up path.
 export function TopicLayout({ title, description, path, card, jsonLd, children }: TopicLayoutProps) {
   const url = `${SITE_URL}${path}`;
@@ -35,6 +52,11 @@ export function TopicLayout({ title, description, path, card, jsonLd, children }
         <meta key="og:image:height" property="og:image:height" content="630" />
         <meta key="twitter:card" name="twitter:card" content="summary_large_image" />
         <link key="canonical" rel="canonical" href={url} />
+        <script
+          key="breadcrumb"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(title, path)) }}
+        />
         {jsonLd ? (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         ) : null}
@@ -42,7 +64,7 @@ export function TopicLayout({ title, description, path, card, jsonLd, children }
       <main className="topic-page">
         <nav className="topic-page__nav">
           <Link href="/">← NovaSingerAI</Link>
-          <Link href="/lyrics">주제별 가사 만들기</Link>
+          <Link href={LYRICS_INDEX.path}>{LYRICS_INDEX.name}</Link>
         </nav>
         {children}
       </main>

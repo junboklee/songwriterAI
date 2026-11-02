@@ -145,6 +145,8 @@ export default function ExplorePage() {
       <Head>
         <title key="title">{`${t('title')} | NovaSingerAI`}</title>
         <meta key="description" name="description" content={t('subtitle')} />
+        {/* The list loads in the browser, so crawlers only ever see an empty shell. */}
+        <meta key="robots" name="robots" content="noindex" />
       </Head>
       <AppShell sidebar={sidebar}>
         <div className="page-actions-bar">

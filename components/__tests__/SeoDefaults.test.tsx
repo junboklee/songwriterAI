@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 
 import SeoDefaults from '@/components/SeoDefaults';
+import { pageCardPath } from '@/lib/ogPageCard';
 
 let mockAsPath = '/';
 jest.mock('next/router', () => ({ useRouter: () => ({ asPath: mockAsPath }) }));
@@ -28,6 +29,15 @@ describe('SeoDefaults', () => {
       'https://novasingerai.com/lyrics/birthday-song'
     );
     expect(canonicalOf('/').href).toBe('https://novasingerai.com');
+  });
+
+  it('gives every page a preview image that exists', () => {
+    mockAsPath = '/pricing';
+    const { container } = render(<SeoDefaults />);
+    expect(container.querySelector('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      `https://novasingerai.com${pageCardPath('home')}`
+    );
   });
 
   it('uses the NovaSingerAI name', () => {
