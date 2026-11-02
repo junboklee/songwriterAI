@@ -37,7 +37,7 @@ const TOOL_PAGES: SitePage[] = [
   },
   {
     path: '/lyrics/structure',
-    updated: '2026-11-02',
+    updated: '2026-11-03',
     title: '노래 구조 짜기 · Suno 가사 태그 만들기',
     description:
       '인트로, 벌스, 후렴, 브릿지 순서를 고르고 구간마다 가사를 쓰면 [Verse 1], [Chorus] 태그가 붙은 가사로 정리해 줘요. 발라드·축가·트로트·랩 구조 예시도 있어요. 가입 없이 무료.'

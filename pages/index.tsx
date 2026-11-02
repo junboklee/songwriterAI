@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { FREE_TOOLS } from '@/lib/freeTools';
 import { LYRICS_TOPICS } from '@/lib/lyricsTopics';
 import { pageCardPath } from '@/lib/ogPageCard';
 
@@ -175,6 +176,19 @@ export default function Home() {
             </div>
           </section>
 
+          <section className="topics">
+            <h2>가입 없이 바로 쓰는 무료 도구</h2>
+            <p>직접 쓴 가사를 다듬을 때 써 보세요.</p>
+            <div className="free-tools">
+              {FREE_TOOLS.map(tool => (
+                <Link key={tool.href} href={tool.href} className="free-tool">
+                  <strong>{tool.name}</strong>
+                  <span>{tool.summary}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
           <section className="workflow">
             <h2>3단계 제작 흐름</h2>
             <div className="workflow-grid">
@@ -233,10 +247,11 @@ export default function Home() {
         </main>
         <footer className="landing-footer">
           <Link href="/lyrics">주제별 가사 만들기</Link>
-          <Link href="/lyrics/check">가사 음절 수 세기</Link>
-          <Link href="/lyrics/style">Suno 스타일 만들기</Link>
-          <Link href="/lyrics/rhyme">라임 찾기</Link>
-          <Link href="/lyrics/structure">노래 구조 짜기</Link>
+          {FREE_TOOLS.map(tool => (
+            <Link key={tool.href} href={tool.href}>
+              {tool.name}
+            </Link>
+          ))}
           <Link href="/pricing">요금 안내</Link>
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">
@@ -412,6 +427,34 @@ export default function Home() {
 
         .topic-chips :global(.topic-chip:hover) {
           background: rgba(167, 139, 250, 0.2);
+        }
+
+        .free-tools {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 12px;
+        }
+
+        .free-tools :global(.free-tool) {
+          display: grid;
+          align-content: start;
+          gap: 6px;
+          padding: 16px 18px;
+          border-radius: 16px;
+          border: 1px solid rgba(196, 181, 253, 0.35);
+          background: rgba(167, 139, 250, 0.08);
+          color: #e9e5ff;
+          text-decoration: none;
+        }
+
+        .free-tools :global(.free-tool:hover) {
+          background: rgba(167, 139, 250, 0.2);
+        }
+
+        .free-tools :global(.free-tool span) {
+          font-size: 0.88rem;
+          line-height: 1.5;
+          color: rgba(226, 232, 240, 0.75);
         }
 
         .workflow-grid {

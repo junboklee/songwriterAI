@@ -183,3 +183,41 @@ export function structureSummary(sections: StructureSection[]): string {
 }
 
 export const hasWrittenText = (sections: StructureSection[]) => sections.some(item => item.text.trim());
+
+// Keeps the work in this browser across reloads. Never sent anywhere; "가사 지우기" removes it.
+const DRAFT_KEY = 'novasinger.structureDraft';
+
+export function saveStructureDraft(sections: StructureSection[]) {
+  try {
+    if (hasWrittenText(sections)) {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(sections.map(({ kind, lines, text, repeat }) => ({ kind, lines, text, repeat }))));
+    } else {
+      window.localStorage.removeItem(DRAFT_KEY);
+    }
+  } catch {
+    // Private mode or storage blocked: the tool still works, just without the saved copy.
+  }
+}
+
+export function loadStructureDraft(): StructureSection[] | null {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(DRAFT_KEY) ?? 'null');
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const sections = parsed
+      .slice(0, MAX_SECTIONS)
+      .filter(item => SECTION_KINDS.includes(item?.kind))
+      .map(item => ({
+        id: newId(),
+        kind: item.kind as SectionKind,
+        lines: Math.min(Math.max(Math.trunc(Number(item.lines)) || 0, 0), MAX_LINES),
+        text: typeof item.text === 'string' ? item.text.slice(0, MAX_SECTION_TEXT) : '',
+        repeat: item.repeat === true
+      }));
+    const restored = normalizeRepeats(sections);
+    return hasWrittenText(restored) ? restored : null;
+  } catch {
+    return null;
+  }
+}

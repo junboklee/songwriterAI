@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { TopicLayout } from '@/components/TopicLayout';
 import { copyText } from '@/lib/clipboard';
@@ -12,11 +12,13 @@ import {
   canRepeat,
   createSection,
   hasWrittenText,
+  loadStructureDraft,
   MAX_LINES,
   MAX_SECTION_TEXT,
   MAX_SECTIONS,
   moveSection,
   removeSection,
+  saveStructureDraft,
   SECTION_INFO,
   SECTION_KINDS,
   sectionLabels,
@@ -45,7 +47,7 @@ const faqs = [
   },
   {
     q: '입력한 가사가 저장되나요?',
-    a: '아니요. 이 페이지는 브라우저 안에서만 동작하고, 가사는 서버로 보내지지 않아요. 창을 닫기 전에 복사해 두세요.'
+    a: '서버로는 보내지 않아요. 새로고침해도 이어 쓸 수 있게 지금 쓰는 브라우저에만 임시로 남겨 두고, "가사 지우기"를 누르면 함께 지워져요. 여럿이 함께 쓰는 컴퓨터라면 다 쓴 뒤 지워 주세요.'
   }
 ];
 
@@ -95,10 +97,28 @@ export default function SongStructurePage() {
   const [sections, setSections] = useState<StructureSection[]>(() => applyPreset(STRUCTURE_PRESETS[0]));
   const [story, setStory] = useState('');
   const [copied, setCopied] = useState<'idle' | 'done' | 'failed'>('idle');
+  const [restored, setRestored] = useState(false);
+  const draftChecked = useRef(false);
   const labels = useMemo(() => sectionLabels(sections), [sections]);
   const output = useMemo(() => buildStructuredLyrics(sections), [sections]);
   const summary = useMemo(() => structureSummary(sections), [sections]);
   const written = hasWrittenText(sections);
+
+  // Read after mount, since the server has no storage. The first save is skipped so the empty
+  // starting layout can't overwrite the draft before it comes back.
+  useEffect(() => {
+    const draft = loadStructureDraft();
+    if (draft) {
+      setSections(draft);
+      setRestored(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (draftChecked.current) {
+      saveStructureDraft(sections);
+    }
+    draftChecked.current = true;
+  }, [sections]);
 
   const update = (next: StructureSection[]) => {
     setSections(next);
@@ -140,6 +160,7 @@ export default function SongStructurePage() {
             ))}
           </div>
           <p className="structurer__hint">예시를 바꿔도 이미 쓴 가사는 같은 구간으로 옮겨져요.</p>
+          {restored && written ? <p className="structurer__hint">이 브라우저에 남아 있던 가사를 불러왔어요.</p> : null}
         </section>
 
         <ol className="structurer__list">
