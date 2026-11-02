@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import { saveLyricsDraft } from '@/lib/lyricsDraft';
 import LyricsCheckPage from '@/pages/lyrics/check';
 
 jest.mock('next/head', () => ({ __esModule: true, default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
@@ -10,6 +11,13 @@ jest.mock('next/link', () => ({
 jest.mock('@/context/I18nContext', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 
 describe('lyrics checker page', () => {
+  it('opens with lyrics sent over from another tool', () => {
+    saveLyricsDraft('[Verse]\n아침 7시 알람 소리');
+    render(<LyricsCheckPage />);
+    expect(screen.getByLabelText('검사할 가사')).toHaveValue('[Verse]\n아침 7시 알람 소리');
+    expect(window.localStorage.getItem('novasinger.lyricsDraft')).toBeNull();
+  });
+
   it('counts syllables and links each flagged line to a prefilled trial chat', () => {
     render(<LyricsCheckPage />);
     fireEvent.change(screen.getByLabelText('검사할 가사'), {

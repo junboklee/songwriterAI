@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { TopicLayout } from '@/components/TopicLayout';
+import { FREE_TOOLS } from '@/lib/freeTools';
 import { TOPIC_GROUPS, topicsInGroup } from '@/lib/lyricsTopics';
 
 export default function LyricsTopicsIndex() {
@@ -16,12 +17,21 @@ export default function LyricsTopicsIndex() {
         상황을 고르면 만드는 방법과 예시 가사, 잘 쓰는 팁을 볼 수 있어요. 마음에 들면 바로 AI 싱어송라이터 Dayeon과
         내 이야기로 가사를 만들어 보세요.
       </p>
-      <p className="topic-lead">
-        이미 쓴 가사가 있다면 <Link href="/lyrics/check">가사 음절 수 세기 · 가창성 검사기</Link>로 부르기 어려운 줄을
-        찾아보세요. Suno에 넣을 스타일은 <Link href="/lyrics/style">Suno 스타일 프롬프트 만들기</Link>에서 골라 만들 수
-        있어요. 라임이 막히면 <Link href="/lyrics/rhyme">라임 찾기</Link>에서 끝 모음이 같은 단어를 찾아보세요. 노래 순서는{' '}
-        <Link href="/lyrics/structure">노래 구조 짜기</Link>에서 [Verse], [Chorus] 태그와 함께 정리할 수 있어요.
-      </p>
+      <section>
+        <h2>무료 작사 도구</h2>
+        <p className="topic-lead">가입 없이 바로 쓸 수 있어요.</p>
+        <ul>
+          {FREE_TOOLS.map(tool => (
+            <li key={tool.href}>
+              <Link href={tool.href}>
+                <strong>{tool.name}</strong>
+              </Link>
+              <br />
+              <span className="topic-lead">{tool.summary}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
       {TOPIC_GROUPS.map(group => (
         <section key={group.id}>
           <h2>{group.name}</h2>

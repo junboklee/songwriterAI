@@ -29,6 +29,7 @@ type CharacterApiPayload = {
 export const CHARACTER_PAGE_TEXT = {
   sessionExpired: '세션이 만료되었습니다. 다시 로그인해 주세요.',
   rateLimited: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
+  requestFailed: '답변을 받지 못했어요. 잠시 후 다시 시도해 주세요.',
   loadError: '캐릭터 정보를 불러오지 못했습니다.',
   notFound: '공개된 캐릭터를 찾을 수 없습니다.',
   loginRequired: '로그인 후 캐릭터와 대화를 시작할 수 있습니다.'

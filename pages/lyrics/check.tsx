@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { TopicLayout } from '@/components/TopicLayout';
 import { useTranslation } from '@/context/I18nContext';
+import { takeLyricsDraft } from '@/lib/lyricsDraft';
 import { analyzeLyrics } from '@/lib/lyricsTools';
 import { checkSingability, type SingabilityIssue } from '@/lib/singability';
 
@@ -75,6 +76,13 @@ const fixHref = (line: string, request: string) => {
 export default function LyricsCheckPage() {
   const { t } = useTranslation('songEditor');
   const [lyrics, setLyrics] = useState('');
+  // Lyrics sent over from another free tool (read after mount, since the server has no storage).
+  useEffect(() => {
+    const draft = takeLyricsDraft();
+    if (draft) {
+      setLyrics(draft.slice(0, MAX_LYRICS));
+    }
+  }, []);
   const analysis = useMemo(() => analyzeLyrics(lyrics), [lyrics]);
   const issues = useMemo(() => checkSingability(lyrics), [lyrics]);
 
