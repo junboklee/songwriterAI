@@ -140,9 +140,21 @@ describe('useChatSession', () => {
     const { result } = renderHook(() => useChatSession(user, '1'));
     await waitFor(() => expect(result.current.messages).toHaveLength(1));
 
-    await act(() => result.current.send('안녕'));
+    let sent: boolean | undefined;
+    await act(async () => {
+      sent = await result.current.send('안녕');
+    });
 
+    expect(sent).toBe(false);
     expect(result.current.error).toBe('요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.');
     expect(result.current.messages.at(-1)).toMatchObject({ role: 'assistant', content: result.current.error });
+
+    // A dropped connection shows our own message, not the browser's English one.
+    sendMock.mockRejectedValue(new TypeError('Failed to fetch'));
+    await act(async () => {
+      sent = await result.current.send('다시');
+    });
+    expect(sent).toBe(false);
+    expect(result.current.error).toBe('답변을 받지 못했어요. 잠시 후 다시 시도해 주세요.');
   });
 });

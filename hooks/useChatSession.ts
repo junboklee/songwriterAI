@@ -224,10 +224,11 @@ export function useChatSession(
     };
   }, [characterId, fetchCustomCharacters, requestedCharacterId, router, router.query.threadId, user]);
 
-  const send = async (text: string) => {
+  // Resolves to false when the message got no reply, so the page can give the text back.
+  const send = async (text: string): Promise<boolean> => {
     const trimmed = text.trim();
     if (!trimmed || isLoading) {
-      return;
+      return true;
     }
 
     setMessages(prev => [...prev, { id: `user-${Date.now()}`, role: 'user', content: trimmed }]);
@@ -274,10 +275,13 @@ export function useChatSession(
           onReplyRef.current?.({ message: reply, threadId: data.threadId, characterId, characterName: character.name, idToken });
         }
       }
+      return true;
     } catch (sendError) {
-      const message = errorMessage(sendError, TEXT.unexpectedError);
+      // fetch rejects with a TypeError in the browser's language; show our own message instead.
+      const message = sendError instanceof TypeError ? TEXT.requestFailed : errorMessage(sendError, TEXT.unexpectedError);
       setMessages(prev => [...prev, { id: `assistant-error-${Date.now()}`, role: 'assistant', content: message }]);
       setError(message);
+      return false;
     } finally {
       setIsLoading(false);
     }

@@ -116,7 +116,11 @@ export default function ChatPage() {
       setShowCrisisHelp(true);
     }
     setInput('');
-    void session.send(text);
+    void session.send(text).then(sent => {
+      if (!sent) {
+        setInput(current => current || text);
+      }
+    });
   };
 
   return (

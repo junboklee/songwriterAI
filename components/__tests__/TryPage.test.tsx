@@ -76,6 +76,40 @@ describe('/try', () => {
     expect(screen.getByPlaceholderText(/쓰고 싶은 노래/)).toBeDisabled();
   });
 
+  it('gives the text back and points to free tools when the AI is unavailable', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce(reply({ error: '지금은 AI가 잠시 답할 수 없어요.', code: 'AI_UNAVAILABLE' }, false))
+      .mockResolvedValueOnce(reply({ reply: '이제 들려요!', remaining: 2 }));
+    global.fetch = fetchMock as unknown as typeof fetch;
+    render(<TryPage />);
+    fireEvent.click(screen.getByLabelText('만 19세 이상입니다 (필수)'));
+    fireEvent.change(screen.getByPlaceholderText(/쓰고 싶은 노래/), { target: { value: '엄마 생신 노래' } });
+    fireEvent.click(screen.getByRole('button', { name: '보내기' }));
+
+    expect(await screen.findByText('지금은 AI가 잠시 답할 수 없어요.')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/쓰고 싶은 노래/)).toHaveValue('엄마 생신 노래');
+    expect(screen.getByRole('link', { name: '노래 구조 짜기' })).toHaveAttribute('href', '/lyrics/structure');
+    expect(trackEvent).toHaveBeenCalledWith('trial_ai_unavailable', { from: 'direct' });
+
+    fireEvent.click(screen.getByRole('button', { name: '보내기' }));
+    expect(await screen.findByText('이제 들려요!')).toBeInTheDocument();
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).history).toEqual([]);
+    expect(screen.queryByRole('link', { name: '노래 구조 짜기' })).toBeNull();
+  });
+
+  it('gives the text back when the network fails', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new TypeError('Failed to fetch')) as unknown as typeof fetch;
+    render(<TryPage />);
+    fireEvent.click(screen.getByLabelText('만 19세 이상입니다 (필수)'));
+    fireEvent.change(screen.getByPlaceholderText(/쓰고 싶은 노래/), { target: { value: '안녕' } });
+    fireEvent.click(screen.getByRole('button', { name: '보내기' }));
+
+    expect(await screen.findByText('잠시 후 다시 시도해 주세요.')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/쓰고 싶은 노래/)).toHaveValue('안녕');
+    expect(screen.queryByRole('link', { name: '노래 구조 짜기' })).toBeNull();
+  });
+
   it('sends members to the full chat', async () => {
     mockUser = { uid: 'u1' };
     mockQuery = { prompt: '축가' };
