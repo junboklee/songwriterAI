@@ -2,8 +2,10 @@ import {
   applyPreset,
   buildStructuredLyrics,
   createSection,
+  loadStructureDraft,
   moveSection,
   removeSection,
+  saveStructureDraft,
   sectionLabels,
   STRUCTURE_PRESETS,
   structureSummary,
@@ -58,6 +60,31 @@ describe('song structure', () => {
     const removed = removeSection(sections, 1);
     expect(removed.find(item => item.kind === 'chorus')?.repeat).toBe(false);
     expect(moveSection(sections, 0, -1)).toBe(sections);
+  });
+
+  it('restores a saved draft and rejects tampered data', () => {
+    window.localStorage.clear();
+    const sections = withText(applyPreset(preset('동요')), { 0: '첫 벌스' });
+    saveStructureDraft(sections);
+    expect(loadStructureDraft()?.map(({ kind, text, repeat }) => ({ kind, text, repeat }))).toEqual(
+      sections.map(({ kind, text, repeat }) => ({ kind, text, repeat }))
+    );
+
+    window.localStorage.setItem(
+      'novasinger.structureDraft',
+      JSON.stringify([
+        { kind: 'hack', text: '버려짐', lines: 4 },
+        { kind: 'chorus', text: '후렴', lines: 999, repeat: true },
+        null
+      ])
+    );
+    expect(loadStructureDraft()).toEqual([expect.objectContaining({ kind: 'chorus', text: '후렴', lines: 16, repeat: false })]);
+
+    window.localStorage.setItem('novasinger.structureDraft', '{broken');
+    expect(loadStructureDraft()).toBeNull();
+
+    saveStructureDraft(applyPreset(preset('동요')));
+    expect(window.localStorage.getItem('novasinger.structureDraft')).toBeNull();
   });
 
   it('summarizes the layout for the songwriting chat', () => {

@@ -19,6 +19,27 @@ jest.mock('next/link', () => ({
 }));
 
 describe('song structure page', () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it('keeps the work across reloads until the lyrics are cleared', () => {
+    const first = render(<SongStructurePage />);
+    fireEvent.click(screen.getByRole('button', { name: '생일 노래 (1분)' }));
+    fireEvent.change(screen.getByLabelText('Verse 가사'), { target: { value: '촛불 하나' } });
+    first.unmount();
+
+    const second = render(<SongStructurePage />);
+    expect(screen.getByLabelText('Verse 가사')).toHaveValue('촛불 하나');
+    expect(screen.getByTestId('structure-output').textContent).toBe('[Intro]\n\n[Verse]\n촛불 하나\n\n[Chorus]\n\n[Outro]');
+    expect(screen.getByText('이 브라우저에 남아 있던 가사를 불러왔어요.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '가사 지우기' }));
+    expect(window.localStorage.getItem('novasinger.structureDraft')).toBeNull();
+    second.unmount();
+
+    render(<SongStructurePage />);
+    expect(screen.getByLabelText('Verse 1 가사')).toHaveValue('');
+  });
+
   it('builds tagged lyrics and hands the layout to the trial chat', () => {
     render(<SongStructurePage />);
     fireEvent.click(screen.getByRole('button', { name: '생일 노래 (1분)' }));
