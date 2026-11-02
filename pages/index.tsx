@@ -236,6 +236,7 @@ export default function Home() {
           <Link href="/lyrics/check">가사 음절 수 세기</Link>
           <Link href="/lyrics/style">Suno 스타일 만들기</Link>
           <Link href="/lyrics/rhyme">라임 찾기</Link>
+          <Link href="/lyrics/structure">노래 구조 짜기</Link>
           <Link href="/pricing">요금 안내</Link>
           <Link href="/terms">이용약관</Link>
           <Link href="/privacy">
