@@ -6,13 +6,15 @@ import { AppError, BadRequestError } from '@/lib/errors';
 import { generateReply, withoutPlaceholders } from '@/lib/llm';
 import { logError, logInfo } from '@/lib/logger';
 import { withLyricsGuard } from '@/lib/lyricsGuard';
+import { enforceRateLimit } from '@/lib/rateLimiter';
 import { CRISIS_REMINDER, looksLikeCrisis } from '@/lib/safety';
 import {
   TRIAL_MAX_MESSAGE,
   cleanupTrialUsage,
   consumeTrialMessage,
   refundTrialMessage,
-  sanitizeTrialHistory
+  sanitizeTrialHistory,
+  trialRateKey
 } from '@/lib/trial';
 
 // POST { message, history?, adult: true } -> { reply, remaining, crisis }
@@ -39,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const ip = clientIp(req);
+    await enforceRateLimit(trialRateKey(ip));
     const { remaining } = await consumeTrialMessage(ip);
     consumedBy = ip;
     if (Math.random() < 0.05) {
@@ -60,7 +63,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     logInfo('trial.message', { remaining, historyLength: turns.length - 1, existingLyricsRequest: guarded.flagged, crisis });
     return res.status(200).json({ reply, remaining, crisis });
   } catch (error) {
-    if (consumedBy) {
+    // An empty reply was still generated and paid for, so it keeps counting against the daily limit.
+    const paidFor = error instanceof AppError && error.code === 'EMPTY_REPLY';
+    if (consumedBy && !paidFor) {
       await refundTrialMessage(consumedBy).catch(refundError => logError('trial.refund_failed', refundError));
     }
     if (error instanceof AppError) {

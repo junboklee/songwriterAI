@@ -34,6 +34,10 @@ export function visitorKey(ip: string, date: string) {
   return createHmac('sha256', secret).update(`${date}|${ip}`).digest('hex').slice(0, 32);
 }
 
+// Requests that fail are refunded, so the daily count alone doesn't limit them. The rate limiter's
+// documents use this key, which keeps the raw IP out of them as well.
+export const trialRateKey = (ip: string, now = new Date()) => `trial:${visitorKey(ip, formatYmd(todayInSeoul(now)))}`;
+
 // Counts one trial message for this visitor and for the day, or throws when a limit is reached.
 export async function consumeTrialMessage(ip: string, now = new Date()) {
   const date = formatYmd(todayInSeoul(now));
