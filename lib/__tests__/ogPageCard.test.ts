@@ -17,7 +17,8 @@ describe('pageCard', () => {
     expect(pageCard('check')).toEqual(expect.objectContaining({ label: '무료 도구' }));
     expect(pageCard('style')).toEqual(expect.objectContaining({ label: '무료 도구' }));
     expect(pageCard('rhyme')).toEqual(expect.objectContaining({ label: '무료 도구' }));
-    const reserved = ['home', 'check', 'style', 'rhyme'];
+    expect(pageCard('structure')).toEqual(expect.objectContaining({ label: '무료 도구' }));
+    const reserved = ['home', 'check', 'style', 'rhyme', 'structure'];
     LYRICS_TOPICS.forEach(topic => expect(reserved).not.toContain(topic.slug));
   });
 

@@ -1,7 +1,7 @@
 import { getLyricsTopic } from '@/lib/lyricsTopics';
 
 // Link-preview cards for the public pages: the landing page ('home'), the free tools ('check',
-// 'style', 'rhyme') and each /lyrics topic.
+// 'style', 'rhyme', 'structure') and each /lyrics topic.
 // Everything here is static, so the image route can cache the result.
 
 export type PageCard = { title: string; lyrics: string; label: string };
@@ -31,6 +31,12 @@ const RHYME_CARD: PageCard = {
   label: '무료 도구'
 };
 
+const STRUCTURE_CARD: PageCard = {
+  title: '노래 구조 짜기 · Suno 가사 태그',
+  lyrics: '[Intro] [Verse 1] [Chorus]\n순서를 고르고 구간마다 가사를 쓰면\n태그 붙은 가사로 정리해 줘요\n가입 없이 무료로 써 보세요',
+  label: '무료 도구'
+};
+
 export function pageCard(slug: string): PageCard | null {
   if (slug === 'home') {
     return HOME_CARD;
@@ -43,6 +49,9 @@ export function pageCard(slug: string): PageCard | null {
   }
   if (slug === 'rhyme') {
     return RHYME_CARD;
+  }
+  if (slug === 'structure') {
+    return STRUCTURE_CARD;
   }
   const topic = getLyricsTopic(slug);
   return topic ? { title: topic.title, lyrics: topic.sample.lyrics, label: `예시 가사 「${topic.sample.title}」` } : null;
