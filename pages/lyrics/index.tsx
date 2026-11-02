@@ -7,10 +7,10 @@ import { TOPIC_GROUPS, topicsInGroup } from '@/lib/lyricsTopics';
 export default function LyricsTopicsIndex() {
   return (
     <TopicLayout
-      title="주제별 가사 만들기"
+      title="노래 가사 만들기 · 주제별 가이드와 무료 작사 도구"
       path="/lyrics"
       card="home"
-      description="생일 축하 노래, 결혼식 축가, 고백 노래, 트로트, 랩, CM송까지. 상황과 장르에 맞는 노래 가사를 AI 싱어송라이터와 함께 만들어 보세요."
+      description="생일 축하 노래, 결혼식 축가, 고백 노래, 트로트, 랩까지 상황별 가사 만드는 법과 예시를 모았어요. 라임 찾기, 음절 수 세기, 노래 구조 짜기 도구도 가입 없이 무료."
     >
       <h1>어떤 노래를 만들고 싶나요?</h1>
       <p className="topic-lead">
