@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { TopicLayout } from '@/components/TopicLayout';
 import { copyText } from '@/lib/clipboard';
 import { countSyllables } from '@/lib/lyricsTools';
+import { saveLyricsDraft } from '@/lib/lyricsDraft';
 import { getLyricsTopic } from '@/lib/lyricsTopics';
 import {
   applyPreset,
@@ -270,6 +271,11 @@ export default function SongStructurePage() {
             >
               가사 지우기
             </button>
+            {written ? (
+              <Link href="/lyrics/check" target="_blank" rel="noopener" className="btn btn--ghost" onClick={() => saveLyricsDraft(output)}>
+                가창성 검사하기
+              </Link>
+            ) : null}
           </div>
           {copied === 'failed' ? <p className="structurer__hint">복사하지 못했어요. 글자를 길게 눌러 직접 복사해 주세요.</p> : null}
         </section>

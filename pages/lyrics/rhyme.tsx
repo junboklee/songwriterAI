@@ -225,6 +225,9 @@ export default function RhymeFinderPage() {
         <li>
           <Link href="/lyrics/check">가사 음절 수 세기</Link>
         </li>
+        <li>
+          <Link href="/lyrics/structure">노래 구조 짜기</Link>
+        </li>
       </ul>
 
       <h2>자주 묻는 질문</h2>

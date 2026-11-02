@@ -8,6 +8,7 @@ import { CrisisHelpBanner } from '@/components/chat/CrisisHelpBanner';
 import { useAuth } from '@/context/AuthContext';
 import { AI_OUTPUT_CAVEAT, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
 import { trackEvent } from '@/lib/analytics';
+import { FREE_TOOLS } from '@/lib/freeTools';
 import { CHARACTER_PROFILES } from '@/lib/chat/model';
 import { extractLyrics } from '@/lib/lyricsFormat';
 import { saveTrialLyrics } from '@/lib/trialHandoff';
@@ -17,14 +18,6 @@ type Turn = { role: 'user' | 'assistant'; content: string };
 const DAYEON = CHARACTER_PROFILES['1'];
 const MAX_MESSAGE = 1000;
 const REGISTER_HREF = `/auth/register?redirect=${encodeURIComponent('/suno')}`;
-
-// These work without the AI, so they stay useful while it can't answer.
-const FREE_TOOLS = [
-  { href: '/lyrics/structure', name: '노래 구조 짜기' },
-  { href: '/lyrics/rhyme', name: '라임 찾기' },
-  { href: '/lyrics/check', name: '가사 음절 수 세기' },
-  { href: '/lyrics/style', name: 'Suno 스타일 만들기' }
-];
 
 // No-signup trial with Dayeon (POST /api/trial/chat). Nothing is saved on the server; the latest
 // lyrics are kept in this browser so they can be saved to the library right after sign-up.

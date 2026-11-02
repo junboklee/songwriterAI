@@ -5,7 +5,17 @@ import SongStructurePage from '@/pages/lyrics/structure';
 jest.mock('next/head', () => ({ __esModule: true, default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 jest.mock('next/link', () => ({
   __esModule: true,
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>
+  default: ({ children, href, onClick }: { children: React.ReactNode; href: string; onClick?: () => void }) => (
+    <a
+      href={href}
+      onClick={event => {
+        event.preventDefault();
+        onClick?.();
+      }}
+    >
+      {children}
+    </a>
+  )
 }));
 
 describe('song structure page', () => {
@@ -32,6 +42,14 @@ describe('song structure page', () => {
     const prompt = decodeURIComponent(href.split('prompt=')[1]);
     expect(prompt).toContain('구조: Intro → Verse (4줄) → Chorus (4줄) → Chorus (반복) → Outro (2줄)');
     expect(prompt).toContain('노래 이야기: 엄마 생신');
+  });
+
+  it('sends written lyrics to the checker', () => {
+    render(<SongStructurePage />);
+    expect(screen.queryByRole('link', { name: '가창성 검사하기' })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Verse 1 가사'), { target: { value: '첫 줄' } });
+    fireEvent.click(screen.getByRole('link', { name: '가창성 검사하기' }));
+    expect(JSON.parse(window.localStorage.getItem('novasinger.lyricsDraft') ?? '{}').text).toContain('[Verse 1]\n첫 줄');
   });
 
   it('removes sections and clears written lines', () => {

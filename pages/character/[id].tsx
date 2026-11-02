@@ -105,7 +105,7 @@ export default function CharacterChatPage() {
               ? TEXT.sessionExpired
               : requestError.status === 429
               ? TEXT.rateLimited
-              : 'Assistant request failed.';
+              : TEXT.requestFailed;
           throw new Error(requestError.message || fallback);
         }
         throw requestError;
@@ -122,7 +122,9 @@ export default function CharacterChatPage() {
         setMessages(prev => normaliseMessages([...prev, replyMessage]));
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unexpected error.';
+      // fetch rejects with a TypeError in the browser's language; show our own message instead.
+      const message = err instanceof Error && !(err instanceof TypeError) ? err.message : TEXT.requestFailed;
+      setInput(current => current || trimmed);
       setError(message);
       setMessages(prev => [...prev, { id: `err-${Date.now()}`, role: 'assistant', content: message }]);
     } finally {
