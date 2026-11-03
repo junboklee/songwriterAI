@@ -6,6 +6,7 @@ import { FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 import { AssistantMessageBody } from '@/components/AssistantMessageBody';
 import { CrisisHelpBanner } from '@/components/chat/CrisisHelpBanner';
 import { useAuth } from '@/context/AuthContext';
+import { useAiAvailable } from '@/hooks/useAiAvailable';
 import { AI_OUTPUT_CAVEAT, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
 import { trackEvent } from '@/lib/analytics';
 import { FREE_TOOLS } from '@/lib/freeTools';
@@ -14,6 +15,19 @@ import { extractLyrics } from '@/lib/lyricsFormat';
 import { saveTrialLyrics } from '@/lib/trialHandoff';
 
 type Turn = { role: 'user' | 'assistant'; content: string };
+
+// Opened in a new tab so the conversation and the typed message stay here.
+const FreeToolLinks = () => (
+  <ul>
+    {FREE_TOOLS.map(tool => (
+      <li key={tool.href}>
+        <Link href={tool.href} target="_blank" rel="noopener">
+          {tool.name}
+        </Link>
+      </li>
+    ))}
+  </ul>
+);
 
 const DAYEON = CHARACTER_PROFILES['1'];
 const MAX_MESSAGE = 1000;
@@ -33,6 +47,7 @@ export default function TryPage() {
   const [limitReached, setLimitReached] = useState(false);
   const [aiUnavailable, setAiUnavailable] = useState(false);
   const [showCrisis, setShowCrisis] = useState(false);
+  const aiDown = useAiAvailable() === false;
 
   const prompt = typeof router.query.prompt === 'string' ? router.query.prompt.slice(0, 500) : '';
   // Where the visitor came from (share page, topic page, landing), for GA attribution.
@@ -56,6 +71,15 @@ export default function TryPage() {
       setInput(prompt);
     }
   }, [prompt]);
+
+  // Said before the visitor writes anything; a reply in this conversation means it is back.
+  const showDownNotice = aiDown && !aiUnavailable && !turns.some(turn => turn.role === 'assistant');
+
+  useEffect(() => {
+    if (aiDown) {
+      trackEvent('trial_ai_unavailable', { from, when: 'before_send' });
+    }
+  }, [aiDown, from]);
 
   const lyrics = [...turns].reverse().map(turn => (turn.role === 'assistant' ? extractLyrics(turn.content) : null)).find(Boolean) ?? null;
   const canSend = adult && input.trim().length > 0 && !busy && !limitReached;
@@ -84,7 +108,7 @@ export default function TryPage() {
         }
         if (payload.code === 'AI_UNAVAILABLE') {
           setAiUnavailable(true);
-          trackEvent('trial_ai_unavailable', { from });
+          trackEvent('trial_ai_unavailable', { from, when: 'after_send' });
         }
         throw new Error(typeof payload.error === 'string' ? payload.error : '잠시 후 다시 시도해 주세요.');
       }
@@ -139,6 +163,16 @@ export default function TryPage() {
             하루 3번까지 메시지를 보낼 수 있어요. 체험 대화는 저장되지 않고, 가입하면 마지막 가사를 보관함에 옮겨 드려요.
           </p>
         </header>
+
+        {showDownNotice ? (
+          <div className="trial__fallback trial__fallback--notice" role="status">
+            <p>
+              지금은 다연이 잠시 답하지 못하고 있어요. 보내 볼 수는 있고, 답을 못 받으면 체험 횟수는 줄지 않아요. 기다리는 동안 AI 없이
+              쓰는 무료 도구를 써 보세요.
+            </p>
+            <FreeToolLinks />
+          </div>
+        ) : null}
 
         <section className="trial__chat" aria-live="polite">
           <div className="trial__message trial__message--assistant">
@@ -200,15 +234,7 @@ export default function TryPage() {
           {aiUnavailable ? (
             <div className="trial__fallback">
               <p>보내려던 글은 입력칸에 그대로 있어요. 기다리는 동안 AI 없이 쓰는 무료 도구를 써 보세요.</p>
-              <ul>
-                {FREE_TOOLS.map(tool => (
-                  <li key={tool.href}>
-                    <Link href={tool.href} target="_blank" rel="noopener">
-                      {tool.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <FreeToolLinks />
             </div>
           ) : null}
           <p className="trial__notice">

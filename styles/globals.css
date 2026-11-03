@@ -4925,6 +4925,11 @@ textarea {
 .trial__fallback a {
   text-decoration: underline;
 }
+.trial__fallback--notice {
+  padding: 12px 14px;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+}
 
 .metric-grid {
   display: grid;
