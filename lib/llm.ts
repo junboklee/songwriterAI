@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
 
+import { recordAiStatus } from '@/lib/aiStatus';
 import { AppError } from '@/lib/errors';
-import { logError } from '@/lib/logger';
+import { logError, logWarn } from '@/lib/logger';
 import { extractLyrics } from '@/lib/lyricsFormat';
 import { SONGWRITING_GUIDELINES } from '@/lib/songwritingPrompt';
 import type { TokenUsage } from '@/lib/usage';
@@ -60,8 +61,26 @@ export function asProviderError(error: unknown) {
   if (!quota && status !== 429) {
     return error;
   }
+  if (quota) {
+    recordAiStatus(false);
+  }
   logError('llm.unavailable', error, { reason: quota ? 'quota' : 'rate_limit' });
   return new AiUnavailableError();
+}
+
+// The smallest request that shows whether the credits are used up (lib/aiStatus.ts). A refused
+// request costs nothing; otherwise it is a few tokens. Logged as a warning only, so it doesn't
+// raise an alert every ten minutes while the credits are out.
+export async function probeAi() {
+  try {
+    await getClient().responses.create({ model: CHAT_MODEL, input: 'ok', ...modelOptions(CHAT_MODEL, 16), store: false });
+    return true;
+  } catch (error) {
+    const { code, message } = (error ?? {}) as { code?: unknown; message?: unknown };
+    const quota = QUOTA_MESSAGE.test(`${String(code ?? '')} ${String(message ?? '')}`);
+    logWarn('llm.probe_failed', { quota });
+    return !quota;
+  }
 }
 
 const rethrowProviderError = (error: unknown): never => {
@@ -91,6 +110,7 @@ export async function generateReply(
   const response = await getClient()
     .responses.create(buildRequest(personaInstructions, turns))
     .catch(rethrowProviderError);
+  recordAiStatus(true);
   const usage = toTokenUsage(response.usage);
   if (usage) {
     onUsage?.(usage);
@@ -142,6 +162,7 @@ export async function completeText(
       store: false
     })
     .catch(rethrowProviderError);
+  recordAiStatus(true);
   const usage = toTokenUsage(response.usage);
   if (usage) {
     onUsage?.(usage);
@@ -164,6 +185,7 @@ export async function* streamReply(
       if (event.type === 'response.output_text.delta') {
         yield event.delta;
       } else if (event.type === 'response.completed') {
+        recordAiStatus(true);
         const usage = toTokenUsage(event.response.usage);
         if (usage) {
           onUsage?.(usage);

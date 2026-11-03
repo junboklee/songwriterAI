@@ -17,6 +17,8 @@ jest.mock('next/link', () => ({
 }));
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: mockUser, loading: false }) }));
 jest.mock('@/lib/analytics', () => ({ trackEvent: jest.fn() }));
+let mockAiAvailable: boolean | null = null;
+jest.mock('@/hooks/useAiAvailable', () => ({ useAiAvailable: () => mockAiAvailable }));
 
 const reply = (payload: unknown, ok = true) => ({ ok, json: async () => payload });
 
@@ -25,6 +27,7 @@ describe('/try', () => {
     jest.clearAllMocks();
     mockQuery = {};
     mockUser = null;
+    mockAiAvailable = null;
     window.localStorage.clear();
   });
 
@@ -90,12 +93,35 @@ describe('/try', () => {
     expect(await screen.findByText('지금은 AI가 잠시 답할 수 없어요.')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/쓰고 싶은 노래/)).toHaveValue('엄마 생신 노래');
     expect(screen.getByRole('link', { name: '노래 구조 짜기' })).toHaveAttribute('href', '/lyrics/structure');
-    expect(trackEvent).toHaveBeenCalledWith('trial_ai_unavailable', { from: 'direct' });
+    expect(trackEvent).toHaveBeenCalledWith('trial_ai_unavailable', { from: 'direct', when: 'after_send' });
 
     fireEvent.click(screen.getByRole('button', { name: '보내기' }));
     expect(await screen.findByText('이제 들려요!')).toBeInTheDocument();
     expect(JSON.parse(fetchMock.mock.calls[1][1].body).history).toEqual([]);
     expect(screen.queryByRole('link', { name: '노래 구조 짜기' })).toBeNull();
+  });
+
+  it('says up front when the AI is down and drops the notice once a reply arrives', async () => {
+    mockAiAvailable = false;
+    global.fetch = jest.fn().mockResolvedValue(reply({ reply: '이제 들려요!', remaining: 2 })) as unknown as typeof fetch;
+    render(<TryPage />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('지금은 다연이 잠시 답하지 못하고 있어요.');
+    expect(screen.getByRole('link', { name: '라임 찾기' })).toHaveAttribute('href', '/lyrics/rhyme');
+    expect(trackEvent).toHaveBeenCalledWith('trial_ai_unavailable', { from: 'direct', when: 'before_send' });
+
+    fireEvent.click(screen.getByLabelText('만 19세 이상입니다 (필수)'));
+    fireEvent.change(screen.getByPlaceholderText(/쓰고 싶은 노래/), { target: { value: '안녕' } });
+    fireEvent.click(screen.getByRole('button', { name: '보내기' }));
+    expect(await screen.findByText('이제 들려요!')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('shows no notice while the AI is answering', () => {
+    mockAiAvailable = true;
+    render(<TryPage />);
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(trackEvent).not.toHaveBeenCalledWith('trial_ai_unavailable', expect.anything());
   });
 
   it('gives the text back when the network fails', async () => {

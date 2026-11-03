@@ -1,8 +1,9 @@
 import OpenAI from 'openai';
 
+import { aiAvailable, resetAiStatus } from '@/lib/aiStatus';
 import { AppError } from '@/lib/errors';
-import { AiUnavailableError, asProviderError, generateReply, streamReply } from '@/lib/llm';
-import { logError } from '@/lib/logger';
+import { AiUnavailableError, asProviderError, generateReply, probeAi, streamReply } from '@/lib/llm';
+import { logError, logWarn } from '@/lib/logger';
 
 jest.mock('@/lib/logger', () => ({ logError: jest.fn(), logInfo: jest.fn(), logWarn: jest.fn() }));
 
@@ -72,5 +73,33 @@ describe('model calls', () => {
       }
     };
     await expect(read()).rejects.toBeInstanceOf(AiUnavailableError);
+  });
+
+  it('remembers whether real requests got through', async () => {
+    const probe = jest.fn().mockResolvedValue(true);
+    resetAiStatus();
+    createMock.mockRejectedValue(quotaError);
+    await generateReply('persona', [{ role: 'user', content: '안녕' }]).catch(() => null);
+    expect(await aiAvailable(probe)).toBe(false);
+
+    createMock.mockResolvedValue({ output_text: '안녕!', usage: null });
+    await generateReply('persona', [{ role: 'user', content: '안녕' }]);
+    expect(await aiAvailable(probe)).toBe(true);
+    expect(probe).not.toHaveBeenCalled();
+  });
+
+  it('probes with a tiny request and only reports used-up credits as unavailable', async () => {
+    (logError as jest.Mock).mockClear();
+    createMock.mockResolvedValue({ output_text: 'ok' });
+    expect(await probeAi()).toBe(true);
+    expect(createMock.mock.calls[0][0]).toMatchObject({ input: 'ok', store: false });
+
+    createMock.mockRejectedValue(quotaError);
+    expect(await probeAi()).toBe(false);
+    expect(logWarn).toHaveBeenCalledWith('llm.probe_failed', { quota: true });
+    expect(logError).not.toHaveBeenCalled();
+
+    createMock.mockRejectedValue(new Error('socket hang up'));
+    expect(await probeAi()).toBe(true);
   });
 });
