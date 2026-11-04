@@ -78,7 +78,7 @@ describe('POST /api/characters', () => {
     await handler({ method: 'POST', headers: {} } as unknown as NextApiRequest, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.body).toMatchObject({ error: '상세 설정은(는) 4,000자 이하로 입력해 주세요.' });
+    expect(res.body).toMatchObject({ error: '상세 설정은 4,000자 이하로 입력해 주세요.' });
     expect(assertPublishable).not.toHaveBeenCalled();
     expect(uploadAvatar).not.toHaveBeenCalled();
   });

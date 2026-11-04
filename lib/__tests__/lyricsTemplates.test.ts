@@ -1,9 +1,9 @@
+import { hasFinalConsonant } from '@/lib/hangul';
 import { checkSingability } from '@/lib/singability';
 import {
   OCCASIONS,
   PARENTS,
   SEASONS,
-  hasFinalConsonant,
   makeLyrics,
   makerHrefForTopic,
   makerPrompt,

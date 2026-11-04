@@ -482,8 +482,8 @@
   },
   chat: {
     status: {
-      ready: '{{name}}와(과) 새로운 대화를 시작해 볼까요?',
-      assistantTyping: '{{name}}가 응답을 준비하고 있어요...',
+      ready: '{{name}}에게 말을 걸어 새 대화를 시작해 보세요.',
+      assistantTyping: '{{name}}의 답을 기다리는 중이에요...',
       userTyping: '입력 중이에요...'
     },
     typingIndicator: {

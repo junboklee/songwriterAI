@@ -11,7 +11,8 @@ describe('findCharacterLimitError', () => {
   });
 
   it('names the first field that is too long', () => {
-    expect(findCharacterLimitError({ greeting: 'x'.repeat(301) })).toBe('첫 인사말은(는) 300자 이하로 입력해 주세요.');
+    expect(findCharacterLimitError({ greeting: 'x'.repeat(301) })).toBe('첫 인사말은 300자 이하로 입력해 주세요.');
+    expect(findCharacterLimitError({ shortDescription: 'x'.repeat(281) })).toBe('한 줄 소개는 280자 이하로 입력해 주세요.');
     expect(findCharacterLimitError({ name: 'x'.repeat(41), greeting: 'x'.repeat(301) })).toContain('캐릭터 이름');
   });
 

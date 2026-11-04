@@ -2,6 +2,8 @@
 // site, filled with a name, a place and a season in the browser. No AI call, so it keeps working
 // while the AI can't answer.
 
+import { hasFinalConsonant } from '@/lib/hangul';
+
 export type Occasion = 'birthday' | 'parents' | 'wedding';
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 export type Mood = 'bright' | 'calm';
@@ -69,15 +71,6 @@ const DEFAULT_PLACE: Record<Occasion, string> = {
   parents: '우리 집 앞',
   wedding: '그곳'
 };
-
-const HANGUL_START = 0xac00;
-const HANGUL_COUNT = 11172;
-
-// Null when the word doesn't end in a Hangul syllable (a Latin name, say), so no particle fits.
-export function hasFinalConsonant(word: string): boolean | null {
-  const code = word.charCodeAt(word.length - 1) - HANGUL_START;
-  return code >= 0 && code < HANGUL_COUNT ? code % 28 !== 0 : null;
-}
 
 // 지민아 / 수아야: the vocative particle depends on the final consonant.
 const vocative = (name: string) => {
