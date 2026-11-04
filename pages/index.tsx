@@ -447,6 +447,11 @@ export default function Home() {
           text-decoration: none;
         }
 
+        /* Five tools: the lyrics maker gets the full first row so the rest pair up evenly. */
+        .free-tools :global(.free-tool:first-child) {
+          grid-column: 1 / -1;
+        }
+
         .free-tools :global(.free-tool:hover) {
           background: rgba(167, 139, 250, 0.2);
         }

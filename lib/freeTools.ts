@@ -1,6 +1,11 @@
 // The free tools that run in the browser without the AI, so they keep working while it can't answer.
 export const FREE_TOOLS = [
   {
+    href: '/lyrics/maker',
+    name: '이름 넣어 가사 만들기',
+    summary: '이름과 장소, 계절을 고르면 생일·부모님·축가 가사와 Suno 스타일을 바로 만들어 줘요.'
+  },
+  {
     href: '/lyrics/structure',
     name: '노래 구조 짜기',
     summary: '구간 순서를 고르고 가사를 쓰면 [Verse], [Chorus] 태그를 붙여 정리해 줘요.'
