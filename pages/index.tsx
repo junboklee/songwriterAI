@@ -145,6 +145,9 @@ export default function Home() {
                     <span className="cta-label">가입 없이 바로 써 보기</span>
                   </div>
                 </Link>
+                <Link href="/lyrics/maker" className="hero-maker">
+                  이름만 넣으면 생일·부모님·축가 가사가 바로 나와요 →
+                </Link>
                 <Link href="/auth/register" className="hero-login">
                   무료로 가입하기
                 </Link>
@@ -344,6 +347,15 @@ export default function Home() {
         .hero-cta :global(.cta),
         .bottom-cta :global(.cta) {
           text-decoration: none;
+        }
+
+        .hero-cta :global(.hero-maker) {
+          margin: 0.4rem 0 0.3rem;
+          font-weight: 600;
+          color: #c4b5fd;
+          text-align: center;
+          text-decoration: underline;
+          text-underline-offset: 3px;
         }
 
         .cta-card {

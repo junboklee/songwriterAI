@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import { trackEvent } from '@/lib/analytics';
 import { copyText } from '@/lib/clipboard';
 import LyricsMakerPage from '@/pages/lyrics/maker';
 
@@ -12,6 +13,7 @@ jest.mock('next/link', () => ({
     </a>
   )
 }));
+jest.mock('@/lib/analytics', () => ({ trackEvent: jest.fn() }));
 jest.mock('@/lib/clipboard', () => ({ copyText: jest.fn().mockResolvedValue(true) }));
 
 const lyrics = () => screen.getByTestId('maker-lyrics').textContent ?? '';
@@ -44,6 +46,9 @@ describe('/lyrics/maker', () => {
     fireEvent.click(screen.getByRole('button', { name: '가사 복사하기' }));
     expect(await screen.findByRole('button', { name: '가사를 복사했어요' })).toBeInTheDocument();
     expect((copyText as jest.Mock).mock.calls[0][0]).toMatch(/^지민의 날\n\n\[Verse 1\]/);
+    // The event carries the choices only, never the name or place typed in.
+    expect(trackEvent).toHaveBeenCalledWith('maker_copied', { what: 'lyrics', occasion: 'birthday', mood: 'bright' });
+    expect(JSON.stringify((trackEvent as jest.Mock).mock.calls)).not.toMatch(/지민|한강/);
   });
 
   it('switches the fields for parents and weddings', () => {

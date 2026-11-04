@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { TopicLayout } from '@/components/TopicLayout';
+import { trackEvent } from '@/lib/analytics';
 import { copyText } from '@/lib/clipboard';
 import { saveLyricsDraft } from '@/lib/lyricsDraft';
 import {
@@ -110,6 +111,10 @@ export default function LyricsMakerPage() {
   const copy = async (what: 'lyrics' | 'style') => {
     const ok = await copyText(what === 'lyrics' ? `${result.title}\n\n${result.lyrics}` : result.style);
     setCopied(ok ? what : 'failed');
+    if (ok) {
+      // Choices only, never the name or place typed in.
+      trackEvent('maker_copied', { what, occasion: input.occasion, mood: input.mood });
+    }
   };
 
   // Rendered outside the style's scope, so the chip classes are styled through :global below.
