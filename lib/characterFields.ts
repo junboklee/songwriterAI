@@ -1,3 +1,5 @@
+import { hasFinalConsonant } from '@/lib/hangul';
+
 // Length limits for character fields, shared by the forms (maxLength) and the APIs (validation).
 // The descriptions become part of the model's instructions on every chat turn, so the server
 // must enforce these even though the forms already do.
@@ -25,7 +27,7 @@ const FIELD_LABELS = {
 export type CharacterTextField = keyof typeof FIELD_LABELS;
 
 const tooLong = (label: string, limit: number) =>
-  `${label}은(는) ${limit.toLocaleString('ko-KR')}자 이하로 입력해 주세요.`;
+  `${label}${hasFinalConsonant(label) ? '은' : '는'} ${limit.toLocaleString('ko-KR')}자 이하로 입력해 주세요.`;
 
 // The first limit violation as a user-facing message, or null when everything fits.
 export function findCharacterLimitError(
