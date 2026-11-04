@@ -45,7 +45,7 @@ describe('buildRss', () => {
   const items = xml.match(/<item>.*?<\/item>/g) ?? [];
 
   it('has one item per topic and tool, newest first', () => {
-    expect(items).toHaveLength(LYRICS_TOPICS.length + 4);
+    expect(items).toHaveLength(LYRICS_TOPICS.length + 5);
     const dates = items.map(item => Date.parse(item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] ?? ''));
     dates.forEach(date => expect(Number.isNaN(date)).toBe(false));
     expect([...dates].sort((a, b) => b - a)).toEqual(dates);
