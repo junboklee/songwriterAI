@@ -3,6 +3,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import ChatPage from '@/pages/chat';
 
 const mockSend = jest.fn();
+let mockAiAvailable: boolean | null = null;
+let mockSessionOptions: { onReply?: (reply: unknown) => void } = {};
+jest.mock('@/hooks/useAiAvailable', () => ({ useAiAvailable: () => mockAiAvailable }));
 jest.mock('next/router', () => ({ useRouter: () => ({ query: {}, push: jest.fn() }) }));
 jest.mock('next/image', () => ({ __esModule: true, default: () => null }));
 jest.mock('next/link', () => ({
@@ -27,7 +30,9 @@ jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { uid: 'u1' 
 jest.mock('@/context/I18nContext', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 jest.mock('@/hooks/useLyricsAutoSave', () => ({ useLyricsAutoSave: () => ({ enabled: true, toggle: jest.fn(), handleReply: jest.fn() }) }));
 jest.mock('@/hooks/useChatSession', () => ({
-  useChatSession: () => ({
+  useChatSession: (_user: unknown, _characterId: unknown, options: typeof mockSessionOptions) => {
+    mockSessionOptions = options;
+    return {
     character: { id: '1', name: '다연', avatar: '/a.png', description: '', availability: '' },
     characterId: '1',
     isLoading: false,
@@ -41,7 +46,8 @@ jest.mock('@/hooks/useChatSession', () => ({
     conversationsError: null,
     resolveCharacterMeta: jest.fn(),
     send: mockSend
-  })
+    };
+  }
 }));
 
 const sendText = async (text: string) => {
@@ -52,6 +58,26 @@ const sendText = async (text: string) => {
 };
 
 describe('chat page draft', () => {
+  beforeEach(() => {
+    mockAiAvailable = null;
+  });
+
+  it('says up front when the AI is down, until a reply arrives', () => {
+    mockAiAvailable = false;
+    render(<ChatPage />);
+    expect(screen.getByRole('status')).toHaveTextContent('지금은 AI가 잠시 답하지 못하고 있어요.');
+    expect(screen.getByRole('link', { name: '이름 넣어 가사 만들기' })).toHaveAttribute('href', '/lyrics/maker');
+
+    act(() => mockSessionOptions.onReply?.({ reply: '안녕!' }));
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('shows no notice while the AI is answering', () => {
+    mockAiAvailable = true;
+    render(<ChatPage />);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
   it('gives the text back when the message got no reply', async () => {
     mockSend.mockResolvedValue(false);
     render(<ChatPage />);

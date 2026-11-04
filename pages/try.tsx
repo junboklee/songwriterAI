@@ -3,31 +3,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FormEvent, KeyboardEvent, useEffect, useState } from 'react';
 
+import { AiDownNotice } from '@/components/AiDownNotice';
 import { AssistantMessageBody } from '@/components/AssistantMessageBody';
 import { CrisisHelpBanner } from '@/components/chat/CrisisHelpBanner';
 import { useAuth } from '@/context/AuthContext';
 import { useAiAvailable } from '@/hooks/useAiAvailable';
 import { AI_OUTPUT_CAVEAT, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
 import { trackEvent } from '@/lib/analytics';
-import { FREE_TOOLS } from '@/lib/freeTools';
 import { CHARACTER_PROFILES } from '@/lib/chat/model';
 import { extractLyrics } from '@/lib/lyricsFormat';
 import { saveTrialLyrics } from '@/lib/trialHandoff';
 
 type Turn = { role: 'user' | 'assistant'; content: string };
 
-// Opened in a new tab so the conversation and the typed message stay here.
-const FreeToolLinks = () => (
-  <ul>
-    {FREE_TOOLS.map(tool => (
-      <li key={tool.href}>
-        <Link href={tool.href} target="_blank" rel="noopener">
-          {tool.name}
-        </Link>
-      </li>
-    ))}
-  </ul>
-);
 
 const DAYEON = CHARACTER_PROFILES['1'];
 const MAX_MESSAGE = 1000;
@@ -165,13 +153,10 @@ export default function TryPage() {
         </header>
 
         {showDownNotice ? (
-          <div className="trial__fallback trial__fallback--notice" role="status">
-            <p>
-              지금은 다연이 잠시 답하지 못하고 있어요. 보내 볼 수는 있고, 답을 못 받으면 체험 횟수는 줄지 않아요. 기다리는 동안 AI 없이
-              쓰는 무료 도구를 써 보세요.
-            </p>
-            <FreeToolLinks />
-          </div>
+          <AiDownNotice
+            upfront
+            message="지금은 다연이 잠시 답하지 못하고 있어요. 보내 볼 수는 있고, 답을 못 받으면 체험 횟수는 줄지 않아요. 기다리는 동안 AI 없이 쓰는 무료 도구를 써 보세요."
+          />
         ) : null}
 
         <section className="trial__chat" aria-live="polite">
@@ -232,10 +217,7 @@ export default function TryPage() {
           </div>
           {error ? <p className="trial__error">{error}</p> : null}
           {aiUnavailable ? (
-            <div className="trial__fallback">
-              <p>보내려던 글은 입력칸에 그대로 있어요. 기다리는 동안 AI 없이 쓰는 무료 도구를 써 보세요.</p>
-              <FreeToolLinks />
-            </div>
+            <AiDownNotice message="보내려던 글은 입력칸에 그대로 있어요. 기다리는 동안 AI 없이 쓰는 무료 도구를 써 보세요." />
           ) : null}
           <p className="trial__notice">
             {AI_SERVICE_NOTICE} {AI_OUTPUT_CAVEAT} 체험을 시작하면 <Link href="/terms">이용약관</Link>과{' '}

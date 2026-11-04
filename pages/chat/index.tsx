@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AiDownNotice } from '@/components/AiDownNotice';
 import { AppNav } from '@/components/AppNav';
 import { AppShell } from '@/components/AppShell';
 import { RequireAuth } from '@/components/RequireAuth';
@@ -13,6 +14,7 @@ import { ChatVideoPanel } from '@/components/chat/ChatVideoPanel';
 import { CrisisHelpBanner } from '@/components/chat/CrisisHelpBanner';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
+import { useAiAvailable } from '@/hooks/useAiAvailable';
 import { useChatSession, type ChatReply } from '@/hooks/useChatSession';
 import { useLyricsAutoSave } from '@/hooks/useLyricsAutoSave';
 import { AI_BADGE, AI_SERVICE_NOTICE } from '@/lib/aiDisclosure';
@@ -28,6 +30,9 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const promptParam = typeof router.query.prompt === 'string' ? router.query.prompt.slice(0, 500) : '';
   const [showCrisisHelp, setShowCrisisHelp] = useState(false);
+  const aiDown = useAiAvailable() === false;
+  // A reply in this visit means the AI is answering again, whatever the status check said.
+  const [replied, setReplied] = useState(false);
 
   const requestedCharacterId = Array.isArray(router.query.characterId)
     ? router.query.characterId[0] ?? null
@@ -38,7 +43,10 @@ export default function ChatPage() {
   // Auto-save needs the session's threadId, so the session reaches it through a ref.
   const replyHandlerRef = useRef<(reply: ChatReply) => void>();
   const session = useChatSession(user, requestedCharacterId, {
-    onReply: reply => replyHandlerRef.current?.(reply)
+    onReply: reply => {
+      setReplied(true);
+      replyHandlerRef.current?.(reply);
+    }
   });
   const { character, characterId, isLoading, messages } = session;
   const autoSave = useLyricsAutoSave(session.threadId, characterId);
@@ -202,6 +210,12 @@ export default function ChatPage() {
                 />
 
                 {showCrisisHelp ? <CrisisHelpBanner onClose={() => setShowCrisisHelp(false)} /> : null}
+                {aiDown && !replied ? (
+                  <AiDownNotice
+                    upfront
+                    message="지금은 AI가 잠시 답하지 못하고 있어요. 보내 볼 수는 있지만 답을 받지 못할 수 있어요. 기다리는 동안 AI 없이 쓰는 무료 도구를 써 보세요."
+                  />
+                ) : null}
                 <ChatComposer
                   ref={chatInputRef}
                   value={input}

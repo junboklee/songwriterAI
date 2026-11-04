@@ -20,6 +20,14 @@ describe('/lyrics/maker', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     window.localStorage.clear();
+    window.history.replaceState({}, '', '/lyrics/maker');
+  });
+
+  it('opens with the occasion a topic page asked for', () => {
+    window.history.replaceState({}, '', '/lyrics/maker?for=wedding');
+    render(<LyricsMakerPage />);
+    expect(screen.getByRole('button', { name: '결혼 축가' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('신부 이름')).toBeInTheDocument();
   });
 
   it('fills the lyrics as the visitor types and copies them with the title', async () => {

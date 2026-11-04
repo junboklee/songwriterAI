@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { TopicLayout } from '@/components/TopicLayout';
 import { LYRICS_TOPICS, getLyricsTopic, topicChatHref, type LyricsTopic } from '@/lib/lyricsTopics';
+import { makerHrefForTopic } from '@/lib/lyricsTemplates';
 
 export const getStaticPaths: GetStaticPaths = async () => ({
   paths: LYRICS_TOPICS.map(topic => ({ params: { slug: topic.slug } })),
@@ -17,6 +18,7 @@ export const getStaticProps: GetStaticProps<{ topic: LyricsTopic }> = async ({ p
 export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
   const similar = LYRICS_TOPICS.filter(item => item.group === topic.group && item.slug !== topic.slug);
   const others = LYRICS_TOPICS.filter(item => item.group !== topic.group);
+  const makerHref = makerHrefForTopic(topic.slug);
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -47,6 +49,12 @@ export default function LyricsTopicPage({ topic }: { topic: LyricsTopic }) {
             무료로 시작하기
           </Link>
         </div>
+        {makerHref ? (
+          <p className="topic-lead">
+            지금 바로 가사가 필요하다면 이름과 장소만 넣어 완성하는 <Link href={makerHref}>이름 넣어 가사 만들기</Link>도
+            써 보세요. 가입 없이 무료예요.
+          </p>
+        ) : null}
 
         <h2>이렇게 만들어요</h2>
         <ol>
