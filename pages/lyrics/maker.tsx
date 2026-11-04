@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { TopicLayout } from '@/components/TopicLayout';
 import { copyText } from '@/lib/clipboard';
@@ -12,6 +12,7 @@ import {
   SEASONS,
   makeLyrics,
   makerPrompt,
+  parseOccasion,
   type MakerInput,
   type Mood,
   type Vocal
@@ -93,6 +94,14 @@ export default function LyricsMakerPage() {
   });
   const [copied, setCopied] = useState<Copied>('idle');
   const result = useMemo(() => makeLyrics(input), [input]);
+
+  // Topic pages link here with ?for=parents and the like. Read after mount: the page is static.
+  useEffect(() => {
+    const occasion = parseOccasion(new URLSearchParams(window.location.search).get('for'));
+    if (occasion) {
+      setInput(prev => ({ ...prev, occasion }));
+    }
+  }, []);
 
   const set = (change: Partial<MakerInput>) => {
     setInput(prev => ({ ...prev, ...change }));

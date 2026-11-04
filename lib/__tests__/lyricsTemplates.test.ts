@@ -5,7 +5,9 @@ import {
   SEASONS,
   hasFinalConsonant,
   makeLyrics,
+  makerHrefForTopic,
   makerPrompt,
+  parseOccasion,
   withAnd,
   type MakerInput
 } from '@/lib/lyricsTemplates';
@@ -79,6 +81,16 @@ describe('makeLyrics', () => {
 });
 
 describe('helpers', () => {
+  it('links the matching topic pages to the maker with the occasion picked', () => {
+    expect(makerHrefForTopic('birthday-song')).toBe('/lyrics/maker?for=birthday');
+    expect(makerHrefForTopic('parents-day-song')).toBe('/lyrics/maker?for=parents');
+    expect(makerHrefForTopic('wedding-song')).toBe('/lyrics/maker?for=wedding');
+    expect(makerHrefForTopic('breakup-song')).toBeNull();
+    expect(parseOccasion('wedding')).toBe('wedding');
+    expect(parseOccasion('<script>')).toBeNull();
+    expect(parseOccasion(null)).toBeNull();
+  });
+
   it('tells whether a word ends in a final consonant', () => {
     expect(hasFinalConsonant('지민')).toBe(true);
     expect(hasFinalConsonant('수아')).toBe(false);

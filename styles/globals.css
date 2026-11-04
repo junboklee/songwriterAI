@@ -4905,16 +4905,16 @@ textarea {
   color: #fca5a5;
   font-size: 0.85rem;
 }
-.trial__fallback {
+.ai-notice {
   display: grid;
   gap: 8px;
   font-size: 0.85rem;
 }
-.trial__fallback p {
+.ai-notice p {
   margin: 0;
   color: var(--text-secondary);
 }
-.trial__fallback ul {
+.ai-notice ul {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
@@ -4922,10 +4922,10 @@ textarea {
   padding: 0;
   list-style: none;
 }
-.trial__fallback a {
+.ai-notice a {
   text-decoration: underline;
 }
-.trial__fallback--notice {
+.ai-notice--upfront {
   padding: 12px 14px;
   border: 1px solid var(--divider);
   border-radius: 12px;

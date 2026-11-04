@@ -29,6 +29,21 @@ export const OCCASIONS: { id: Occasion; label: string }[] = [
   { id: 'wedding', label: '결혼 축가' }
 ];
 
+// Topic pages whose song the maker can fill in, so they can open it with that occasion picked.
+const OCCASION_BY_TOPIC: Record<string, Occasion> = {
+  'birthday-song': 'birthday',
+  'parents-song': 'parents',
+  'parents-day-song': 'parents',
+  'parents-birthday-party-song': 'parents',
+  'wedding-song': 'wedding'
+};
+
+export const makerHrefForTopic = (slug: string) =>
+  OCCASION_BY_TOPIC[slug] ? `/lyrics/maker?for=${OCCASION_BY_TOPIC[slug]}` : null;
+
+export const parseOccasion = (value: string | null): Occasion | null =>
+  OCCASIONS.find(item => item.id === value)?.id ?? null;
+
 export const SEASONS: { id: Season; label: string }[] = [
   { id: 'spring', label: '봄' },
   { id: 'summer', label: '여름' },
