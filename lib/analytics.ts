@@ -19,6 +19,7 @@ export type AnalyticsEvent =
   | 'share_action'
   | 'lyrics_rewritten'
   | 'lyrics_copied'
+  | 'maker_copied'
   | 'singability_fix_opened'
   | 'singability_fix_all'
   | 'singability_fix_all_applied'
