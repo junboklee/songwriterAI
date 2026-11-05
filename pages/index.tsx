@@ -9,7 +9,7 @@ import { pageCardPath } from '@/lib/ogPageCard';
 const highlights = [
   {
     title: '이야기하면 가사가 돼요',
-    body: 'AI 싱어송라이터 Dayeon에게 오늘 있었던 일이나 전하고 싶은 마음을 이야기하면 노래 가사와 음악 스타일로 만들어 줘요.'
+    body: 'AI 싱어송라이터 다연에게 오늘 있었던 일이나 전하고 싶은 마음을 이야기하면 노래 가사와 음악 스타일로 만들어 줘요.'
   },
   {
     title: '부르기 좋은 한국어',
@@ -136,7 +136,7 @@ export default function Home() {
                 <span>AI 싱어송라이터와 함께 쓰는 한국어 가사</span>
               </h1>
               <p>
-                Dayeon에게 오늘 있었던 일을 이야기해 보세요. 부르기 좋은 한국어 가사와 음악 스타일로 만들어 드려요.
+                다연에게 오늘 있었던 일을 이야기해 보세요. 부르기 좋은 한국어 가사와 음악 스타일로 만들어 드려요.
                 완성한 가사는 Suno 같은 AI 음악 도구에 붙여 넣기만 하면 노래가 됩니다.
               </p>
               <div className="hero-cta">
@@ -198,7 +198,7 @@ export default function Home() {
               <article>
                 <span className="badge">STEP 01</span>
                 <h3>이야기하기</h3>
-                <p>누구에게 어떤 마음을 전하고 싶은지 Dayeon이나 마음에 드는 캐릭터에게 이야기해요.</p>
+                <p>누구에게 어떤 마음을 전하고 싶은지 다연이나 마음에 드는 캐릭터에게 이야기해요.</p>
               </article>
               <article>
                 <span className="badge">STEP 02</span>

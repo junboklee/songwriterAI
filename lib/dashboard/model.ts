@@ -84,7 +84,7 @@ export type ConversationListItem = {
 export const featuredCharacters: CharacterCard[] = [
   {
     id: '1',
-    title: 'Dayeon',
+    title: '다연',
     creator: '친절하고 정감 있는',
     description:
       '나는 김다연이야. 가수가 되는 게 꿈이라 매일 가사 쓰고 노래 연습에 푹 빠져 있어!',

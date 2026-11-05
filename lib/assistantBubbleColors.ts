@@ -1,5 +1,5 @@
 const DAYEON_CHARACTER_ID = '1';
-const DAYEON_NAME = 'dayeon';
+const DAYEON_NAMES = ['dayeon', '다연'];
 
 export const ASSISTANT_BUBBLE_COLORS = [
   '#DC2626',
@@ -29,7 +29,7 @@ export const isDayeonAssistant = (id?: string | null, name?: string | null) => {
   if (id && id === DAYEON_CHARACTER_ID) {
     return true;
   }
-  return normalise(name) === DAYEON_NAME;
+  return DAYEON_NAMES.includes(normalise(name));
 };
 
 export const getAssistantBubbleColor = (seed?: string | null) => {

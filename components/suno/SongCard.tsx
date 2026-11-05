@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { useTranslation } from '@/context/I18nContext';
 import { copyText } from '@/lib/clipboard';
+import { displayCharacterName } from '@/lib/defaultCharacterNames';
 import type { SongEntry } from '@/types/suno';
 
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
@@ -21,7 +22,7 @@ const metaString = (song: SongEntry, key: string) => {
 // What the card shows from a song's metadata; internal fields (storedAt etc.) stay hidden.
 export const songDetails = (song: SongEntry) => ({
   style: metaString(song, 'style'),
-  characterName: metaString(song, 'characterName'),
+  characterName: (name => (name ? displayCharacterName(name) : null))(metaString(song, 'characterName')),
   fromChat: song.metadata?.source === 'auto-from-chat'
 });
 

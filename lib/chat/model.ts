@@ -84,7 +84,7 @@ export const TEXT = {
 export const CHARACTER_PROFILES: Record<string, CharacterProfile> = {
   '1': {
     id: '1',
-    name: 'Dayeon',
+    name: '다연',
     tag: 'Empathy',
     avatar: '/avatars/dayeon.png',
     greeting: '왔구나! 오늘 하루는 어땠어? 이야기 들려주면 노래로 만들어 볼게 🎵',

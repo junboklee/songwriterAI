@@ -121,7 +121,7 @@ describe('useChatSession', () => {
     expect(result.current.quota).toEqual({ used: 5, limit: 300 });
     expect(result.current.conversations[0]).toMatchObject({ threadId: 't9', title: null, lastMessagePreview: '🎵 비\n\n빗소리' });
     expect(onReply).toHaveBeenCalledWith(
-      expect.objectContaining({ threadId: 't9', characterId: '1', characterName: 'Dayeon', idToken: 'token' })
+      expect.objectContaining({ threadId: 't9', characterId: '1', characterName: '다연', idToken: 'token' })
     );
     expect(router.replace).toHaveBeenCalledWith(
       { pathname: '/chat', query: { characterId: '1', threadId: 't9' } },

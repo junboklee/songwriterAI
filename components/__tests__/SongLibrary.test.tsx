@@ -28,7 +28,8 @@ const song: SongEntry = {
 
 describe('songDetails', () => {
   it('picks the user-facing metadata only', () => {
-    expect(songDetails(song)).toEqual({ style: '어쿠스틱 발라드', characterName: 'Dayeon', fromChat: true });
+    // Saved before the Korean rename, so the stored name is still 'Dayeon'.
+    expect(songDetails(song)).toEqual({ style: '어쿠스틱 발라드', characterName: '다연', fromChat: true });
     expect(songDetails({ ...song, metadata: {} })).toEqual({ style: null, characterName: null, fromChat: false });
   });
 });
@@ -36,7 +37,7 @@ describe('songDetails', () => {
 describe('SongCard', () => {
   it('shows the character name, style and a link to the chat instead of raw metadata', () => {
     render(<SongCard song={song} selected={false} onToggleSelect={jest.fn()} onEdit={jest.fn()} />);
-    expect(screen.getByText('Dayeon')).toBeInTheDocument();
+    expect(screen.getByText('다연')).toBeInTheDocument();
     expect(screen.getByText('어쿠스틱 발라드')).toBeInTheDocument();
     expect(screen.queryByText('storedAt')).toBeNull();
     expect(screen.queryByText(/auto-from-chat/)).toBeNull();
