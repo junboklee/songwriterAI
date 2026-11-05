@@ -14,7 +14,7 @@ export default function LyricsTopicsIndex() {
     >
       <h1>어떤 노래를 만들고 싶나요?</h1>
       <p className="topic-lead">
-        상황을 고르면 만드는 방법과 예시 가사, 잘 쓰는 팁을 볼 수 있어요. 마음에 들면 바로 AI 싱어송라이터 Dayeon과
+        상황을 고르면 만드는 방법과 예시 가사, 잘 쓰는 팁을 볼 수 있어요. 마음에 들면 바로 AI 싱어송라이터 다연과
         내 이야기로 가사를 만들어 보세요.
       </p>
       <section>

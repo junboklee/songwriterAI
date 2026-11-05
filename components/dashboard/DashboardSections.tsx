@@ -77,7 +77,7 @@ export function SpotlightSection({
                   </p>
                 </div>
               </Link>
-              {scene.title === 'Dayeon' && (
+              {scene.id === '1' && (
                 <div
                   style={{
                     display: 'flex',
