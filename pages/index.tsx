@@ -146,7 +146,7 @@ export default function Home() {
                   </div>
                 </Link>
                 <Link href="/lyrics/maker" className="hero-maker">
-                  이름만 넣으면 생일·부모님·축가 가사가 바로 나와요 →
+                  이름만 넣으면 생일·고백·졸업·응원 가사가 바로 나와요 →
                 </Link>
                 <Link href="/auth/register" className="hero-login">
                   무료로 가입하기

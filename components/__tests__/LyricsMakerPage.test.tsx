@@ -64,6 +64,13 @@ describe('/lyrics/maker', () => {
     fireEvent.click(screen.getByRole('button', { name: '잔잔하게' }));
     expect(lyrics()).toContain('민준과 서연 결혼 축하해요');
     expect(screen.getByTestId('maker-style')).toHaveTextContent('romantic piano ballad');
+
+    fireEvent.click(screen.getByRole('button', { name: '사랑 고백' }));
+    expect(screen.queryByLabelText('신부 이름')).toBeNull();
+    fireEvent.change(screen.getByLabelText('좋아하는 사람 이름'), { target: { value: '수아' } });
+    fireEvent.change(screen.getByLabelText(/처음 만난 곳/), { target: { value: '동아리방' } });
+    expect(lyrics()).toContain('동아리방에서 처음 본 순간');
+    expect(lyrics()).toContain('수아야 너를 좋아해');
   });
 
   it('hands the lyrics to the checker and the details to Dayeon', () => {

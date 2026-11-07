@@ -13,6 +13,7 @@ import {
   SEASONS,
   makeLyrics,
   makerPrompt,
+  occasionFields,
   parseOccasion,
   type MakerInput,
   type Mood,
@@ -35,7 +36,11 @@ const VOCALS: { id: Vocal; label: string }[] = [
 const TOPIC_LINKS = [
   { href: '/lyrics/birthday-song', label: '생일 축하 노래 가사 만들기' },
   { href: '/lyrics/parents-song', label: '부모님께 드리는 노래 가사' },
-  { href: '/lyrics/wedding-song', label: '결혼식 축가 가사 만들기' }
+  { href: '/lyrics/wedding-song', label: '결혼식 축가 가사 만들기' },
+  { href: '/lyrics/confession-song', label: '고백 노래 가사 만들기' },
+  { href: '/lyrics/friendship-song', label: '친구에게 주는 우정 노래' },
+  { href: '/lyrics/graduation-song', label: '졸업 축하 노래 가사' },
+  { href: '/lyrics/comfort-song', label: '위로·응원 노래 가사' }
 ];
 
 const faqs = [
@@ -45,7 +50,7 @@ const faqs = [
   },
   {
     q: '만든 가사를 선물이나 행사에 써도 되나요?',
-    a: '네, 생일이나 결혼식, 가족 행사에 편하게 쓰세요. 같은 틀을 고른 다른 사람과 가사가 비슷할 수 있으니 한두 줄은 직접 바꾸면 더 내 노래가 돼요.'
+    a: '네, 생일이나 결혼식, 졸업식, 고백처럼 마음을 전하는 자리에 편하게 쓰세요. 같은 틀을 고른 다른 사람과 가사가 비슷할 수 있으니 한두 줄은 직접 바꾸면 더 내 노래가 돼요.'
   },
   {
     q: '노래(음원)는 어떻게 만드나요?',
@@ -95,6 +100,7 @@ export default function LyricsMakerPage() {
   });
   const [copied, setCopied] = useState<Copied>('idle');
   const result = useMemo(() => makeLyrics(input), [input]);
+  const fields = occasionFields(input.occasion);
 
   // Topic pages link here with ?for=parents and the like. Read after mount: the page is static.
   useEffect(() => {
@@ -136,8 +142,8 @@ export default function LyricsMakerPage() {
 
   return (
     <TopicLayout
-      title="이름 넣어 노래 가사 만들기 · 생일·부모님·축가 가사 바로 완성"
-      description="이름과 추억의 장소, 계절만 고르면 생일 축하 노래, 부모님 감사 노래, 결혼 축가 가사를 바로 만들어 줘요. Suno 스타일 문구까지 함께. 가입 없이 무료."
+      title="이름 넣어 노래 가사 만들기 · 생일·축가·고백·졸업·응원 가사 바로 완성"
+      description="이름과 추억의 장소, 계절만 고르면 생일 축하, 부모님 감사, 결혼 축가, 사랑 고백, 우정, 졸업, 응원 노래 가사를 바로 만들어 줘요. Suno 스타일 문구까지 함께. 가입 없이 무료."
       path="/lyrics/maker"
       card="maker"
       jsonLd={jsonLd}
@@ -154,7 +160,7 @@ export default function LyricsMakerPage() {
           {chips(OCCASIONS, input.occasion, occasion => set({ occasion }))}
         </section>
 
-        {input.occasion === 'parents' ? (
+        {fields.nameLabel === null ? (
           <section className="maker__group" aria-label="받는 분">
             <p className="maker__label">누구에게 드리나요?</p>
             {chips(PARENTS, input.parent, parent => set({ parent }))}
@@ -162,18 +168,18 @@ export default function LyricsMakerPage() {
         ) : (
           <div className="maker__names">
             <label className="maker__field">
-              <span className="maker__label">{input.occasion === 'wedding' ? '신랑 이름' : '받는 사람 이름'}</span>
+              <span className="maker__label">{fields.nameLabel}</span>
               <input
                 className="maker__input"
                 value={input.name}
                 maxLength={MAX_NAME}
-                placeholder={input.occasion === 'wedding' ? '예: 민준' : '예: 지민'}
+                placeholder={fields.partnerLabel ? '예: 민준' : '예: 지민'}
                 onChange={event => set({ name: event.target.value })}
               />
             </label>
-            {input.occasion === 'wedding' ? (
+            {fields.partnerLabel ? (
               <label className="maker__field">
-                <span className="maker__label">신부 이름</span>
+                <span className="maker__label">{fields.partnerLabel}</span>
                 <input
                   className="maker__input"
                   value={input.partner}
@@ -188,14 +194,13 @@ export default function LyricsMakerPage() {
 
         <label className="maker__field">
           <span className="maker__label">
-            {input.occasion === 'wedding' ? '두 사람이 처음 만난 곳' : '함께한 추억의 장소'}{' '}
-            <span className="maker__hint">(선택)</span>
+            {fields.placeLabel} <span className="maker__hint">(선택)</span>
           </span>
           <input
             className="maker__input"
             value={input.place}
             maxLength={MAX_PLACE}
-            placeholder={input.occasion === 'wedding' ? '예: 대학교 도서관' : '예: 한강'}
+            placeholder={`예: ${fields.placeExample}`}
             onChange={event => set({ place: event.target.value })}
           />
         </label>
