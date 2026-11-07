@@ -85,7 +85,12 @@ describe('helpers', () => {
     expect(makerHrefForTopic('birthday-song')).toBe('/lyrics/maker?for=birthday');
     expect(makerHrefForTopic('parents-day-song')).toBe('/lyrics/maker?for=parents');
     expect(makerHrefForTopic('wedding-song')).toBe('/lyrics/maker?for=wedding');
+    expect(makerHrefForTopic('crush-song')).toBe('/lyrics/maker?for=love');
+    expect(makerHrefForTopic('graduation-song')).toBe('/lyrics/maker?for=graduation');
+    expect(makerHrefForTopic('exam-cheer-song')).toBe('/lyrics/maker?for=cheer');
     expect(makerHrefForTopic('breakup-song')).toBeNull();
+    // A sports cheer chant is not a personal pep talk.
+    expect(makerHrefForTopic('cheer-song')).toBeNull();
     expect(parseOccasion('wedding')).toBe('wedding');
     expect(parseOccasion('<script>')).toBeNull();
     expect(parseOccasion(null)).toBeNull();
@@ -105,5 +110,8 @@ describe('helpers', () => {
     );
     expect(makerPrompt({ ...base, occasion: 'parents', parent: 'dad' })).toMatch(/^아빠께 드리는 감사 노래 가사를 새로 써 줘\. 계절은 봄이야\./);
     expect(makerPrompt({ ...base, occasion: 'wedding', name: '민준', partner: '서연' })).toMatch(/^민준과 서연의 결혼식 축가/);
+    expect(makerPrompt({ ...base, occasion: 'love' })).toMatch(/^지민에게 고백하는 노래 가사/);
+    expect(makerPrompt({ ...base, occasion: 'friend', name: '' })).toMatch(/^친구에게 주는 우정 노래 가사/);
+    expect(makerPrompt({ ...base, occasion: 'cheer', name: '수아' })).toMatch(/^수아에게 보내는 응원 노래 가사/);
   });
 });
